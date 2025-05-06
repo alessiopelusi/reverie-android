@@ -79,4 +79,7 @@ dependencies {
 
     // bottom navigation
     implementation(libs.androidx.material)
+
+    // extended icons
+    implementation(libs.androidx.material.icons.extended)
 }

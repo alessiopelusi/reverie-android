@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="all_diaries">Tutti i Diari</string>
+    <string name="diary">Diario</string>
+    <string name="time_capsule">Capsule del Tempo</string>
+</resources>

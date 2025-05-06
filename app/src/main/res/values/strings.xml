@@ -1,3 +1,8 @@
 <resources>
-    <string name="app_name">Reverie</string>
+    <string name="app_name" translatable="false">Reverie</string>
+    <string name="all_diaries">All Diaries</string>
+    <string name="diary">Diary</string>
+    <string name="time_capsule">Time Capsule</string>
+    <string name="navigation_drawer" translatable="false">Menu</string>
+    <string name="account" translatable="false">Account</string>
 </resources>
