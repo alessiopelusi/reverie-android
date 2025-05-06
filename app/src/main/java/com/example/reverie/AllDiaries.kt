@@ -187,7 +187,7 @@ fun AllDiariesScreen() {
                         )
                     } else {
                         ButtonDefaults.outlinedButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surface,
+                            containerColor = MaterialTheme.colorScheme.background,
                             contentColor = Purple80
                         )
                     }

@@ -45,6 +45,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
@@ -173,8 +174,7 @@ fun CustomTopBar(drawerState: DrawerState) {
     val scope = rememberCoroutineScope()
     CenterAlignedTopAppBar(
         colors = topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            titleContentColor = MaterialTheme.colorScheme.primary,
+            containerColor = MaterialTheme.colorScheme.secondary,
         ),
         title = {
             Text(stringResource(R.string.app_name), textAlign = TextAlign.Center)
@@ -212,15 +212,17 @@ fun CustomBottomBar(navController: NavController) {
 
     NavigationBar (
         containerColor = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.primary,
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination
         topLevelRoutes.forEach { topLevelRoute ->
             NavigationBarItem(
-                icon = { Icon(topLevelRoute.icon, contentDescription = topLevelRoute.name) },
-                //label = { Text(topLevelRoute.name) },
-                alwaysShowLabel = false, // don't reserve space for label
+                icon = { Icon(
+                    topLevelRoute.icon,
+                    contentDescription = topLevelRoute.name
+                ) },
+                label = { Text(topLevelRoute.name) },
+                //alwaysShowLabel = false, // don't reserve space for label
                 selected = currentDestination?.hierarchy?.any { it.hasRoute(topLevelRoute.route::class) } == true,
                 onClick = {
                     navController.navigate(topLevelRoute.route) {
@@ -236,7 +238,11 @@ fun CustomBottomBar(navController: NavController) {
                         // Restore state when reselecting a previously selected item
                         restoreState = true
                     }
-                }
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    //selectedIconColor = MaterialTheme.colorScheme.primary,
+                    indicatorColor = MaterialTheme.colorScheme.surface
+                ),
             )
         }
     }

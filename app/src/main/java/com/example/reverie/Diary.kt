@@ -15,7 +15,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Icon
@@ -31,7 +31,7 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.reverie.ui.theme.gialloScuro
+import com.example.reverie.ui.theme.PaperColor
 import kotlinx.serialization.Serializable
 
 
@@ -43,7 +43,8 @@ fun DiaryScreen(navController: NavController) {
 
     Column(
         modifier = Modifier
-            .fillMaxSize().border(width = 2.dp, color = Color.Magenta, shape = RectangleShape),
+            .fillMaxSize()
+            .border(width = 2.dp, color = Color.Magenta, shape = RectangleShape),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -122,7 +123,7 @@ fun DiaryScreen(navController: NavController) {
             ),
             modifier = Modifier.align(Alignment.End)
         ) {
-            Icon(Icons.Default.Edit, contentDescription = "Edit")
+            Icon(Icons.Outlined.Edit, contentDescription = "Edit")
         }
     }
 }
@@ -132,7 +133,7 @@ fun DiaryPage(modifier: Modifier, text: String) {
     Box(
         modifier = modifier
             .border(width = 2.dp, color = Color.Blue, shape = RectangleShape)
-            .background(gialloScuro)
+            .background(PaperColor)
     ) {
         Text(text = text)
     }

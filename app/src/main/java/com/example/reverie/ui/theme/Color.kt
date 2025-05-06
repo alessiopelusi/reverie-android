@@ -10,4 +10,5 @@ val Purple40 = Color(0xFF6650a4)
 val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
-val gialloScuro = Color(0xFFE9D3A6)
+val PaperColor = Color(0xFFFFFDDD)
+val YellowOchre = Color(0xFFEFD9AA)
