@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.reverie.ui.theme.gialloScuro
 import kotlinx.serialization.Serializable
 
@@ -37,7 +38,7 @@ import kotlinx.serialization.Serializable
 @Serializable object Diary
 
 @Composable
-fun DiaryScreen() {
+fun DiaryScreen(navController: NavController) {
     val title = "Emotional Diary"
 
     Column(
@@ -110,7 +111,9 @@ fun DiaryScreen() {
         )
 
         Button(
-            onClick = {},
+            onClick = {
+                navController.navigate(ModifyDiary)
+            },
             colors = ButtonColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.primary,

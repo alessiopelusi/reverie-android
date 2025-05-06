@@ -151,11 +151,15 @@ fun Reverie() {
                     }
                     composable<Diary> {
                         bottomBarVisibility = true
-                        DiaryScreen()
+                        DiaryScreen(navController)
                     }
                     composable<TimeCapsule> {
                         bottomBarVisibility = true
                         TimeCapsuleScreen()
+                    }
+                    composable<ModifyDiary>{
+                        bottomBarVisibility = false
+                        ModifyDiaryScreen()
                     }
                 }
             }
