@@ -28,7 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import com.example.reverie.ui.theme.gialloScuro
 import kotlinx.serialization.Serializable
@@ -61,6 +61,7 @@ fun DiaryScreen() {
         BoxWithConstraints (
             modifier = Modifier.border(width = 2.dp, color = Color.Red, shape = RectangleShape).weight(1f, false),
         ) {
+            val boxWithConstraintsScope = this
             LazyRow (
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 state = diaryPageListState,
@@ -72,7 +73,7 @@ fun DiaryScreen() {
                             // Here's the content of each list item.
                             val widthFraction = 0.90f
                             DiaryPage(modifier = Modifier
-                                .widthIn(max = LocalConfiguration.current.screenWidthDp.dp * widthFraction)
+                                .widthIn(max = LocalWindowInfo.current.containerSize.width.dp * widthFraction)
                                 .aspectRatio(9f/16f),
                                 item)
                         },
@@ -82,7 +83,7 @@ fun DiaryScreen() {
                             // so it's measuring just the Box
                             val placeable = measurables.first().measure(constraints)
                             // maxWidth is from the BoxWithConstraints
-                            val maxWidthInPx = maxWidth.roundToPx()
+                            val maxWidthInPx = boxWithConstraintsScope.maxWidth.roundToPx()
                             // Box width
                             val itemWidth = placeable.width
                             // Calculating the space for the first and last item
