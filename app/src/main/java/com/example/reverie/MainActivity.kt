@@ -14,7 +14,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -44,6 +43,7 @@ import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalDrawerSheet
@@ -61,77 +61,94 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            ReverieTheme {
-                ScaffoldExample()
-            }
+            Reverie()
         }
     }
 }
 
 @Composable
-fun ScaffoldExample() {
-    val navController = rememberNavController()
+fun Reverie() {
+    ReverieTheme {
+        val navController = rememberNavController()
 
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+        val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
-    ModalNavigationDrawer (
-        drawerContent = {
-            ModalDrawerSheet {
-                Column(
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    Spacer(Modifier.height(12.dp))
-                    Text("Drawer Title", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.titleLarge)
-                    HorizontalDivider()
+        ModalNavigationDrawer(
+            drawerContent = {
+                ModalDrawerSheet {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            "Drawer Title",
+                            modifier = Modifier.padding(16.dp),
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        HorizontalDivider()
 
-                    Text("Section 1", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.titleMedium)
-                    NavigationDrawerItem(
-                        label = { Text("Item 1") },
-                        selected = false,
-                        onClick = { /* Handle click */ }
-                    )
-                    NavigationDrawerItem(
-                        label = { Text("Item 2") },
-                        selected = false,
-                        onClick = { /* Handle click */ }
-                    )
+                        Text(
+                            "Section 1",
+                            modifier = Modifier.padding(16.dp),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        NavigationDrawerItem(
+                            label = { Text("Item 1") },
+                            selected = false,
+                            onClick = { /* Handle click */ }
+                        )
+                        NavigationDrawerItem(
+                            label = { Text("Item 2") },
+                            selected = false,
+                            onClick = { /* Handle click */ }
+                        )
 
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-                    Text("Section 2", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.titleMedium)
-                    NavigationDrawerItem(
-                        label = { Text("Settings") },
-                        selected = false,
-                        icon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
-                        badge = { Text("20") }, // Placeholder
-                        onClick = { /* Handle click */ }
-                    )
-                    NavigationDrawerItem(
-                        label = { Text("Help and feedback") },
-                        selected = false,
-                        icon = { Icon(Icons.AutoMirrored.Outlined.Help, contentDescription = null) },
-                        onClick = { /* Handle click */ },
-                    )
-                    Spacer(Modifier.height(12.dp))
+                        Text(
+                            "Section 2",
+                            modifier = Modifier.padding(16.dp),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        NavigationDrawerItem(
+                            label = { Text("Settings") },
+                            selected = false,
+                            icon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
+                            badge = { Text("20") }, // Placeholder
+                            onClick = { /* Handle click */ }
+                        )
+                        NavigationDrawerItem(
+                            label = { Text("Help and feedback") },
+                            selected = false,
+                            icon = {
+                                Icon(
+                                    Icons.AutoMirrored.Outlined.Help,
+                                    contentDescription = null
+                                )
+                            },
+                            onClick = { /* Handle click */ },
+                        )
+                        Spacer(Modifier.height(12.dp))
+                    }
                 }
-            }
-        },
-        drawerState = drawerState
-    ) {
-        Scaffold(
-            topBar = { CustomTopBar(drawerState) },
-            bottomBar = { CustomBottomAppBar(navController) },
-        ) { innerPadding ->
-            NavHost(navController, startDestination = Diary, Modifier.padding(innerPadding)) {
-                composable<AllDiaries> {
-                    AllDiariesScreen()
-                }
-                composable<Diary> {
-                    DiaryScreen()
-                }
-                composable<TimeCapsule> {
-                    TimeCapsuleScreen()
+            },
+            drawerState = drawerState
+        ) {
+            Scaffold(
+                topBar = { CustomTopBar(drawerState) },
+                bottomBar = { CustomBottomBar(navController) },
+            ) { innerPadding ->
+                NavHost(navController, startDestination = Diary, Modifier.padding(innerPadding)) {
+                    composable<AllDiaries> {
+                        AllDiariesScreen()
+                    }
+                    composable<Diary> {
+                        DiaryScreen()
+                    }
+                    composable<TimeCapsule> {
+                        TimeCapsuleScreen()
+                    }
                 }
             }
         }
@@ -171,7 +188,7 @@ fun CustomTopBar(drawerState: DrawerState) {
 }
 
 @Composable
-fun CustomBottomAppBar(navController: NavController) {
+fun CustomBottomBar(navController: NavController) {
     data class TopLevelRoute<T : Any>(val name: String, val route: T, val icon: ImageVector)
 
     val topLevelRoutes = listOf(
@@ -190,7 +207,7 @@ fun CustomBottomAppBar(navController: NavController) {
             NavigationBarItem(
                 icon = { Icon(topLevelRoute.icon, contentDescription = topLevelRoute.name) },
                 //label = { Text(topLevelRoute.name) },
-                alwaysShowLabel = false, // Non riservare spazio per l'etichetta
+                alwaysShowLabel = false, // don't reserve space for label
                 selected = currentDestination?.hierarchy?.any { it.hasRoute(topLevelRoute.route::class) } == true,
                 onClick = {
                     navController.navigate(topLevelRoute.route) {
@@ -215,7 +232,5 @@ fun CustomBottomAppBar(navController: NavController) {
 @Preview(showBackground = true, widthDp = 400, heightDp = 850)
 @Composable
 fun DefaultPreview() {
-    ReverieTheme {
-        ScaffoldExample()
-    }
+    Reverie()
 }
