@@ -52,7 +52,10 @@ import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.launch
 
@@ -135,18 +138,25 @@ fun Reverie() {
             },
             drawerState = drawerState
         ) {
+            var bottomBarVisibility by remember { mutableStateOf(true) }
+
             Scaffold(
                 topBar = { CustomTopBar(drawerState) },
-                bottomBar = { CustomBottomBar(navController) },
+                // if bottomBarVisibility is set to none, we don't show the bottom bar
+                bottomBar = { if (bottomBarVisibility) CustomBottomBar(navController) },
             ) { innerPadding ->
                 NavHost(navController, startDestination = Diary, Modifier.padding(innerPadding)) {
+                    // for each composable we set the visibility for the bottom
                     composable<AllDiaries> {
+                        bottomBarVisibility = true
                         AllDiariesScreen()
                     }
                     composable<Diary> {
+                        bottomBarVisibility = true
                         DiaryScreen()
                     }
                     composable<TimeCapsule> {
+                        bottomBarVisibility = true
                         TimeCapsuleScreen()
                     }
                 }
@@ -200,7 +210,7 @@ fun CustomBottomBar(navController: NavController) {
     NavigationBar (
         containerColor = MaterialTheme.colorScheme.primaryContainer,
         contentColor = MaterialTheme.colorScheme.primary,
-    ){
+    ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination
         topLevelRoutes.forEach { topLevelRoute ->
