@@ -23,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,16 +31,69 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.CreationExtras
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.reverie.ui.theme.PaperColor
+import dagger.hilt.android.lifecycle.HiltViewModel
+import jakarta.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.toRoute
 
+@Serializable
+data class Diary(val id: Int)
 
-@Serializable object Diary
+@Serializable object EditDiary
+
+class DiaryRepository @Inject constructor(
+    private val apiService: ApiService
+) {
+    fun getDiaryById(id: Int): DiaryState {
+        return apiService.getDiaryById(id)
+    }
+}
+
+data class DiaryState(
+    val id: Int = 0,
+    val title: String = "",
+    val content: String = "",
+)
+
+@HiltViewModel
+class DiaryViewModel@Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
+    private val repository: DiaryRepository
+) : ViewModel() {
+
+    private val diary = savedStateHandle.toRoute<Diary>()
+    // Expose screen UI state
+    private val _uiState = MutableStateFlow(repository.getDiaryById(diary.id))
+    val uiState: StateFlow<DiaryState> = _uiState.asStateFlow()
+
+    // Handle business logic
+    fun rollDice() {
+        _uiState.update { currentState ->
+            currentState.copy(
+            )
+        }
+    }
+}
 
 @Composable
-fun DiaryScreen(navController: NavController) {
-    val title = "Emotional Diary"
+fun DiaryScreen(diaryId: Int, onNavigateToEditDiary: () -> Unit, viewModel: DiaryViewModel = hiltViewModel()) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier
@@ -50,7 +104,7 @@ fun DiaryScreen(navController: NavController) {
     ) {
         Text(
             modifier = Modifier.padding(8.dp),
-            text = title
+            text = uiState.title
         )
 
         val listOfItems: List<String> = (1..10).map { "Item $it" }
@@ -112,9 +166,7 @@ fun DiaryScreen(navController: NavController) {
         )
 
         Button(
-            onClick = {
-                navController.navigate(ModifyDiary)
-            },
+            onClick = { onNavigateToEditDiary() },
             colors = ButtonColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.primary,
@@ -126,6 +178,15 @@ fun DiaryScreen(navController: NavController) {
             Icon(Icons.Outlined.Edit, contentDescription = "Edit")
         }
     }
+}
+
+
+@Composable
+fun EditDiaryScreen(){
+    Text(
+        modifier = Modifier.padding(8.dp),
+        text = "You are editing your diary!",
+    )
 }
 
 @Composable

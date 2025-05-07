@@ -6,6 +6,12 @@ plugins {
     // navigation
     // Kotlin serialization plugin for type safe routes and navigation arguments
     kotlin("plugin.serialization") version "2.0.21"
+
+    // KSP
+    id("com.google.devtools.ksp")
+
+    // Hilt
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -82,4 +88,9 @@ dependencies {
 
     // extended icons
     implementation(libs.androidx.material.icons.extended)
+
+    // Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.android.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
 }

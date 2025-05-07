@@ -56,20 +56,23 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.navigation.toRoute
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            Reverie()
+            MainComposable()
         }
     }
 }
 
 @Composable
-fun Reverie() {
+fun MainComposable() {
     ReverieTheme {
         val navController = rememberNavController()
 
@@ -144,23 +147,24 @@ fun Reverie() {
                 // if bottomBarVisibility is set to none, we don't show the bottom bar
                 bottomBar = { if (bottomBarVisibility) CustomBottomBar(navController) },
             ) { innerPadding ->
-                NavHost(navController, startDestination = Diary, Modifier.padding(innerPadding)) {
+                NavHost(navController, startDestination = Diary(0), Modifier.padding(innerPadding)) {
                     // for each composable we set the visibility for the bottom
                     composable<AllDiaries> {
                         bottomBarVisibility = true
                         AllDiariesScreen()
                     }
-                    composable<Diary> {
+                    composable<Diary> { backStackEntry ->
                         bottomBarVisibility = true
-                        DiaryScreen(navController)
+                        val diary: Diary = backStackEntry.toRoute()
+                        DiaryScreen(diaryId = diary.id, onNavigateToEditDiary = { navController.navigate(EditDiary) })
                     }
                     composable<TimeCapsule> {
                         bottomBarVisibility = true
                         TimeCapsuleScreen()
                     }
-                    composable<ModifyDiary>{
+                    composable<EditDiary>{
                         bottomBarVisibility = false
-                        ModifyDiaryScreen()
+                        EditDiaryScreen()
                     }
                 }
             }
@@ -206,7 +210,7 @@ fun CustomBottomBar(navController: NavController) {
 
     val topLevelRoutes = listOf(
         TopLevelRoute(stringResource(R.string.all_diaries), AllDiaries, Icons.AutoMirrored.Rounded.LibraryBooks),
-        TopLevelRoute(stringResource(R.string.diary), Diary, Icons.AutoMirrored.Rounded.MenuBook),
+        TopLevelRoute(stringResource(R.string.diary), Diary(0), Icons.AutoMirrored.Rounded.MenuBook),
         TopLevelRoute(stringResource(R.string.time_capsule), TimeCapsule, Icons.Rounded.MailOutline)
     )
 
@@ -251,5 +255,5 @@ fun CustomBottomBar(navController: NavController) {
 @Preview(showBackground = true, widthDp = 400, heightDp = 850)
 @Composable
 fun DefaultPreview() {
-    Reverie()
+    MainComposable()
 }
