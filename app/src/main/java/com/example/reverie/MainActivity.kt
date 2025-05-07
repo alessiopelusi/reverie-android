@@ -56,6 +56,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.navigation
 import androidx.navigation.toRoute
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -77,6 +79,9 @@ fun MainComposable() {
         val navController = rememberNavController()
 
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+
+        val diaryId = 0
+        val preferredDiaryId = 0
 
         ModalNavigationDrawer(
             drawerContent = {
@@ -145,26 +150,43 @@ fun MainComposable() {
             Scaffold(
                 topBar = { CustomTopBar(drawerState) },
                 // if bottomBarVisibility is set to none, we don't show the bottom bar
-                bottomBar = { if (bottomBarVisibility) CustomBottomBar(navController) },
+                bottomBar = { if (bottomBarVisibility) CustomBottomBar(navController, Diary(preferredDiaryId)) },
             ) { innerPadding ->
-                NavHost(navController, startDestination = Diary(0), Modifier.padding(innerPadding)) {
+                NavHost(navController, startDestination = AllDiaries, Modifier.padding(innerPadding)) {
                     // for each composable we set the visibility for the bottom
+
+                    // we create a navigation for Diary that contains ViewDiary and EditDiary
+                    // in this way we can share the same viewModel between the various composable
+                    // https://developer.android.com/develop/ui/compose/libraries#hilt-navigation
+                    navigation<Diary>(startDestination = ViewDiary(diaryId)) {
+                        composable<ViewDiary> { backStackEntry ->
+                            bottomBarVisibility = true
+                            val parentEntry = remember(backStackEntry) {
+                                navController.getBackStackEntry<Diary>()
+                            }
+                            val parentViewModel = hiltViewModel<DiaryViewModel>(parentEntry)
+                            val diary: Diary = parentEntry.toRoute()
+                            DiaryScreen(
+                                onNavigateToEditDiary = { navController.navigate(EditDiary(diary.id)) },
+                                viewModel = parentViewModel
+                            )
+                        }
+                        composable<EditDiary> { backStackEntry ->
+                            bottomBarVisibility = false
+                            val parentEntry = remember(backStackEntry) {
+                                navController.getBackStackEntry<Diary>()
+                            }
+                            val parentViewModel = hiltViewModel<DiaryViewModel>(parentEntry)
+                            EditDiaryScreen(viewModel = parentViewModel)
+                        }
+                    }
                     composable<AllDiaries> {
                         bottomBarVisibility = true
                         AllDiariesScreen()
                     }
-                    composable<Diary> { backStackEntry ->
-                        bottomBarVisibility = true
-                        val diary: Diary = backStackEntry.toRoute()
-                        DiaryScreen(diaryId = diary.id, onNavigateToEditDiary = { navController.navigate(EditDiary) })
-                    }
                     composable<TimeCapsule> {
                         bottomBarVisibility = true
                         TimeCapsuleScreen()
-                    }
-                    composable<EditDiary>{
-                        bottomBarVisibility = false
-                        EditDiaryScreen()
                     }
                 }
             }
@@ -205,12 +227,12 @@ fun CustomTopBar(drawerState: DrawerState) {
 }
 
 @Composable
-fun CustomBottomBar(navController: NavController) {
+fun CustomBottomBar(navController: NavController, preferredDiary: Diary) {
     data class TopLevelRoute<T : Any>(val name: String, val route: T, val icon: ImageVector)
 
     val topLevelRoutes = listOf(
         TopLevelRoute(stringResource(R.string.all_diaries), AllDiaries, Icons.AutoMirrored.Rounded.LibraryBooks),
-        TopLevelRoute(stringResource(R.string.diary), Diary(0), Icons.AutoMirrored.Rounded.MenuBook),
+        TopLevelRoute(stringResource(R.string.diary), preferredDiary, Icons.AutoMirrored.Rounded.MenuBook),
         TopLevelRoute(stringResource(R.string.time_capsule), TimeCapsule, Icons.Rounded.MailOutline)
     )
 

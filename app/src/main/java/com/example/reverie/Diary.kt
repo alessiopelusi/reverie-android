@@ -1,5 +1,6 @@
 package com.example.reverie
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -21,6 +22,7 @@ import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,16 +32,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.createSavedStateHandle
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.CreationExtras
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.reverie.ui.theme.PaperColor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
@@ -47,7 +44,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.toRoute
@@ -55,7 +51,11 @@ import androidx.navigation.toRoute
 @Serializable
 data class Diary(val id: Int)
 
-@Serializable object EditDiary
+@Serializable
+data class ViewDiary(val id: Int)
+
+@Serializable
+data class EditDiary(val id: Int)
 
 class DiaryRepository @Inject constructor(
     private val apiService: ApiService
@@ -72,7 +72,7 @@ data class DiaryState(
 )
 
 @HiltViewModel
-class DiaryViewModel@Inject constructor(
+class DiaryViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val repository: DiaryRepository
 ) : ViewModel() {
@@ -83,16 +83,17 @@ class DiaryViewModel@Inject constructor(
     val uiState: StateFlow<DiaryState> = _uiState.asStateFlow()
 
     // Handle business logic
-    fun rollDice() {
+    fun changeTitle(newTitle: String) {
         _uiState.update { currentState ->
             currentState.copy(
+                title = newTitle
             )
         }
     }
 }
 
 @Composable
-fun DiaryScreen(diaryId: Int, onNavigateToEditDiary: () -> Unit, viewModel: DiaryViewModel = hiltViewModel()) {
+fun DiaryScreen(onNavigateToEditDiary: () -> Unit, viewModel: DiaryViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Column(
@@ -182,10 +183,22 @@ fun DiaryScreen(diaryId: Int, onNavigateToEditDiary: () -> Unit, viewModel: Diar
 
 
 @Composable
-fun EditDiaryScreen(){
+fun EditDiaryScreen(viewModel: DiaryViewModel = hiltViewModel()){
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     Text(
         modifier = Modifier.padding(8.dp),
         text = "You are editing your diary!",
+    )
+    SimpleFilledTextFieldSample(uiState.title, onUpdateTitle =  { viewModel.changeTitle(it) })
+}
+
+@Composable
+fun SimpleFilledTextFieldSample(title: String, onUpdateTitle: (String) -> Unit) {
+    TextField(
+        value = title,
+        onValueChange = onUpdateTitle,
+        label = { Text("Titolo") }
     )
 }
 
