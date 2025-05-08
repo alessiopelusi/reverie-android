@@ -4,6 +4,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 // object used to provide dependencies to other classes
 // when we call inject we use those methods (based on result type)
@@ -11,14 +12,14 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
+    @Singleton
     @Provides
-    //@Singleton
     fun provideApiService(): ApiService {
         return ApiService.create()
     }
 
+    @Singleton
     @Provides
-    //@Singleton
     fun provideDiaryRepository(apiService: ApiService): DiaryRepository {
         return DiaryRepository(apiService)
     }

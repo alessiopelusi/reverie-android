@@ -1,5 +1,6 @@
 package com.example.reverie
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -36,33 +37,53 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.example.reverie.ui.theme.PaperColor
 import dagger.hilt.android.lifecycle.HiltViewModel
-import jakarta.inject.Inject
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 
 // Routes (Diary is the root)
 @Serializable
-data class Diary(val id: Int)
+data class Diary(val diaryId: Int)
 
 @Serializable
-data class ViewDiary(val id: Int)
+data class ViewDiary(val diaryId: Int)
 
 @Serializable
-data class EditDiary(val id: Int)
+data class EditDiaryPage(val diaryId: Int)
 
 // Using Hilt we inject a dependency (apiSevice)
+@Singleton
 class DiaryRepository @Inject constructor(
     private val apiService: ApiService
 ) {
-    fun getDiaryById(id: Int): DiaryState {
-        return apiService.getDiaryById(id)
+    private val _diaries = MutableStateFlow<Map<Int, DiaryState>>(emptyMap())
+    val diaries: StateFlow<Map<Int, DiaryState>> = _diaries.asStateFlow()
+
+    fun getDiaryById(diaryId: Int): DiaryState {
+        val diary = _diaries.value[diaryId] ?: apiService.getDiaryById(diaryId)
+        _diaries.update { it + (diaryId to diary) }
+        return diary
+    }
+
+    fun updateDiary(diary: DiaryState) {
+        _diaries.update { it + (diary.id to diary) }
+    }
+
+    // TODO improve retrieval
+    fun getAllProfileDiaries(profileId: Int): AllDiariesState {
+        val profileDiaries = apiService.getAllProfileDiaries(profileId)
+        _diaries.update { it + profileDiaries.diaries.associateBy { diary -> diary.id } }
+        return profileDiaries
     }
 }
 
@@ -82,7 +103,7 @@ class DiaryViewModel @Inject constructor(
 
     private val diary = savedStateHandle.toRoute<Diary>()
     // Expose screen UI state
-    private val _uiState = MutableStateFlow(repository.getDiaryById(diary.id))
+    private val _uiState = MutableStateFlow(repository.getDiaryById(diary.diaryId))
     val uiState: StateFlow<DiaryState> = _uiState.asStateFlow()
 
     // Handle business logic
@@ -92,11 +113,14 @@ class DiaryViewModel @Inject constructor(
                 title = newTitle
             )
         }
+        viewModelScope.launch {
+            repository.updateDiary(_uiState.value)
+        }
     }
 }
 
 @Composable
-fun ViewDiaryScreen(onNavigateToEditDiary: () -> Unit, viewModel: DiaryViewModel = hiltViewModel()) {
+fun ViewDiaryScreen(onNavigateToEditDiaryPage: () -> Unit, viewModel: DiaryViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Column(
@@ -170,7 +194,7 @@ fun ViewDiaryScreen(onNavigateToEditDiary: () -> Unit, viewModel: DiaryViewModel
         )
 
         Button(
-            onClick = { onNavigateToEditDiary() },
+            onClick = { onNavigateToEditDiaryPage() },
             colors = ButtonColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.primary,
@@ -184,9 +208,20 @@ fun ViewDiaryScreen(onNavigateToEditDiary: () -> Unit, viewModel: DiaryViewModel
     }
 }
 
-
 @Composable
 fun EditDiaryScreen(viewModel: DiaryViewModel = hiltViewModel()){
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    Text(
+        modifier = Modifier.padding(8.dp),
+        text = "You are editing your diary!",
+    )
+    EditTitleTextField(uiState.title, onUpdateTitle = { viewModel.changeTitle(it) })
+}
+
+
+@Composable
+fun EditDiaryPageScreen(viewModel: DiaryViewModel = hiltViewModel()){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Text(

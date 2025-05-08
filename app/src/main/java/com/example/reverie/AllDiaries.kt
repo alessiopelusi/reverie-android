@@ -1,8 +1,11 @@
 package com.example.reverie
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,13 +18,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -39,15 +48,59 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import androidx.compose.ui.zIndex
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.toRoute
 import com.example.reverie.ui.theme.Purple80
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.serialization.Serializable
 import kotlin.math.absoluteValue
 
 
-@Serializable object AllDiaries
+@Serializable
+data class EditDiary(val diaryId: Int)
+
+@Serializable
+data class AllDiariesParent(val profileId: Int)
+
+@Serializable
+data class AllDiaries(val profileId: Int)
+
+
+// DiaryState contains all the data of the diary
+data class AllDiariesState(
+    val profileId: Int,
+    val diaries: List<DiaryState>,
+    val pagerState: PagerState = PagerState(pageCount = {diaries.size}),
+) {
+    val currentPage: Int
+        get() = pagerState.currentPage
+}
+
+// HiltViewModel inject SavedStateHandle + other dependencies provided by AppModule
+@HiltViewModel
+class AllDiariesViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
+    private val repository: DiaryRepository
+) : ViewModel() {
+
+    private val allDiaries = savedStateHandle.toRoute<AllDiaries>()
+    // Expose screen UI state
+    private val _uiState = MutableStateFlow(repository.getAllProfileDiaries(allDiaries.profileId))
+    val uiState: StateFlow<AllDiariesState> = _uiState.asStateFlow()
+}
 
 @Composable
-fun AllDiariesScreen() {
+fun AllDiariesScreen(onNavigateToDiary: (Int) -> Unit, onNavigateToEditDiary: (Int) -> Unit,  viewModel: AllDiariesViewModel = hiltViewModel()) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     Column(
         modifier = Modifier
             .fillMaxSize().border(width = 2.dp, color = Color.Magenta, shape = RectangleShape)
@@ -56,14 +109,11 @@ fun AllDiariesScreen() {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        val listOfItems: List<String> = (1..10).map { "Item $it" }
-        val pagerState = rememberPagerState(pageCount = {
-            listOfItems.size
-        })
+        val pageInteractionSource = remember { MutableInteractionSource() }
 
         Text(
             modifier = Modifier.padding(8.dp),
-            text = "Emotional Diary"
+            text = uiState.diaries[uiState.currentPage].title
         )
 
         HorizontalPager(
@@ -71,7 +121,7 @@ fun AllDiariesScreen() {
                 .border(width = 2.dp, color = Color.Red, shape = RectangleShape)
                 .weight(1f, false),
             contentPadding = PaddingValues(50.dp),
-            state = pagerState
+            state = uiState.pagerState
         ) { page ->
             Card (
                 Modifier
@@ -81,7 +131,7 @@ fun AllDiariesScreen() {
                         // scroll position. We use the absolute value which allows us to mirror
                         // any effects for both directions
                         val pageOffset = (
-                                (pagerState.currentPage - page) + pagerState
+                                (uiState.currentPage - page) + uiState.pagerState
                                     .currentPageOffsetFraction
                                 ).absoluteValue
 
@@ -103,10 +153,16 @@ fun AllDiariesScreen() {
                             fraction = 1f - pageOffset.coerceIn(0f, 1f)
                         )
                     }
+                    .clickable(
+                        interactionSource = pageInteractionSource,
+                        indication = LocalIndication.current
+                    ) {
+                        onNavigateToDiary(uiState.diaries[uiState.currentPage].id)
+                    }
             ) {
                 DiaryPage(
                     modifier = Modifier.fillMaxSize(),
-                    "Item $page",
+                    text = uiState.diaries[uiState.currentPage].content
                 )
             }
         }
@@ -118,8 +174,8 @@ fun AllDiariesScreen() {
                 .padding(bottom = 8.dp),
             horizontalArrangement = Arrangement.Center
         ) {
-            repeat(pagerState.pageCount) { iteration ->
-                val color = if (pagerState.currentPage == iteration) Color.DarkGray else Color.LightGray
+            repeat(uiState.pagerState.pageCount) { iteration ->
+                val color = if (uiState.pagerState.currentPage == iteration) Color.DarkGray else Color.LightGray
                 Box(
                     modifier = Modifier
                         .padding(2.dp)
@@ -128,6 +184,20 @@ fun AllDiariesScreen() {
                         .size(16.dp)
                 )
             }
+        }
+
+        Button(
+            // replace pagerState.currentPage with the actual id of the currentPage diary
+            onClick = { onNavigateToEditDiary(uiState.diaries[uiState.currentPage].id) },
+            colors = ButtonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.primary,
+                disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                disabledContentColor = MaterialTheme.colorScheme.primary
+            ),
+            modifier = Modifier.align(Alignment.End)
+        ) {
+            Icon(Icons.Outlined.Edit, contentDescription = "Edit")
         }
 
         val itemsList: List<String> = (1..5).map { "It $it" }
