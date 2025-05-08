@@ -4,8 +4,9 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import jakarta.inject.Singleton
 
+// object used to provide dependencies to other classes
+// when we call inject we use those methods (based on result type)
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {

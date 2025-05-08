@@ -62,7 +62,7 @@ import androidx.navigation.toRoute
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
-
+// AndroidEntryPoint is used for Hilt (DI)
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -166,7 +166,7 @@ fun MainComposable() {
                             }
                             val parentViewModel = hiltViewModel<DiaryViewModel>(parentEntry)
                             val diary: Diary = parentEntry.toRoute()
-                            DiaryScreen(
+                            ViewDiaryScreen(
                                 onNavigateToEditDiary = { navController.navigate(EditDiary(diary.id)) },
                                 viewModel = parentViewModel
                             )

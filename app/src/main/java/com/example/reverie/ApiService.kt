@@ -1,5 +1,7 @@
 package com.example.reverie
 
+
+// example of Database connection
 interface ApiService {
     fun getDiaryById(id: Int): DiaryState
 

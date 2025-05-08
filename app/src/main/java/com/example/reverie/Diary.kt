@@ -1,6 +1,5 @@
 package com.example.reverie
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -32,11 +31,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.toRoute
 import com.example.reverie.ui.theme.PaperColor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
@@ -45,9 +45,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.serialization.Serializable
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.toRoute
 
+
+// Routes (Diary is the root)
 @Serializable
 data class Diary(val id: Int)
 
@@ -57,6 +57,7 @@ data class ViewDiary(val id: Int)
 @Serializable
 data class EditDiary(val id: Int)
 
+// Using Hilt we inject a dependency (apiSevice)
 class DiaryRepository @Inject constructor(
     private val apiService: ApiService
 ) {
@@ -65,12 +66,14 @@ class DiaryRepository @Inject constructor(
     }
 }
 
+// DiaryState contains all the data of the diary
 data class DiaryState(
     val id: Int = 0,
     val title: String = "",
     val content: String = "",
 )
 
+// HiltViewModel inject SavedStateHandle + other dependencies provided by AppModule
 @HiltViewModel
 class DiaryViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
@@ -93,7 +96,7 @@ class DiaryViewModel @Inject constructor(
 }
 
 @Composable
-fun DiaryScreen(onNavigateToEditDiary: () -> Unit, viewModel: DiaryViewModel = hiltViewModel()) {
+fun ViewDiaryScreen(onNavigateToEditDiary: () -> Unit, viewModel: DiaryViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Column(
@@ -190,11 +193,11 @@ fun EditDiaryScreen(viewModel: DiaryViewModel = hiltViewModel()){
         modifier = Modifier.padding(8.dp),
         text = "You are editing your diary!",
     )
-    SimpleFilledTextFieldSample(uiState.title, onUpdateTitle =  { viewModel.changeTitle(it) })
+    EditTitleTextField(uiState.title, onUpdateTitle = { viewModel.changeTitle(it) })
 }
 
 @Composable
-fun SimpleFilledTextFieldSample(title: String, onUpdateTitle: (String) -> Unit) {
+fun EditTitleTextField(title: String, onUpdateTitle: (String) -> Unit) {
     TextField(
         value = title,
         onValueChange = onUpdateTitle,
