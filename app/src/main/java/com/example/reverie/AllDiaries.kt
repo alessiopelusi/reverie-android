@@ -35,6 +35,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -77,7 +78,7 @@ data class AllDiaries(val profileId: Int)
 // DiaryState contains all the data of the diary
 data class AllDiariesState(
     val profileId: Int,
-    val diaries: List<DiaryState>,
+    val diaries: List<StateFlow<DiaryState>>,
     val pagerState: PagerState = PagerState(pageCount = {diaries.size}),
 ) {
     val currentPage: Int
@@ -93,13 +94,17 @@ class AllDiariesViewModel @Inject constructor(
 
     private val allDiaries = savedStateHandle.toRoute<AllDiaries>()
     // Expose screen UI state
-    private val _uiState = MutableStateFlow(repository.getAllProfileDiaries(allDiaries.profileId))
+    private val _uiState = MutableStateFlow(AllDiariesState(
+        allDiaries.profileId,
+        repository.getAllProfileDiaries(allDiaries.profileId)
+    ))
     val uiState: StateFlow<AllDiariesState> = _uiState.asStateFlow()
 }
 
 @Composable
 fun AllDiariesScreen(onNavigateToDiary: (Int) -> Unit, onNavigateToEditDiary: (Int) -> Unit,  viewModel: AllDiariesViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val diariesStates = uiState.diaries.map{it.collectAsStateWithLifecycle()}
 
     Column(
         modifier = Modifier
@@ -113,7 +118,7 @@ fun AllDiariesScreen(onNavigateToDiary: (Int) -> Unit, onNavigateToEditDiary: (I
 
         Text(
             modifier = Modifier.padding(8.dp),
-            text = uiState.diaries[uiState.currentPage].title
+            text = diariesStates[uiState.currentPage].value.title
         )
 
         HorizontalPager(
@@ -157,12 +162,12 @@ fun AllDiariesScreen(onNavigateToDiary: (Int) -> Unit, onNavigateToEditDiary: (I
                         interactionSource = pageInteractionSource,
                         indication = LocalIndication.current
                     ) {
-                        onNavigateToDiary(uiState.diaries[uiState.currentPage].id)
+                        onNavigateToDiary(uiState.diaries[uiState.currentPage].value.id)
                     }
             ) {
                 DiaryPage(
                     modifier = Modifier.fillMaxSize(),
-                    text = uiState.diaries[uiState.currentPage].content
+                    text = diariesStates[uiState.currentPage].value.content
                 )
             }
         }
@@ -188,7 +193,7 @@ fun AllDiariesScreen(onNavigateToDiary: (Int) -> Unit, onNavigateToEditDiary: (I
 
         Button(
             // replace pagerState.currentPage with the actual id of the currentPage diary
-            onClick = { onNavigateToEditDiary(uiState.diaries[uiState.currentPage].id) },
+            onClick = { onNavigateToEditDiary(uiState.diaries[uiState.currentPage].value.id) },
             colors = ButtonColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.primary,

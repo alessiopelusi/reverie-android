@@ -7,22 +7,22 @@ import javax.inject.Singleton
 @Singleton
 interface ApiService {
     fun getDiaryById(diaryId: Int): DiaryState
-    fun getAllProfileDiaries(profileId: Int): AllDiariesState
+    fun getAllProfileDiaries(profileId: Int, excludeDiaryIds: List<Int> = listOf()): List<DiaryState>
 
     companion object {
         fun create(): ApiService {
             // Simulazione di un'implementazione reale
             return object : ApiService {
                 override fun getDiaryById(diaryId: Int): DiaryState {
-                    return DiaryState(diaryId, "Titolo del diario $diaryId", "Contenuto del diario $diaryId")
+                    return DiaryState(diaryId, 0, "Titolo del diario $diaryId", "Contenuto del diario $diaryId")
                 }
 
-                override fun getAllProfileDiaries(profileId: Int): AllDiariesState {
+                override fun getAllProfileDiaries(profileId: Int, excludeDiaryIds: List<Int>): List<DiaryState> {
                     val list: MutableList<DiaryState> = mutableListOf()
                     for (i in 0..2) {
-                        list.add(getDiaryById(i))
+                        if (i !in excludeDiaryIds) list.add(getDiaryById(i))
                     }
-                    return AllDiariesState(profileId, list)
+                    return list
                 }
             }
         }

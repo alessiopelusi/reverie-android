@@ -44,8 +44,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -66,30 +69,40 @@ data class EditDiaryPage(val diaryId: Int)
 class DiaryRepository @Inject constructor(
     private val apiService: ApiService
 ) {
-    private val _diaries = MutableStateFlow<Map<Int, DiaryState>>(emptyMap())
-    val diaries: StateFlow<Map<Int, DiaryState>> = _diaries.asStateFlow()
+    private val _diaries = mutableMapOf<Int, MutableStateFlow<DiaryState>>()
 
-    fun getDiaryById(diaryId: Int): DiaryState {
-        val diary = _diaries.value[diaryId] ?: apiService.getDiaryById(diaryId)
-        _diaries.update { it + (diaryId to diary) }
-        return diary
+    fun getDiaryById(diaryId: Int): StateFlow<DiaryState> {
+        if (diaryId !in _diaries) {
+            val diary = apiService.getDiaryById(diaryId)
+            _diaries[diaryId] = MutableStateFlow(diary)
+        }
+        return _diaries.getValue(diaryId).asStateFlow()
     }
 
     fun updateDiary(diary: DiaryState) {
-        _diaries.update { it + (diary.id to diary) }
+        if (diary.id in _diaries) _diaries.getValue(diary.id).update { diary }
+        // update database
     }
 
     // TODO improve retrieval
-    fun getAllProfileDiaries(profileId: Int): AllDiariesState {
-        val profileDiaries = apiService.getAllProfileDiaries(profileId)
-        _diaries.update { it + profileDiaries.diaries.associateBy { diary -> diary.id } }
-        return profileDiaries
+    fun getAllProfileDiaries(profileId: Int): List<StateFlow<DiaryState>> {
+        // We fetch only the missing diaries
+        val profileDiaries = apiService.getAllProfileDiaries(
+            profileId,
+            _diaries.filter{ it.value.value.profileId == profileId }.map{ it.key}
+        )
+        _diaries.putAll(profileDiaries.associateBy(
+            { diary -> diary.id },
+            { diary -> MutableStateFlow(diary) })
+        )
+        return _diaries.filter{ it.value.value.profileId == profileId }.map{ it.value.asStateFlow() }
     }
 }
 
 // DiaryState contains all the data of the diary
 data class DiaryState(
     val id: Int = 0,
+    val profileId: Int = 0,
     val title: String = "",
     val content: String = "",
 )
@@ -103,18 +116,17 @@ class DiaryViewModel @Inject constructor(
 
     private val diary = savedStateHandle.toRoute<Diary>()
     // Expose screen UI state
-    private val _uiState = MutableStateFlow(repository.getDiaryById(diary.diaryId))
-    val uiState: StateFlow<DiaryState> = _uiState.asStateFlow()
+    val uiState : StateFlow<DiaryState> = repository.getDiaryById(diary.diaryId).stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(),
+        initialValue = repository.getDiaryById(diary.diaryId).value // Wrong?
+    )
 
     // Handle business logic
     fun changeTitle(newTitle: String) {
-        _uiState.update { currentState ->
-            currentState.copy(
-                title = newTitle
-            )
-        }
         viewModelScope.launch {
-            repository.updateDiary(_uiState.value)
+            val diary = uiState.value.copy(title = newTitle)
+            repository.updateDiary(diary)
         }
     }
 }
