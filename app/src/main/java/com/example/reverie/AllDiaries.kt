@@ -79,10 +79,16 @@ data class AllDiaries(val profileId: Int)
 data class AllDiariesState(
     val profileId: Int,
     val diaries: List<StateFlow<DiaryState>>,
-    val pagerState: PagerState = PagerState(pageCount = {diaries.size}),
+    val pagerState: PagerState = PagerState(
+        // endlessPagerMultiplier = 1000
+        // endlessPagerMultiplier/2 = 500
+        // offset = 1
+        pageCount = {diaries.size*1000},
+        currentPage = diaries.size*500 + 1
+    ),
 ) {
     val currentPage: Int
-        get() = pagerState.currentPage
+        get() = pagerState.currentPage % diaries.size
 }
 
 // HiltViewModel inject SavedStateHandle + other dependencies provided by AppModule
@@ -127,7 +133,8 @@ fun AllDiariesScreen(onNavigateToDiary: (Int) -> Unit, onNavigateToEditDiary: (I
                 .weight(1f, false),
             contentPadding = PaddingValues(50.dp),
             state = uiState.pagerState
-        ) { page ->
+        ) { absolutePage ->
+            val relativePage = absolutePage % diariesStates.size
             Card (
                 Modifier
                     .padding(8.dp)
@@ -136,7 +143,7 @@ fun AllDiariesScreen(onNavigateToDiary: (Int) -> Unit, onNavigateToEditDiary: (I
                         // scroll position. We use the absolute value which allows us to mirror
                         // any effects for both directions
                         val pageOffset = (
-                                (uiState.currentPage - page) + uiState.pagerState
+                                (uiState.currentPage - relativePage) + uiState.pagerState
                                     .currentPageOffsetFraction
                                 ).absoluteValue
 
@@ -167,7 +174,7 @@ fun AllDiariesScreen(onNavigateToDiary: (Int) -> Unit, onNavigateToEditDiary: (I
             ) {
                 DiaryPage(
                     modifier = Modifier.fillMaxSize(),
-                    text = diariesStates[uiState.currentPage].value.content
+                    text = diariesStates[uiState.currentPage].value.cover
                 )
             }
         }
@@ -179,8 +186,8 @@ fun AllDiariesScreen(onNavigateToDiary: (Int) -> Unit, onNavigateToEditDiary: (I
                 .padding(bottom = 8.dp),
             horizontalArrangement = Arrangement.Center
         ) {
-            repeat(uiState.pagerState.pageCount) { iteration ->
-                val color = if (uiState.pagerState.currentPage == iteration) Color.DarkGray else Color.LightGray
+            repeat(uiState.diaries.size) { iteration ->
+                val color = if (uiState.currentPage == iteration) Color.DarkGray else Color.LightGray
                 Box(
                     modifier = Modifier
                         .padding(2.dp)

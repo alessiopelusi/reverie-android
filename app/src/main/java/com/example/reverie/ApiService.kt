@@ -14,7 +14,7 @@ interface ApiService {
             // Simulazione di un'implementazione reale
             return object : ApiService {
                 override fun getDiaryById(diaryId: Int): DiaryState {
-                    return DiaryState(diaryId, 0, "Titolo del diario $diaryId", "Contenuto del diario $diaryId")
+                    return DiaryState(diaryId, 0, "Titolo del diario $diaryId", "Copertina del diario $diaryId")
                 }
 
                 override fun getAllProfileDiaries(profileId: Int, excludeDiaryIds: List<Int>): List<DiaryState> {

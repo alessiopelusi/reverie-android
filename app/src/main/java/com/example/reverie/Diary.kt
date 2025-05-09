@@ -99,12 +99,17 @@ class DiaryRepository @Inject constructor(
     }
 }
 
+data class DiaryPage(
+    val content: String = ""
+)
+
 // DiaryState contains all the data of the diary
 data class DiaryState(
     val id: Int = 0,
     val profileId: Int = 0,
     val title: String = "",
-    val content: String = "",
+    val cover: String = "",
+    val pages: MutableList<DiaryPage> = mutableListOf()
 )
 
 // HiltViewModel inject SavedStateHandle + other dependencies provided by AppModule
