@@ -53,13 +53,19 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.example.reverie.ui.theme.Purple80
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.timeout
 import kotlinx.coroutines.flow.update
 import kotlinx.serialization.Serializable
 import kotlin.math.absoluteValue
@@ -78,7 +84,7 @@ data class AllDiaries(val profileId: Int)
 // DiaryState contains all the data of the diary
 data class AllDiariesState(
     val profileId: Int,
-    val diaries: List<StateFlow<DiaryState>>,
+    val diaries: List<StateFlow<DiaryStateSubset>>,
     val pagerState: PagerState = PagerState(
         // endlessPagerMultiplier = 1000
         // endlessPagerMultiplier/2 = 500
@@ -102,7 +108,20 @@ class AllDiariesViewModel @Inject constructor(
     // Expose screen UI state
     private val _uiState = MutableStateFlow(AllDiariesState(
         allDiaries.profileId,
-        repository.getAllProfileDiaries(allDiaries.profileId)
+        repository.getAllProfileDiaries(allDiaries.profileId).map{it ->
+            it.map { DiaryStateSubset(it.id, it.profileId, it.title, it.cover) }
+                .distinctUntilChanged()
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(),
+                    initialValue = DiaryStateSubset(
+                        it.value.id,
+                        it.value.profileId,
+                        it.value.title,
+                        it.value.cover
+                    )
+                )
+        }
     ))
     val uiState: StateFlow<AllDiariesState> = _uiState.asStateFlow()
 }

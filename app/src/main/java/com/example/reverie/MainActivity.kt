@@ -164,7 +164,7 @@ fun MainComposable() {
                         composable<AllDiaries> {
                             bottomBarVisibility = true
                             AllDiariesScreen(
-                                onNavigateToEditDiary = {diaryId -> navController.navigate(EditDiary(diaryId))},
+                                onNavigateToEditDiary = {pageId -> navController.navigate(EditDiaryPage(pageId))},
                                 onNavigateToDiary = {diaryId -> navController.navigate(Diary(diaryId))}
                             )
                         }
@@ -178,17 +178,13 @@ fun MainComposable() {
                                 val parentViewModel = hiltViewModel<DiaryViewModel>(parentEntry)
                                 val diary: Diary = parentEntry.toRoute()
                                 ViewDiaryScreen(
-                                    onNavigateToEditDiaryPage = { navController.navigate(EditDiaryPage(diary.diaryId)) },
+                                    onNavigateToEditDiaryPage = {page -> navController.navigate(EditDiaryPage(page)) },
                                     viewModel = parentViewModel
                                 )
                             }
                             composable<EditDiaryPage> { backStackEntry ->
                                 bottomBarVisibility = false
-                                val parentEntry = remember(backStackEntry) {
-                                    navController.getBackStackEntry<Diary>()
-                                }
-                                val parentViewModel = hiltViewModel<DiaryViewModel>(parentEntry)
-                                EditDiaryPageScreen(viewModel = parentViewModel)
+                                EditDiaryPageScreen()
                             }
                             composable<EditDiary> { backStackEntry ->
                                 bottomBarVisibility = false

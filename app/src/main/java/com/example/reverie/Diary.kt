@@ -1,6 +1,5 @@
 package com.example.reverie
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -47,7 +46,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -62,7 +60,7 @@ data class Diary(val diaryId: Int)
 data class ViewDiary(val diaryId: Int)
 
 @Serializable
-data class EditDiaryPage(val diaryId: Int)
+data class EditDiaryPage(val pageId: Int)
 
 // Using Hilt we inject a dependency (apiSevice)
 @Singleton
@@ -99,8 +97,37 @@ class DiaryRepository @Inject constructor(
     }
 }
 
+// Using Hilt we inject a dependency (apiSevice)
+@Singleton
+class DiaryPagesRepository @Inject constructor(
+    private val apiService: ApiService
+) {
+    private val _pages = mutableMapOf<Int, MutableStateFlow<DiaryPage>>()
+
+    fun getPageById(pageId: Int): StateFlow<DiaryPage> {
+        if (pageId !in _pages) {
+            val page = apiService.getPageById(pageId)
+            _pages[pageId] = MutableStateFlow(page)
+        }
+        return _pages.getValue(pageId).asStateFlow()
+    }
+
+    fun updateDiaryPage(page: DiaryPage) {
+        if (page.id in _pages) _pages.getValue(page.id).update { page }
+    }
+}
+
 data class DiaryPage(
-    val content: String = ""
+    val id: Int = 0,
+    val pageNumber: Int,
+    val content: String = "",
+)
+
+data class DiaryStateSubset(
+    val id: Int = 0,
+    val profileId: Int = 0,
+    val title: String = "",
+    val cover: String = "",
 )
 
 // DiaryState contains all the data of the diary
@@ -109,7 +136,7 @@ data class DiaryState(
     val profileId: Int = 0,
     val title: String = "",
     val cover: String = "",
-    val pages: MutableList<DiaryPage> = mutableListOf()
+    val pages: List<DiaryPage> = listOf()
 )
 
 // HiltViewModel inject SavedStateHandle + other dependencies provided by AppModule
@@ -137,7 +164,7 @@ class DiaryViewModel @Inject constructor(
 }
 
 @Composable
-fun ViewDiaryScreen(onNavigateToEditDiaryPage: () -> Unit, viewModel: DiaryViewModel = hiltViewModel()) {
+fun ViewDiaryScreen(onNavigateToEditDiaryPage: (Int) -> Unit, viewModel: DiaryViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Column(
@@ -152,7 +179,7 @@ fun ViewDiaryScreen(onNavigateToEditDiaryPage: () -> Unit, viewModel: DiaryViewM
             text = uiState.title
         )
 
-        val listOfItems: List<String> = (1..10).map { "Item $it" }
+        val listOfItems = uiState.pages
         val diaryPageListState = rememberLazyListState()
         // start lazyrow from the end
         LaunchedEffect(Unit) {
@@ -176,7 +203,7 @@ fun ViewDiaryScreen(onNavigateToEditDiaryPage: () -> Unit, viewModel: DiaryViewM
                             DiaryPage(modifier = Modifier
                                 .widthIn(max = LocalWindowInfo.current.containerSize.width.dp * widthFraction)
                                 .aspectRatio(9f/16f),
-                                item)
+                                item.content)
                         },
                         measurePolicy = { measurables, constraints ->
                             // I'm assuming you'll declaring just one root
@@ -211,7 +238,7 @@ fun ViewDiaryScreen(onNavigateToEditDiaryPage: () -> Unit, viewModel: DiaryViewM
         )
 
         Button(
-            onClick = { onNavigateToEditDiaryPage() },
+            onClick = { onNavigateToEditDiaryPage(diaryPageListState.firstVisibleItemIndex) },
             colors = ButtonColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.primary,
@@ -236,16 +263,40 @@ fun EditDiaryScreen(viewModel: DiaryViewModel = hiltViewModel()){
     EditTitleTextField(uiState.title, onUpdateTitle = { viewModel.changeTitle(it) })
 }
 
+// HiltViewModel inject SavedStateHandle + other dependencies provided by AppModule
+@HiltViewModel
+class EditDiaryPageViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
+    private val repository: DiaryPagesRepository
+) : ViewModel() {
+
+    private val diary = savedStateHandle.toRoute<EditDiaryPage>()
+    // Expose screen UI state
+    val uiState : StateFlow<DiaryPage> = repository.getPageById(diary.pageId).stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(),
+        initialValue = repository.getPageById(diary.pageId).value // Wrong?a
+    )
+
+    // Handle business logic
+    fun changeContent(newContent: String) {
+        viewModelScope.launch {
+            val diary = uiState.value.copy(content = newContent)
+            repository.updateDiaryPage(diary)
+        }
+    }
+}
+
 
 @Composable
-fun EditDiaryPageScreen(viewModel: DiaryViewModel = hiltViewModel()){
+fun EditDiaryPageScreen(viewModel: EditDiaryPageViewModel = hiltViewModel()){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Text(
         modifier = Modifier.padding(8.dp),
         text = "You are editing your diary!",
     )
-    EditTitleTextField(uiState.title, onUpdateTitle = { viewModel.changeTitle(it) })
+    EditContentTextField(uiState.content, onUpdateContent = { newContent -> viewModel.changeContent(newContent) })
 }
 
 @Composable
@@ -254,6 +305,15 @@ fun EditTitleTextField(title: String, onUpdateTitle: (String) -> Unit) {
         value = title,
         onValueChange = onUpdateTitle,
         label = { Text("Titolo") }
+    )
+}
+
+@Composable
+fun EditContentTextField(title: String, onUpdateContent: (String) -> Unit) {
+    TextField(
+        value = title,
+        onValueChange = onUpdateContent,
+        label = { Text("Contenuto") }
     )
 }
 
