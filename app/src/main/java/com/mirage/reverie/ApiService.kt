@@ -1,15 +1,12 @@
-package com.example.reverie
+package com.mirage.reverie
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Singleton
 
 
 // example of Database connection
 @Singleton
 interface ApiService {
-    fun getPageById(pageId: Int): DiaryPage
+    fun getPageById(pageId: Int): DiaryPageState
     fun getDiaryById(diaryId: Int): DiaryState
     fun getAllProfileDiaries(profileId: Int, excludeDiaryIds: List<Int> = listOf()): List<DiaryState>
 
@@ -17,12 +14,12 @@ interface ApiService {
         fun create(): ApiService {
             // Simulazione di un'implementazione reale
             return object : ApiService {
-                override fun getPageById(pageId: Int): DiaryPage {
-                    return DiaryPage(pageId, pageId, "Contenuto pagina $pageId")
+                override fun getPageById(pageId: Int): DiaryPageState {
+                    return DiaryPageState(pageId, pageId, "Contenuto pagina $pageId")
                 }
 
                 override fun getDiaryById(diaryId: Int): DiaryState {
-                    val list = mutableListOf<DiaryPage>()
+                    val list = mutableListOf<DiaryPageState>()
                     for (i in 0..5) {
                         list.add(getPageById(i))
                     }

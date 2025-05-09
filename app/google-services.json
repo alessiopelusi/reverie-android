@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "382282258811",
+    "project_id": "reverie-96138",
+    "storage_bucket": "reverie-96138.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:382282258811:android:76c6d2054754dff64405de",
+        "android_client_info": {
+          "package_name": "com.mirage.reverie"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbvxnvNjcAGbuVgFux4vZUJKmRU0HL4T8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

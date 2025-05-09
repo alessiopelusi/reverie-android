@@ -1,7 +1,6 @@
-package com.example.reverie
+package com.mirage.reverie
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
@@ -29,11 +28,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.reverie.ui.theme.ReverieTheme
+import com.mirage.reverie.ui.theme.ReverieTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Help
 import androidx.compose.material.icons.automirrored.rounded.LibraryBooks
-import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.MailOutline
 import androidx.compose.material.icons.rounded.Menu
@@ -164,7 +162,7 @@ fun MainComposable() {
                         composable<AllDiaries> {
                             bottomBarVisibility = true
                             AllDiariesScreen(
-                                onNavigateToEditDiary = {pageId -> navController.navigate(EditDiaryPage(pageId))},
+                                onNavigateToEditDiary = {pageId -> navController.navigate(EditDiary(pageId))},
                                 onNavigateToDiary = {diaryId -> navController.navigate(Diary(diaryId))}
                             )
                         }

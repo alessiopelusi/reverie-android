@@ -1,4 +1,4 @@
-package com.example.reverie
+package com.mirage.reverie
 
 import org.junit.Test
 

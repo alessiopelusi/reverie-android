@@ -1,4 +1,4 @@
-package com.example.reverie
+package com.mirage.reverie
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -38,7 +38,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
-import com.example.reverie.ui.theme.PaperColor
+import com.mirage.reverie.ui.theme.PaperColor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -62,12 +62,30 @@ data class ViewDiary(val diaryId: Int)
 @Serializable
 data class EditDiaryPage(val pageId: Int)
 
+
+data class DiaryPageState(
+    val id: Int = 0,
+    val pageNumber: Int,
+    val content: String = "",
+)
+
+// DiaryState contains all the data of the diary
+data class DiaryState(
+    val id: Int = 0,
+    val profileId: Int = 0,
+    val title: String = "",
+    val cover: String = "",
+    val pages: List<DiaryPageState> = listOf()
+)
+
+
 // Using Hilt we inject a dependency (apiSevice)
 @Singleton
 class DiaryRepository @Inject constructor(
     private val apiService: ApiService
 ) {
     private val _diaries = mutableMapOf<Int, MutableStateFlow<DiaryState>>()
+    private val _pages = mutableMapOf<Int, MutableStateFlow<DiaryPageState>>()
 
     fun getDiaryById(diaryId: Int): StateFlow<DiaryState> {
         if (diaryId !in _diaries) {
@@ -95,16 +113,8 @@ class DiaryRepository @Inject constructor(
         )
         return _diaries.filter{ it.value.value.profileId == profileId }.map{ it.value.asStateFlow() }
     }
-}
 
-// Using Hilt we inject a dependency (apiSevice)
-@Singleton
-class DiaryPagesRepository @Inject constructor(
-    private val apiService: ApiService
-) {
-    private val _pages = mutableMapOf<Int, MutableStateFlow<DiaryPage>>()
-
-    fun getPageById(pageId: Int): StateFlow<DiaryPage> {
+    fun getPageById(pageId: Int): StateFlow<DiaryPageState> {
         if (pageId !in _pages) {
             val page = apiService.getPageById(pageId)
             _pages[pageId] = MutableStateFlow(page)
@@ -112,32 +122,33 @@ class DiaryPagesRepository @Inject constructor(
         return _pages.getValue(pageId).asStateFlow()
     }
 
-    fun updateDiaryPage(page: DiaryPage) {
+    fun updateDiaryPage(page: DiaryPageState) {
         if (page.id in _pages) _pages.getValue(page.id).update { page }
     }
 }
 
-data class DiaryPage(
-    val id: Int = 0,
-    val pageNumber: Int,
-    val content: String = "",
-)
 
-data class DiaryStateSubset(
-    val id: Int = 0,
-    val profileId: Int = 0,
-    val title: String = "",
-    val cover: String = "",
-)
+// Using Hilt we inject a dependency (apiSevice)
+@Singleton
+class DiaryPagesRepository @Inject constructor(
+    private val apiService: ApiService
+) {
 
-// DiaryState contains all the data of the diary
-data class DiaryState(
-    val id: Int = 0,
-    val profileId: Int = 0,
-    val title: String = "",
-    val cover: String = "",
-    val pages: List<DiaryPage> = listOf()
-)
+    private val _pages = mutableMapOf<Int, MutableStateFlow<DiaryPageState>>()
+
+    fun getPageById(pageId: Int): StateFlow<DiaryPageState> {
+        if (pageId !in _pages) {
+            val page = apiService.getPageById(pageId)
+            _pages[pageId] = MutableStateFlow(page)
+        }
+        return _pages.getValue(pageId).asStateFlow()
+    }
+
+    fun updateDiaryPage(page: DiaryPageState) {
+        if (page.id in _pages) _pages.getValue(page.id).update { page }
+    }
+}
+
 
 // HiltViewModel inject SavedStateHandle + other dependencies provided by AppModule
 @HiltViewModel
@@ -272,7 +283,7 @@ class EditDiaryPageViewModel @Inject constructor(
 
     private val diary = savedStateHandle.toRoute<EditDiaryPage>()
     // Expose screen UI state
-    val uiState : StateFlow<DiaryPage> = repository.getPageById(diary.pageId).stateIn(
+    val uiState : StateFlow<DiaryPageState> = repository.getPageById(diary.pageId).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(),
         initialValue = repository.getPageById(diary.pageId).value // Wrong?a

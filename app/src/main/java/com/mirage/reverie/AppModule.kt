@@ -1,4 +1,4 @@
-package com.example.reverie
+package com.mirage.reverie
 
 import dagger.Module
 import dagger.Provides
