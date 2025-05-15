@@ -17,7 +17,7 @@ interface ApiService {
             // Simulazione di un'implementazione reale
             return object : ApiService {
                 override fun getPageById(pageId: Int): DiaryPageState {
-                    return DiaryPageState(pageId, pageId, "Contenuto pagina $pageId")
+                    return DiaryPageState(pageId, pageId, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris condimentum vestibulum tellus, id porta ante efficitur at. Vivamus congue aliquam est, id venenatis dolor ultricies sed. Sed ut erat egestas, porttitor odio id, ultrices purus. Etiam eu ante nec lacus dictum porta. Donec ut vestibulum massa. Donec aliquam ut tellus ac gravida. Nullam finibus semper ante. Etiam a tincidunt lectus. Quisque nec pulvinar libero, non maximus nunc. Curabitur porta tempus augue ac rhoncus. Cras euismod ligula nisl, ullamcorper semper neque vehicula nulla.")
                 }
 
                 override fun getDiaryById(diaryId: Int): DiaryState {

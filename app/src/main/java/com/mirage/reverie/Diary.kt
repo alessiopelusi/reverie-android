@@ -368,7 +368,9 @@ fun ViewDiaryScreen(onNavigateToEditDiaryPage: (Int) -> Unit, viewModel: DiaryVi
         }
 
         BoxWithConstraints (
-            modifier = Modifier.border(width = 2.dp, color = Color.Red, shape = RectangleShape).weight(1f, false),
+            modifier = Modifier
+                .border(width = 2.dp, color = Color.Red, shape = RectangleShape)
+                .weight(1f, false),
         ) {
             val boxWithConstraintsScope = this
             LazyRow (
@@ -385,8 +387,8 @@ fun ViewDiaryScreen(onNavigateToEditDiaryPage: (Int) -> Unit, viewModel: DiaryVi
                                 DiaryPage(
                                     modifier = Modifier
                                         .widthIn(max = LocalWindowInfo.current.containerSize.width.dp * widthFraction)
-                                        .aspectRatio(9f/16f),
-                                    page,
+                                        .aspectRatio(9f / 16f),
+                                    page.id,
                                     item.position,
                                     viewModel
                                 )
@@ -505,75 +507,101 @@ fun EditContentTextField(title: String, onUpdateContent: (String) -> Unit) {
 }
 
 @Composable
-fun DiaryPage(modifier: Modifier, page: DiaryPageState, subPageIndex: Int, viewModel: DiaryViewModel) {
+fun DiaryPage(modifier: Modifier, pageId: Int, subPageIndex: Int, viewModel: DiaryViewModel) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val pageIndex = remember(uiState) { uiState.pages.indexOfFirst { it.id == pageId } }
+    val page = remember(uiState) { uiState.pages[pageIndex] }
+    val subPage = remember(uiState) { page.subPages[subPageIndex] }
 
     val textStyle = LocalTextStyle.current.merge(
         TextStyle(color = colorScheme.onSurface, fontSize = 40.sp)
     )
-    var sampleText by remember { mutableStateOf("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris condimentum vestibulum tellus, id porta ante efficitur at. Vivamus congue aliquam est, id venenatis dolor ultricies sed. Sed ut erat egestas, porttitor odio id, ultrices purus. Etiam eu ante nec lacus dictum porta. Donec ut vestibulum massa. Donec aliquam ut tellus ac gravida. Nullam finibus semper ante. Etiam a tincidunt lectus. Quisque nec pulvinar libero, non maximus nunc. Curabitur porta tempus augue ac rhoncus. Cras euismod ligula nisl, ullamcorper semper neque vehicula nulla.") }
 
     var startIndex = if(subPageIndex!=0) page.subPages[subPageIndex-1].contentEndIndex else 0
-    if (startIndex == sampleText.length) startIndex = 0
-    if (startIndex > page.subPages[subPageIndex].contentEndIndex) {
-        viewModel.editSubPageContentEndIndex(page.subPages[subPageIndex].id, startIndex + 1)
+    if (startIndex == page.content.length) startIndex = 0
+    if (startIndex > subPage.contentEndIndex) {
+        viewModel.editSubPageContentEndIndex(subPage.id, startIndex + 1)
         // TODO:hack
-        page.subPages[subPageIndex].contentEndIndex = startIndex+1
+        subPage.contentEndIndex = startIndex+1
     }
 
-    //Log.d("TextFlowLayoutResult before", "${page.id} $subPageIndex $startIndex ${page.subPages[subPageIndex].contentEndIndex} ${page.subPages[subPageIndex].id} $testOverflow")
+    //Log.d("TextFlowLayoutResult before", "${page.id} $subPageIndex $startIndex ${subPage.contentEndIndex} ${subPage.id} $testOverflow")
 
     TextFlow(
-        sampleText.substring(startIndex = startIndex, sampleText.length),
+        page.content.substring(startIndex = startIndex, page.content.length),
         modifier = modifier
             .fillMaxSize(),
         style = textStyle,
         justification = TextFlowJustification.Auto,
         columns = 1,
         onTextFlowLayoutResult = { textFlowLayoutResult ->
-            //Log.d("TextFlowLayoutResult", "${textFlowLayoutResult.lastOffset} ${sampleText.length}")
             val lastOffset = textFlowLayoutResult.lastOffset
-            if (page.subPages[subPageIndex].testOverflow == 0) {
-                viewModel.editSubPageContentEndIndex(page.subPages[subPageIndex].id, sampleText.length)
-                // TODO:hack
-                page.subPages[subPageIndex].contentEndIndex = sampleText.length
-                viewModel.incrementSubPageTestOverflow(page.subPages[subPageIndex].id)
-            } else if (page.subPages[subPageIndex].testOverflow == 1) {
-                viewModel.incrementSubPageTestOverflow(page.subPages[subPageIndex].id)
-            } else if (page.subPages[subPageIndex].testOverflow == 2) {
-                viewModel.editSubPageContentEndIndex(page.subPages[subPageIndex].id, min(startIndex + lastOffset, sampleText.length))
-                // TODO:hack
-                page.subPages[subPageIndex].contentEndIndex = startIndex + lastOffset
-                Log.d("TextFlowLayoutResult", "${page.id} $subPageIndex $startIndex ${page.subPages[subPageIndex].contentEndIndex} ${page.subPages[subPageIndex].id}")
-                // if not last page
-                if (subPageIndex+1 < page.subPages.size) {
-                    viewModel.editSubPageContentEndIndex(page.subPages[subPageIndex+1].id, sampleText.length)
-                    viewModel.resetSubPageTestOverflow(page.subPages[subPageIndex+1].id)
-                } else if (page.subPages[subPageIndex].contentEndIndex < sampleText.length) {
-                    Log.d("DiaryPage", "add subpage")
-                    viewModel.addSubPage(page.id, DiarySubPageState(Random.nextInt(Int.MAX_VALUE), page.id, subPageIndex+1, sampleText.length))
+            // switch based on testOverflow state
+            when(subPage.testOverflow) {
+                0 -> {
+                    viewModel.editSubPageContentEndIndex(subPage.id, page.content.length)
+                    // TODO:hack
+                    subPage.contentEndIndex = page.content.length
+                    Log.d("ciao", "${subPage.testOverflow}, ${uiState.pages[pageIndex].subPages[subPageIndex].testOverflow}")
+                    viewModel.incrementSubPageTestOverflow(subPage.id)
+                    Log.d("ciao", "${subPage.testOverflow}, ${uiState.pages[pageIndex].subPages[subPageIndex].testOverflow}")
                 }
-                viewModel.incrementSubPageTestOverflow(page.subPages[subPageIndex].id)
+                1 -> {
+                    viewModel.incrementSubPageTestOverflow(subPage.id)
+                }
+                2 -> {
+                    viewModel.editSubPageContentEndIndex(
+                        subPage.id,
+                        min(startIndex + lastOffset, page.content.length)
+                    )
+                    // TODO:hack
+                    subPage.contentEndIndex = startIndex + lastOffset
+                    Log.d(
+                        "TextFlowLayoutResult",
+                        "${page.id} $subPageIndex $startIndex ${subPage.contentEndIndex} ${subPage.id}"
+                    )
+                    // if not last page
+                    if (subPageIndex + 1 < page.subPages.size) {
+                        viewModel.editSubPageContentEndIndex(
+                            page.subPages[subPageIndex + 1].id,
+                            page.content.length
+                        )
+                        viewModel.resetSubPageTestOverflow(page.subPages[subPageIndex + 1].id)
+                    } else if (subPage.contentEndIndex < page.content.length) {
+                        viewModel.addSubPage(
+                            page.id,
+                            DiarySubPageState(
+                                Random.nextInt(Int.MAX_VALUE),
+                                page.id,
+                                subPageIndex + 1,
+                                page.content.length
+                            )
+                        )
+                    }
+                    viewModel.incrementSubPageTestOverflow(subPage.id)
+                }
             }
         },
     ) {
         Text(
             uiState.pages.find { it.id == page.id }!!.subPages[subPageIndex].cipolla.toString(),
             color = Color.Transparent,
-            modifier = Modifier.size(0.2f.dp).align(Alignment.BottomEnd)
+            modifier = Modifier
+                .size(0.2f.dp)
+                .align(Alignment.BottomEnd)
         )
-        page.subPages[subPageIndex].images.forEach {
+        subPage.images.forEach {
             Image(
                 modifier = Modifier
                     .align(Alignment.Center)
                     //.fillMaxSize()
                     .offset { IntOffset(it.imageOffset.x.toInt(), it.imageOffset.y.toInt()) }
                     .pointerInput(Unit) {
-                        detectDragGestures (
+                        detectDragGestures(
                             onDrag = { change, dragAmount ->
                                 change.consume()
                                 it.imageOffset += dragAmount
-                                viewModel.resetSubPageTestOverflow(page.subPages[subPageIndex].id)
+                                viewModel.resetSubPageTestOverflow(subPage.id)
                             },
                         )
                     }
