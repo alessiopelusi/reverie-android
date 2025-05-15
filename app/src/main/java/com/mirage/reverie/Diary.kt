@@ -69,6 +69,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
 
@@ -98,13 +99,22 @@ data class DiarySubPageState(
     var contentEndIndex: Int,
     var cipolla: Int = 0,
     val testOverflow: Int = 0,
-    val images: List<DiaryImage> = listOf(DiaryImage(pageId, 0, Offset.Zero, drawableToBitmap(ReverieApp.instance, R.drawable.ic_launcher_background)))
+    val images: List<DiaryImage> = listOf(DiaryImage(Random.nextInt(Int.MAX_VALUE), pageId, 0, Offset.Zero, drawableToBitmap(ReverieApp.instance, R.drawable.ic_launcher_background)))
 )
 
+fun DiarySubPageState.getStartIndex(subPages: List<DiarySubPageState>): Int {
+    return if (position != 0) subPages[position - 1].contentEndIndex else 0
+}
+
+fun DiarySubPageState.getContent(page: DiaryPageState): String {
+    return page.content.substring(startIndex = getStartIndex(page.subPages), page.content.length)
+}
+
 data class DiaryImage(
+    val id: Int,
     val subPageId: Int,
     val subPagePosition: Int,
-    var imageOffset: Offset,
+    var offset: Offset,
     val bitmap: Bitmap
 )
 
@@ -300,14 +310,53 @@ class DiaryViewModel @Inject constructor(
         }
     }
 
-    fun incrementSubPageTestOverflow(subPageId: Int) {
+    private fun getPage(pageIndex: Int): DiaryPageState {
+        return uiState.value.pages[pageIndex]
+    }
+
+    private fun getSubPage(pageIndex: Int, subPageIndex: Int): DiarySubPageState {
+        return getPage(pageIndex).subPages[subPageIndex]
+    }
+
+    fun updateSubPageBasedOnOffset(pageIndex:Int, subPageIndex: Int, lastOffset: Int) {
+        when(getSubPage(pageIndex, subPageIndex).testOverflow) {
+            0 -> {
+                editSubPageContentEndIndex(getSubPage(pageIndex, subPageIndex).id, getPage(pageIndex).content.length)
+            }
+            2 -> {
+                editSubPageContentEndIndex(
+                    getSubPage(pageIndex, subPageIndex).id,
+                    min(getSubPage(pageIndex, subPageIndex).getStartIndex(getPage(pageIndex).subPages) + lastOffset, getPage(pageIndex).content.length)
+                )
+                // if not last page
+                if (getSubPage(pageIndex, subPageIndex).position + 1 < getPage(pageIndex).subPages.size) {
+                    editSubPageContentEndIndex(
+                        getSubPage(pageIndex, subPageIndex+1).id,
+                        getPage(pageIndex).content.length
+                    )
+                    resetSubPageTestOverflow(getSubPage(pageIndex, subPageIndex+1).id)
+                } else if (getSubPage(pageIndex, subPageIndex).contentEndIndex < getPage(pageIndex).content.length) {
+                    addSubPage(
+                        getPage(pageIndex).id,
+                        DiarySubPageState(
+                            Random.nextInt(Int.MAX_VALUE),
+                            getPage(pageIndex).id,
+                            getSubPage(pageIndex, subPageIndex).position + 1,
+                            getPage(pageIndex).content.length
+                        )
+                    )
+                }
+            }
+        }
+        var testOverflow = getSubPage(pageIndex, subPageIndex).testOverflow
+        if (getSubPage(pageIndex, subPageIndex).testOverflow < 3) testOverflow++
         viewModelScope.launch {
             // Aggiorna la lista delle pagine
             val pages = uiState.value.pages.map { page ->
                 page.copy(
                     subPages = page.subPages.map { subPage ->
-                        if (subPage.id == subPageId) {
-                            subPage.copy(testOverflow = subPage.testOverflow+1)
+                        if (subPage.id == getSubPage(pageIndex, subPageIndex).id) {
+                            subPage.copy(testOverflow = testOverflow)
                         } else {
                             subPage
                         }
@@ -333,6 +382,33 @@ class DiaryViewModel @Inject constructor(
                         } else {
                             subPage
                         }
+                    }
+                )
+            }
+            // Aggiorna il DiaryState
+            val updatedDiary = uiState.value.copy(pages = pages)
+            _uiState.update { updatedDiary }
+            // Salva nel repository
+            repository.updateDiary(updatedDiary)
+        }
+    }
+
+
+    fun editSubPageImageOffset(imageId: Int, newOffset: Offset) {
+        viewModelScope.launch {
+            // Aggiorna la lista delle pagine
+            val pages = uiState.value.pages.map { page ->
+                page.copy(
+                    subPages = page.subPages.map { subPage ->
+                        subPage.copy(
+                            images = subPage.images.map { image ->
+                                if (image.id == imageId) {
+                                    image.copy(offset = newOffset)
+                                } else {
+                                    image
+                                }
+                            }
+                        )
                     }
                 )
             }
@@ -517,98 +593,63 @@ fun DiaryPage(modifier: Modifier, pageId: Int, subPageIndex: Int, viewModel: Dia
         TextStyle(color = colorScheme.onSurface, fontSize = 40.sp)
     )
 
-    var startIndex = if(subPageIndex!=0) page.subPages[subPageIndex-1].contentEndIndex else 0
-    if (startIndex == page.content.length) startIndex = 0
-    if (startIndex > subPage.contentEndIndex) {
-        viewModel.editSubPageContentEndIndex(subPage.id, startIndex + 1)
-        // TODO:hack
-        subPage.contentEndIndex = startIndex+1
-    }
-
-    //Log.d("TextFlowLayoutResult before", "${page.id} $subPageIndex $startIndex ${subPage.contentEndIndex} ${subPage.id} $testOverflow")
-
-    TextFlow(
-        page.content.substring(startIndex = startIndex, page.content.length),
-        modifier = modifier
-            .fillMaxSize(),
-        style = textStyle,
-        justification = TextFlowJustification.Auto,
-        columns = 1,
-        onTextFlowLayoutResult = { textFlowLayoutResult ->
-            val lastOffset = textFlowLayoutResult.lastOffset
-            // switch based on testOverflow state
-            when(subPage.testOverflow) {
-                0 -> {
-                    viewModel.editSubPageContentEndIndex(subPage.id, page.content.length)
-                    // TODO:hack
-                    subPage.contentEndIndex = page.content.length
-                    Log.d("ciao", "${subPage.testOverflow}, ${uiState.pages[pageIndex].subPages[subPageIndex].testOverflow}")
-                    viewModel.incrementSubPageTestOverflow(subPage.id)
-                    Log.d("ciao", "${subPage.testOverflow}, ${uiState.pages[pageIndex].subPages[subPageIndex].testOverflow}")
-                }
-                1 -> {
-                    viewModel.incrementSubPageTestOverflow(subPage.id)
-                }
-                2 -> {
-                    viewModel.editSubPageContentEndIndex(
-                        subPage.id,
-                        min(startIndex + lastOffset, page.content.length)
-                    )
-                    // TODO:hack
-                    subPage.contentEndIndex = startIndex + lastOffset
-                    Log.d(
-                        "TextFlowLayoutResult",
-                        "${page.id} $subPageIndex $startIndex ${subPage.contentEndIndex} ${subPage.id}"
-                    )
-                    // if not last page
-                    if (subPageIndex + 1 < page.subPages.size) {
-                        viewModel.editSubPageContentEndIndex(
-                            page.subPages[subPageIndex + 1].id,
-                            page.content.length
-                        )
-                        viewModel.resetSubPageTestOverflow(page.subPages[subPageIndex + 1].id)
-                    } else if (subPage.contentEndIndex < page.content.length) {
-                        viewModel.addSubPage(
-                            page.id,
-                            DiarySubPageState(
-                                Random.nextInt(Int.MAX_VALUE),
-                                page.id,
-                                subPageIndex + 1,
-                                page.content.length
-                            )
-                        )
-                    }
-                    viewModel.incrementSubPageTestOverflow(subPage.id)
-                }
-            }
-        },
+    BoxWithConstraints(
+        modifier = modifier.fillMaxSize()
     ) {
-        Text(
-            uiState.pages.find { it.id == page.id }!!.subPages[subPageIndex].cipolla.toString(),
-            color = Color.Transparent,
+        val parentWidth = constraints.maxWidth.toFloat()
+        val parentHeight = constraints.maxHeight.toFloat()
+        TextFlow(
+            subPage.getContent(page),
             modifier = Modifier
-                .size(0.2f.dp)
-                .align(Alignment.BottomEnd)
-        )
-        subPage.images.forEach {
-            Image(
+                .fillMaxSize(),
+            style = textStyle,
+            justification = TextFlowJustification.Auto,
+            columns = 1,
+            onTextFlowLayoutResult = { textFlowLayoutResult ->
+                viewModel.updateSubPageBasedOnOffset(
+                    pageIndex,
+                    subPageIndex,
+                    textFlowLayoutResult.lastOffset
+                )
+                // switch based on testOverflow state
+            },
+        ) {
+            Text(
+                subPage.cipolla.toString(),
+                color = Color.Transparent,
                 modifier = Modifier
-                    .align(Alignment.Center)
-                    //.fillMaxSize()
-                    .offset { IntOffset(it.imageOffset.x.toInt(), it.imageOffset.y.toInt()) }
-                    .pointerInput(Unit) {
-                        detectDragGestures(
-                            onDrag = { change, dragAmount ->
-                                change.consume()
-                                it.imageOffset += dragAmount
-                                viewModel.resetSubPageTestOverflow(subPage.id)
-                            },
-                        )
-                    }
-                    .flowShape(FlowType.Outside, 0.dp, it.bitmap.toPath(0.5f).asComposePath()),
-                bitmap = it.bitmap.asImageBitmap(),
-                contentDescription = ""
+                    .size(0.2f.dp)
+                    .align(Alignment.BottomEnd)
             )
+            subPage.images.forEach { image ->
+                Image(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        //.fillMaxSize()
+                        .offset { IntOffset(image.offset.x.toInt(), image.offset.y.toInt()) }
+                        .pointerInput(Unit) {
+                            detectDragGestures(
+                                onDrag = { change, dragAmount ->
+                                    val newX = (image.offset.x + dragAmount.x)
+                                        .coerceIn(0f, parentWidth - image.bitmap.width)
+                                    val newY = (image.offset.y + dragAmount.y)
+                                        .coerceIn(0f, parentHeight - image.bitmap.height)
+
+                                    // Aggiorna l'offset vincolato
+                                    change.consume()
+                                    image.offset = Offset(newX, newY)
+                                    viewModel.resetSubPageTestOverflow(subPage.id)
+                                },
+                                onDragEnd = {
+                                    viewModel.editSubPageImageOffset(image.id, image.offset)
+                                }
+                            )
+                        }
+                        .flowShape(FlowType.Outside, 0.dp, image.bitmap.toPath(0.5f).asComposePath()),
+                    bitmap = image.bitmap.asImageBitmap(),
+                    contentDescription = ""
+                )
+            }
         }
     }
 }
