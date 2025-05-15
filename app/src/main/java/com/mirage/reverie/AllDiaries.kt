@@ -53,6 +53,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.mirage.reverie.ui.theme.PaperColor
 import com.mirage.reverie.ui.theme.Purple80
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -195,7 +196,7 @@ fun AllDiariesScreen(onNavigateToDiary: (Int) -> Unit, onNavigateToEditDiary: (I
                         onNavigateToDiary(uiState.diaries[uiState.currentPage].value.id)
                     }
             ) {
-                DiaryPage(
+                DiaryCover(
                     modifier = Modifier.fillMaxSize(),
                     text = diariesStates[uiState.currentPage].value.cover
                 )
@@ -303,4 +304,15 @@ fun AllDiariesScreen(onNavigateToDiary: (Int) -> Unit, onNavigateToEditDiary: (I
         }
     }
 
+}
+
+@Composable
+fun DiaryCover(modifier: Modifier, text: String) {
+    Box(
+        modifier = modifier
+            .border(width = 2.dp, color = Color.Blue, shape = RectangleShape)
+            .background(PaperColor)
+    ) {
+        Text(text = text)
+    }
 }

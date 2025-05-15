@@ -1,5 +1,7 @@
 package com.mirage.reverie
 
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalContext
 import javax.inject.Singleton
 
 

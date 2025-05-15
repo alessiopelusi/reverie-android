@@ -104,10 +104,10 @@ fun TimeCapsuleScreen() {
                         )
                     }
             ) {
-                DiaryPage(
+                /*DiaryPage(
                     modifier = Modifier.fillMaxSize(),
                     "Item $page",
-                )
+                )*/
             }
         }
 
