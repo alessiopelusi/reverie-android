@@ -1,7 +1,6 @@
 package com.mirage.reverie
 
 import android.graphics.Bitmap
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -31,9 +30,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -54,13 +51,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.mirage.reverie.data.model.Diary
+import com.mirage.reverie.data.repository.DiaryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.romainguy.graphics.path.toPath
 import dev.romainguy.text.combobreaker.FlowType
 import dev.romainguy.text.combobreaker.TextFlowJustification
 import dev.romainguy.text.combobreaker.material3.TextFlow
 import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -69,464 +67,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
 
-
-// Routes (Diary is the root)
-@Serializable
-data class Diary(val diaryId: Int)
-
-@Serializable
-data class ViewDiary(val diaryId: Int)
-
-@Serializable
-data class EditDiaryPage(val pageId: Int)
-
-
-data class DiaryPageState(
-    val id: Int = 0,
-    val pageNumber: Int,
-    val content: String = "",
-    val subPages: List<DiarySubPageState> = listOf(DiarySubPageState(Random.nextInt(Int.MAX_VALUE), id, 0, content.length)),
-)
-
-data class DiarySubPageState(
-    val id: Int,
-    val pageId: Int,
-    val position: Int,
-    var contentEndIndex: Int,
-    var cipolla: Int = 0,
-    val testOverflow: Int = 0,
-    val images: List<DiaryImage> = listOf(DiaryImage(Random.nextInt(Int.MAX_VALUE), pageId, 0, Offset.Zero, drawableToBitmap(ReverieApp.instance, R.drawable.ic_launcher_background)))
-)
-
-fun DiarySubPageState.getStartIndex(subPages: List<DiarySubPageState>): Int {
-    return if (position != 0) subPages[position - 1].contentEndIndex else 0
-}
-
-fun DiarySubPageState.getContent(page: DiaryPageState): String {
-    return page.content.substring(startIndex = getStartIndex(page.subPages), page.content.length)
-}
-
-data class DiaryImage(
-    val id: Int,
-    val subPageId: Int,
-    val subPagePosition: Int,
-    var offset: Offset,
-    val bitmap: Bitmap
-)
-
-// DiaryState contains all the data of the diary
-data class DiaryState(
-    val id: Int = 0,
-    val profileId: Int = 0,
-    val title: String = "",
-    val cover: String = "",
-    val pages: List<DiaryPageState> = listOf()
-) {
-    val subPages: List<DiarySubPageState>
-        get() = pages.flatMap { it.subPages }
-}
-
-
-// Using Hilt we inject a dependency (apiSevice)
-@Singleton
-class DiaryRepository @Inject constructor(
-    private val apiService: ApiService
-) {
-    private val _diaries = mutableMapOf<Int, MutableStateFlow<DiaryState>>()
-    private val _pages = mutableMapOf<Int, MutableStateFlow<DiaryPageState>>()
-
-    fun getDiaryById(diaryId: Int): StateFlow<DiaryState> {
-        if (diaryId !in _diaries) {
-            val diary = apiService.getDiaryById(diaryId)
-            _diaries[diaryId] = MutableStateFlow(diary)
-        }
-        return _diaries.getValue(diaryId).asStateFlow()
-    }
-
-    fun updateDiary(diary: DiaryState) {
-        if (diary.id in _diaries) _diaries.getValue(diary.id).update { diary }
-        // update database
-    }
-
-    // TODO improve retrieval
-    fun getAllProfileDiaries(profileId: Int): List<StateFlow<DiaryState>> {
-        // We fetch only the missing diaries
-        val profileDiaries = apiService.getAllProfileDiaries(
-            profileId,
-            _diaries.filter{ it.value.value.profileId == profileId }.map{ it.key}
-        )
-        _diaries.putAll(profileDiaries.associateBy(
-            { diary -> diary.id },
-            { diary -> MutableStateFlow(diary) })
-        )
-        return _diaries.filter{ it.value.value.profileId == profileId }.map{ it.value.asStateFlow() }
-    }
-
-    fun getPageById(pageId: Int): StateFlow<DiaryPageState> {
-        if (pageId !in _pages) {
-            val page = apiService.getPageById(pageId)
-            _pages[pageId] = MutableStateFlow(page)
-        }
-        return _pages.getValue(pageId).asStateFlow()
-    }
-
-    fun updateDiaryPage(page: DiaryPageState) {
-        if (page.id in _pages) _pages.getValue(page.id).update { page }
-    }
-}
-
-
-// Using Hilt we inject a dependency (apiSevice)
-@Singleton
-class DiaryPagesRepository @Inject constructor(
-    private val apiService: ApiService
-) {
-
-    private val _pages = mutableMapOf<Int, MutableStateFlow<DiaryPageState>>()
-
-    fun getPageById(pageId: Int): StateFlow<DiaryPageState> {
-        if (pageId !in _pages) {
-            val page = apiService.getPageById(pageId)
-            _pages[pageId] = MutableStateFlow(page)
-        }
-        return _pages.getValue(pageId).asStateFlow()
-    }
-
-    fun updateDiaryPage(page: DiaryPageState) {
-        if (page.id in _pages) _pages.getValue(page.id).update { page }
-    }
-}
-
-
-// HiltViewModel inject SavedStateHandle + other dependencies provided by AppModule
-@HiltViewModel
-class DiaryViewModel @Inject constructor(
-    private val savedStateHandle: SavedStateHandle,
-    private val repository: DiaryRepository
-) : ViewModel() {
-
-    private val diary = savedStateHandle.toRoute<Diary>()
-    // Expose screen UI state
-/*
-    val uiState : StateFlow<DiaryState> = repository.getDiaryById(diary.diaryId).stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(),
-        initialValue = repository.getDiaryById(diary.diaryId).value // Wrong?
-    )
-*/
-    private val _uiState = MutableStateFlow(repository.getDiaryById(diary.diaryId).value)
-    val uiState = _uiState.asStateFlow()
-
-    // Handle business logic
-    fun changeTitle(newTitle: String) {
-        viewModelScope.launch {
-            val diary = uiState.value.copy(title = newTitle)
-            repository.updateDiary(diary)
-        }
-    }
-
-    fun addSubPage(pageId: Int, newSubPage: DiarySubPageState) {
-        viewModelScope.launch {
-            val pages = uiState.value.pages.map { page ->
-                if (page.id == pageId) {
-                    page.copy(subPages = page.subPages + newSubPage) // Create a new list
-                } else {
-                    page
-                }
-            }
-            val updatedDiary = uiState.value.copy(pages = pages)
-            _uiState.update { updatedDiary }
-            repository.updateDiary(updatedDiary)
-        }
-    }
-
-    fun editSubPage(subPageId: Int, newSubPage: DiarySubPageState) {
-        viewModelScope.launch {
-            // Aggiorna la lista delle pagine
-            val pages = uiState.value.pages.map { page ->
-                page.copy(
-                    subPages = page.subPages.map { subPage ->
-                        if (subPage.id == subPageId) {
-                            newSubPage // Sostituisce il subPage con l'id corrispondente
-                        } else {
-                            subPage
-                        }
-                    }
-                )
-            }
-            // Aggiorna il DiaryState
-            val updatedDiary = uiState.value.copy(pages = pages)
-            _uiState.update { updatedDiary }
-            // Salva nel repository
-            repository.updateDiary(updatedDiary)
-        }
-    }
-
-    fun editSubPageContentEndIndex(subPageId: Int, contentEndIndex: Int) {
-        viewModelScope.launch {
-            // Aggiorna la lista delle pagine
-            val pages = uiState.value.pages.map { page ->
-                page.copy(
-                    subPages = page.subPages.map { subPage ->
-                        if (subPage.id == subPageId) {
-                            subPage.copy(contentEndIndex = contentEndIndex, cipolla = subPage.cipolla+1)
-                        } else {
-                            subPage
-                        }
-                    }
-                )
-            }
-            // Aggiorna il DiaryState
-            val updatedDiary = uiState.value.copy(pages = pages)
-            _uiState.update { updatedDiary }
-            // Salva nel repository
-            repository.updateDiary(updatedDiary)
-        }
-    }
-
-    fun incrementSubPageCipolla(subPageId: Int) {
-        viewModelScope.launch {
-            // Aggiorna la lista delle pagine
-            val pages = uiState.value.pages.map { page ->
-                page.copy(
-                    subPages = page.subPages.map { subPage ->
-                        if (subPage.id == subPageId) {
-                            subPage.copy(cipolla = subPage.cipolla+1)
-                        } else {
-                            subPage
-                        }
-                    }
-                )
-            }
-            // Aggiorna il DiaryState
-            val updatedDiary = uiState.value.copy(pages = pages)
-            _uiState.update { updatedDiary }
-            // Salva nel repository
-            repository.updateDiary(updatedDiary)
-        }
-    }
-
-    private fun getPage(pageIndex: Int): DiaryPageState {
-        return uiState.value.pages[pageIndex]
-    }
-
-    private fun getSubPage(pageIndex: Int, subPageIndex: Int): DiarySubPageState {
-        return getPage(pageIndex).subPages[subPageIndex]
-    }
-
-    fun updateSubPageBasedOnOffset(pageIndex:Int, subPageIndex: Int, lastOffset: Int) {
-        when(getSubPage(pageIndex, subPageIndex).testOverflow) {
-            0 -> {
-                editSubPageContentEndIndex(getSubPage(pageIndex, subPageIndex).id, getPage(pageIndex).content.length)
-            }
-            2 -> {
-                editSubPageContentEndIndex(
-                    getSubPage(pageIndex, subPageIndex).id,
-                    min(getSubPage(pageIndex, subPageIndex).getStartIndex(getPage(pageIndex).subPages) + lastOffset, getPage(pageIndex).content.length)
-                )
-                // if not last page
-                if (getSubPage(pageIndex, subPageIndex).position + 1 < getPage(pageIndex).subPages.size) {
-                    editSubPageContentEndIndex(
-                        getSubPage(pageIndex, subPageIndex+1).id,
-                        getPage(pageIndex).content.length
-                    )
-                    resetSubPageTestOverflow(getSubPage(pageIndex, subPageIndex+1).id)
-                } else if (getSubPage(pageIndex, subPageIndex).contentEndIndex < getPage(pageIndex).content.length) {
-                    addSubPage(
-                        getPage(pageIndex).id,
-                        DiarySubPageState(
-                            Random.nextInt(Int.MAX_VALUE),
-                            getPage(pageIndex).id,
-                            getSubPage(pageIndex, subPageIndex).position + 1,
-                            getPage(pageIndex).content.length
-                        )
-                    )
-                }
-            }
-        }
-        var testOverflow = getSubPage(pageIndex, subPageIndex).testOverflow
-        if (getSubPage(pageIndex, subPageIndex).testOverflow < 3) testOverflow++
-        viewModelScope.launch {
-            // Aggiorna la lista delle pagine
-            val pages = uiState.value.pages.map { page ->
-                page.copy(
-                    subPages = page.subPages.map { subPage ->
-                        if (subPage.id == getSubPage(pageIndex, subPageIndex).id) {
-                            subPage.copy(testOverflow = testOverflow)
-                        } else {
-                            subPage
-                        }
-                    }
-                )
-            }
-            // Aggiorna il DiaryState
-            val updatedDiary = uiState.value.copy(pages = pages)
-            _uiState.update { updatedDiary }
-            // Salva nel repository
-            repository.updateDiary(updatedDiary)
-        }
-    }
-
-    fun resetSubPageTestOverflow(subPageId: Int) {
-        viewModelScope.launch {
-            // Aggiorna la lista delle pagine
-            val pages = uiState.value.pages.map { page ->
-                page.copy(
-                    subPages = page.subPages.map { subPage ->
-                        if (subPage.id == subPageId) {
-                            subPage.copy(testOverflow = 0, cipolla = subPage.cipolla+1)
-                        } else {
-                            subPage
-                        }
-                    }
-                )
-            }
-            // Aggiorna il DiaryState
-            val updatedDiary = uiState.value.copy(pages = pages)
-            _uiState.update { updatedDiary }
-            // Salva nel repository
-            repository.updateDiary(updatedDiary)
-        }
-    }
-
-
-    fun editSubPageImageOffset(imageId: Int, newOffset: Offset) {
-        viewModelScope.launch {
-            // Aggiorna la lista delle pagine
-            val pages = uiState.value.pages.map { page ->
-                page.copy(
-                    subPages = page.subPages.map { subPage ->
-                        subPage.copy(
-                            images = subPage.images.map { image ->
-                                if (image.id == imageId) {
-                                    image.copy(offset = newOffset)
-                                } else {
-                                    image
-                                }
-                            }
-                        )
-                    }
-                )
-            }
-            // Aggiorna il DiaryState
-            val updatedDiary = uiState.value.copy(pages = pages)
-            _uiState.update { updatedDiary }
-            // Salva nel repository
-            repository.updateDiary(updatedDiary)
-        }
-    }
-}
-
-@Composable
-fun ViewDiaryScreen(onNavigateToEditDiaryPage: (Int) -> Unit, viewModel: DiaryViewModel = hiltViewModel()) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .border(width = 2.dp, color = Color.Magenta, shape = RectangleShape),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            modifier = Modifier.padding(8.dp),
-            text = uiState.title
-        )
-
-        val diaryPageListState = rememberLazyListState()
-        // start lazyrow from the end
-        LaunchedEffect(Unit) {
-            diaryPageListState.scrollToItem(uiState.subPages.lastIndex)
-        }
-
-        BoxWithConstraints (
-            modifier = Modifier
-                .border(width = 2.dp, color = Color.Red, shape = RectangleShape)
-                .weight(1f, false),
-        ) {
-            val boxWithConstraintsScope = this
-            LazyRow (
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                state = diaryPageListState,
-                flingBehavior = rememberSnapFlingBehavior(lazyListState = diaryPageListState)
-            ) {
-                itemsIndexed(uiState.subPages) { index, item ->
-                    Layout(
-                        content = {
-                            // Here's the content of each list item.
-                            val widthFraction = 0.90f
-                            uiState.pages.find { it.id == item.pageId }?.let { page ->
-                                DiaryPage(
-                                    modifier = Modifier
-                                        .widthIn(max = LocalWindowInfo.current.containerSize.width.dp * widthFraction)
-                                        .aspectRatio(9f / 16f),
-                                    page.id,
-                                    item.position,
-                                    viewModel
-                                )
-                            }
-                        },
-                        measurePolicy = { measurables, constraints ->
-                            // I'm assuming you'll declaring just one root
-                            // composable in the content function above
-                            // so it's measuring just the Box
-                            val placeable = measurables.first().measure(constraints)
-                            // maxWidth is from the BoxWithConstraints
-                            val maxWidthInPx = boxWithConstraintsScope.maxWidth.roundToPx()
-                            // Box width
-                            val itemWidth = placeable.width
-                            // Calculating the space for the first and last item
-                            val startSpace =
-                                if (index == 0) (maxWidthInPx - itemWidth) / 2 else 0
-                            val endSpace =
-                                if (index == uiState.subPages.lastIndex) (maxWidthInPx - itemWidth) / 2 else 0
-                            // The width of the box + extra space
-                            val width = startSpace + placeable.width + endSpace
-                            layout(width, placeable.height) {
-                                // Placing the Box in the right X position
-                                val x = if (index == 0) startSpace else 0
-                                placeable.place(x, 0)
-                            }
-                        }
-                    )
-                }
-            }
-        }
-
-        Text(
-            modifier = Modifier.padding(8.dp),
-            text = "Page 1/1",
-        )
-
-        Button(
-            onClick = { onNavigateToEditDiaryPage(diaryPageListState.firstVisibleItemIndex) },
-            colors = ButtonColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.primary,
-                disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                disabledContentColor = MaterialTheme.colorScheme.primary
-            ),
-            modifier = Modifier.align(Alignment.End)
-        ) {
-            Icon(Icons.Outlined.Edit, contentDescription = "Edit")
-        }
-    }
-}
-
-@Composable
-fun EditDiaryScreen(viewModel: DiaryViewModel = hiltViewModel()){
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    Text(
-        modifier = Modifier.padding(8.dp),
-        text = "You are editing your diary!",
-    )
-    EditTitleTextField(uiState.title, onUpdateTitle = { viewModel.changeTitle(it) })
-}
 
 // HiltViewModel inject SavedStateHandle + other dependencies provided by AppModule
 @HiltViewModel
@@ -535,9 +78,9 @@ class EditDiaryPageViewModel @Inject constructor(
     private val repository: DiaryPagesRepository
 ) : ViewModel() {
 
-    private val diary = savedStateHandle.toRoute<EditDiaryPage>()
+    private val diary = savedStateHandle.toRoute<EditDiaryPageRoute>()
     // Expose screen UI state
-    val uiState : StateFlow<DiaryPageState> = repository.getPageById(diary.pageId).stateIn(
+    val uiState : StateFlow<DiaryPage> = repository.getPageById(diary.pageId).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(),
         initialValue = repository.getPageById(diary.pageId).value // Wrong?a
@@ -551,6 +94,19 @@ class EditDiaryPageViewModel @Inject constructor(
         }
     }
 }
+
+
+@Composable
+fun EditDiaryScreen(viewModel: DiaryViewModel = hiltViewModel()){
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    Text(
+        modifier = Modifier.padding(8.dp),
+        text = "You are editing your diary!",
+    )
+    EditTitleTextField(uiState.title, onUpdateTitle = { viewModel.changeTitle(it) })
+}
+
 
 
 @Composable
@@ -580,77 +136,5 @@ fun EditContentTextField(title: String, onUpdateContent: (String) -> Unit) {
         onValueChange = onUpdateContent,
         label = { Text("Contenuto") }
     )
-}
-
-@Composable
-fun DiaryPage(modifier: Modifier, pageId: Int, subPageIndex: Int, viewModel: DiaryViewModel) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val pageIndex = remember(uiState) { uiState.pages.indexOfFirst { it.id == pageId } }
-    val page = remember(uiState) { uiState.pages[pageIndex] }
-    val subPage = remember(uiState) { page.subPages[subPageIndex] }
-
-    val textStyle = LocalTextStyle.current.merge(
-        TextStyle(color = colorScheme.onSurface, fontSize = 40.sp)
-    )
-
-    BoxWithConstraints(
-        modifier = modifier.fillMaxSize()
-    ) {
-        val parentWidth = constraints.maxWidth.toFloat()
-        val parentHeight = constraints.maxHeight.toFloat()
-        TextFlow(
-            subPage.getContent(page),
-            modifier = Modifier
-                .fillMaxSize(),
-            style = textStyle,
-            justification = TextFlowJustification.Auto,
-            columns = 1,
-            onTextFlowLayoutResult = { textFlowLayoutResult ->
-                viewModel.updateSubPageBasedOnOffset(
-                    pageIndex,
-                    subPageIndex,
-                    textFlowLayoutResult.lastOffset
-                )
-                // switch based on testOverflow state
-            },
-        ) {
-            Text(
-                subPage.cipolla.toString(),
-                color = Color.Transparent,
-                modifier = Modifier
-                    .size(0.2f.dp)
-                    .align(Alignment.BottomEnd)
-            )
-            subPage.images.forEach { image ->
-                Image(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        //.fillMaxSize()
-                        .offset { IntOffset(image.offset.x.toInt(), image.offset.y.toInt()) }
-                        .pointerInput(Unit) {
-                            detectDragGestures(
-                                onDrag = { change, dragAmount ->
-                                    val newX = (image.offset.x + dragAmount.x)
-                                        .coerceIn(0f, parentWidth - image.bitmap.width)
-                                    val newY = (image.offset.y + dragAmount.y)
-                                        .coerceIn(0f, parentHeight - image.bitmap.height)
-
-                                    // Aggiorna l'offset vincolato
-                                    change.consume()
-                                    image.offset = Offset(newX, newY)
-                                    viewModel.resetSubPageTestOverflow(subPage.id)
-                                },
-                                onDragEnd = {
-                                    viewModel.editSubPageImageOffset(image.id, image.offset)
-                                }
-                            )
-                        }
-                        .flowShape(FlowType.Outside, 0.dp, image.bitmap.toPath(0.5f).asComposePath()),
-                    bitmap = image.bitmap.asImageBitmap(),
-                    contentDescription = ""
-                )
-            }
-        }
-    }
 }
 

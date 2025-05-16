@@ -1,23 +1,13 @@
 package com.mirage.reverie
 
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -45,8 +35,6 @@ import androidx.compose.material.icons.automirrored.rounded.LibraryBooks
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.MailOutline
 import androidx.compose.material.icons.rounded.Menu
-import android.graphics.Canvas
-import android.util.Log
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DrawerState
@@ -54,7 +42,6 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -66,33 +53,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asComposePath
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.navigation
 import androidx.navigation.toRoute
+import com.mirage.reverie.navigation.DiaryRoute
+import com.mirage.reverie.navigation.EditDiaryPageRoute
+import com.mirage.reverie.navigation.ViewDiaryRoute
+import com.mirage.reverie.ui.screens.AllDiariesScreen
+import com.mirage.reverie.ui.screens.ViewDiaryScreen
+import com.mirage.reverie.viewmodel.DiaryViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import dev.romainguy.graphics.path.toPath
-import dev.romainguy.text.combobreaker.FlowType
-import dev.romainguy.text.combobreaker.TextFlowJustification
-import dev.romainguy.text.combobreaker.material3.TextFlow
 import kotlinx.coroutines.launch
-import androidx.core.graphics.createBitmap
-import dev.romainguy.text.combobreaker.TextFlowLayoutResult
-import kotlin.math.min
 
 // AndroidEntryPoint is used for Hilt (DI)
 @AndroidEntryPoint
@@ -112,9 +85,8 @@ fun MainComposable() {
 
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
-        val diaryId = 0
-        val preferredDiaryId = 0
-        val profileId = 0
+        val diaryId = "0"
+        val profileId = "0"
 
         ModalNavigationDrawer(
             drawerContent = {
@@ -196,31 +168,31 @@ fun MainComposable() {
                             bottomBarVisibility = true
                             AllDiariesScreen(
                                 onNavigateToEditDiary = {pageId -> navController.navigate(EditDiary(pageId))},
-                                onNavigateToDiary = {diaryId -> navController.navigate(Diary(diaryId))}
+                                onNavigateToDiary = {diaryId -> navController.navigate(DiaryRoute(diaryId))}
                             )
                         }
 
-                        navigation<Diary>(startDestination = ViewDiary(diaryId)) {
-                            composable<ViewDiary> { backStackEntry ->
+                        navigation<DiaryRoute>(startDestination = ViewDiaryRoute(diaryId)) {
+                            composable<ViewDiaryRoute> { backStackEntry ->
                                 bottomBarVisibility = true
                                 val parentEntry = remember(backStackEntry) {
-                                    navController.getBackStackEntry<Diary>()
+                                    navController.getBackStackEntry<DiaryRoute>()
                                 }
                                 val parentViewModel = hiltViewModel<DiaryViewModel>(parentEntry)
-                                val diary: Diary = parentEntry.toRoute()
+                                val diary: DiaryRoute = parentEntry.toRoute()
                                 ViewDiaryScreen(
-                                    onNavigateToEditDiaryPage = {page -> navController.navigate(EditDiaryPage(page)) },
+                                    onNavigateToEditDiaryPage = {page -> navController.navigate(EditDiaryPageRoute(page)) },
                                     viewModel = parentViewModel
                                 )
                             }
-                            composable<EditDiaryPage> { backStackEntry ->
+                            composable<EditDiaryPageRoute> { backStackEntry ->
                                 bottomBarVisibility = false
                                 EditDiaryPageScreen()
                             }
                             composable<EditDiary> { backStackEntry ->
                                 bottomBarVisibility = false
                                 val parentEntry = remember(backStackEntry) {
-                                    navController.getBackStackEntry<Diary>()
+                                    navController.getBackStackEntry<DiaryRoute>()
                                 }
                                 val parentViewModel = hiltViewModel<DiaryViewModel>(parentEntry)
                                 EditDiaryScreen(viewModel = parentViewModel)
@@ -270,7 +242,7 @@ fun CustomTopBar(drawerState: DrawerState) {
 }
 
 @Composable
-fun CustomBottomBar(navController: NavController, profileId: Int) {
+fun CustomBottomBar(navController: NavController, profileId: String) {
     data class TopLevelRoute<T : Any>(val name: String, val route: T, val icon: ImageVector)
 
     val topLevelRoutes = listOf(

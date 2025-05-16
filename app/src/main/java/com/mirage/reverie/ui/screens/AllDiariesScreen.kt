@@ -1,4 +1,4 @@
-package com.mirage.reverie
+package com.mirage.reverie.ui.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.LocalIndication
@@ -53,6 +53,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.mirage.reverie.data.repository.DiaryRepository
+import com.mirage.reverie.navigation.AllDiaries
 import com.mirage.reverie.ui.theme.PaperColor
 import com.mirage.reverie.ui.theme.Purple80
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -68,40 +70,6 @@ import kotlinx.serialization.Serializable
 import kotlin.math.absoluteValue
 
 
-@Serializable
-data class EditDiary(val diaryId: Int)
-
-@Serializable
-data class AllDiariesParent(val profileId: Int)
-
-@Serializable
-data class AllDiaries(val profileId: Int)
-
-
-data class DiaryStateSubset(
-    val id: Int = 0,
-    val profileId: Int = 0,
-    val title: String = "",
-    val cover: String = "",
-)
-
-
-// DiaryState contains all the data of the diary
-data class AllDiariesState(
-    val profileId: Int,
-    val diaries: List<StateFlow<DiaryStateSubset>>,
-    val pagerState: PagerState = PagerState(
-        // endlessPagerMultiplier = 1000
-        // endlessPagerMultiplier/2 = 500
-        // offset = 1
-        pageCount = {diaries.size*1000},
-        currentPage = diaries.size*500 + 1
-    ),
-) {
-    val currentPage: Int
-        get() = pagerState.currentPage % diaries.size
-}
-
 // HiltViewModel inject SavedStateHandle + other dependencies provided by AppModule
 @HiltViewModel
 class AllDiariesViewModel @Inject constructor(
@@ -111,7 +79,8 @@ class AllDiariesViewModel @Inject constructor(
 
     private val allDiaries = savedStateHandle.toRoute<AllDiaries>()
     // Expose screen UI state
-    private val _uiState = MutableStateFlow(AllDiariesState(
+    private val _uiState = MutableStateFlow(
+        AllDiaries(
         allDiaries.profileId,
         repository.getAllProfileDiaries(allDiaries.profileId).map{it ->
             it.map { DiaryStateSubset(it.id, it.profileId, it.title, it.cover) }
@@ -128,11 +97,11 @@ class AllDiariesViewModel @Inject constructor(
                 )
         }
     ))
-    val uiState: StateFlow<AllDiariesState> = _uiState.asStateFlow()
+    val uiState = _uiState.asStateFlow()
 }
 
 @Composable
-fun AllDiariesScreen(onNavigateToDiary: (Int) -> Unit, onNavigateToEditDiary: (Int) -> Unit,  viewModel: AllDiariesViewModel = hiltViewModel()) {
+fun AllDiariesScreen(onNavigateToDiary: (String) -> Unit, onNavigateToEditDiary: (String) -> Unit,  viewModel: AllDiariesViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val diariesStates = uiState.diaries.map{it.collectAsStateWithLifecycle()}
 
