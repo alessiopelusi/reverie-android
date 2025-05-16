@@ -137,8 +137,7 @@ fun ViewDiaryScreen(onNavigateToEditDiaryPage: (String) -> Unit, viewModel: Diar
                 )
 
                 Button(
-                    //onClick = { onNavigateToEditDiaryPage(diaryPageListState.firstVisibleItemIndex) },
-                    onClick = {},
+                    onClick = { onNavigateToEditDiaryPage(subPages[diaryPageListState.firstVisibleItemIndex].pageId) },
                     colors = ButtonColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
                         contentColor = MaterialTheme.colorScheme.primary,

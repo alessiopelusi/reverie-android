@@ -5,6 +5,10 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import com.mirage.reverie.data.repository.DiaryRepository
+import com.mirage.reverie.data.repository.DiaryRepositoryImpl
+import com.mirage.reverie.data.repository.UserRepository
+import com.mirage.reverie.data.repository.UserRepositoryImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -25,14 +29,20 @@ object ServiceModule {
 
     @Singleton
     @Provides
-    fun provideAccountService(auth: FirebaseAuth): AccountServiceImpl {
+    fun provideAccountService(auth: FirebaseAuth): AccountService {
         return AccountServiceImpl(auth)
     }
 
     @Singleton
     @Provides
-    fun provideDiaryRepository(storageService: StorageService): DiaryRepository {
-        return DiaryRepositoryImpl(storageService)
+    fun provideDiaryRepository(storageService: StorageService, userRepository: UserRepository): DiaryRepository {
+        return DiaryRepositoryImpl(storageService, userRepository)
+    }
+
+    @Singleton
+    @Provides
+    fun provideUserRepository(storageService: StorageService): UserRepository {
+        return UserRepositoryImpl(storageService)
     }
 
     @Provides

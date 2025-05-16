@@ -9,6 +9,8 @@ import javax.inject.Inject
 
 interface DiaryRepository {
     suspend fun getDiary(diaryId: String): Diary
+    suspend fun getDiaries(diaryIds: List<String>): List<Diary>
+    suspend fun getUserDiaries(userId: String): List<Diary>
     suspend fun saveDiary(diary: Diary): Diary
     suspend fun updateDiary(diary: Diary)
     suspend fun deleteDiary(diaryId: String)
@@ -34,11 +36,22 @@ interface DiaryRepository {
 
 // Using Hilt we inject a dependency (apiSevice)
 class DiaryRepositoryImpl @Inject constructor(
-    private val storageService: StorageService
+    private val storageService: StorageService,
+    private val userRepository: UserRepository
 ): DiaryRepository {
     override suspend fun getDiary(diaryId: String): Diary {
         return storageService.getDiary(diaryId)
             ?: throw NoSuchElementException("Diary with ID $diaryId does not exists")
+    }
+
+    override suspend fun getDiaries(diaryIds: List<String>): List<Diary> {
+        return diaryIds.mapNotNull { diaryId ->
+            storageService.getDiary(diaryId)
+        }
+    }
+
+    override suspend fun getUserDiaries(userId: String): List<Diary> {
+        return userRepository.getUser(userId).diaryIds.map { diaryId -> getDiary(diaryId) }
     }
 
     override suspend fun saveDiary(diary: Diary): Diary {

@@ -58,10 +58,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.navigation
 import androidx.navigation.toRoute
+import com.mirage.reverie.navigation.AllDiariesParentRoute
+import com.mirage.reverie.navigation.AllDiariesRoute
 import com.mirage.reverie.navigation.DiaryRoute
 import com.mirage.reverie.navigation.EditDiaryPageRoute
+import com.mirage.reverie.navigation.EditDiaryRoute
 import com.mirage.reverie.navigation.ViewDiaryRoute
 import com.mirage.reverie.ui.screens.AllDiariesScreen
+import com.mirage.reverie.ui.screens.EditDiaryPageScreen
+import com.mirage.reverie.ui.screens.EditDiaryScreen
 import com.mirage.reverie.ui.screens.ViewDiaryScreen
 import com.mirage.reverie.viewmodel.DiaryViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -86,7 +91,7 @@ fun MainComposable() {
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
         val diaryId = "0"
-        val profileId = "0"
+        val userId = "0"
 
         ModalNavigationDrawer(
             drawerContent = {
@@ -155,19 +160,19 @@ fun MainComposable() {
             Scaffold(
                 topBar = { CustomTopBar(drawerState) },
                 // if bottomBarVisibility is set to none, we don't show the bottom bar
-                bottomBar = { if (bottomBarVisibility) CustomBottomBar(navController, profileId) },
+                bottomBar = { if (bottomBarVisibility) CustomBottomBar(navController, userId) },
             ) { innerPadding ->
-                NavHost(navController, startDestination = AllDiariesParent(profileId), Modifier.padding(innerPadding)) {
+                NavHost(navController, startDestination = AllDiariesParentRoute(userId), Modifier.padding(innerPadding)) {
                     // for each composable we set the visibility for the bottom
 
                     // we create a navigation for Diary that contains ViewDiary and EditDiary
                     // in this way we can share the same viewModel between the various composable
                     // https://developer.android.com/develop/ui/compose/libraries#hilt-navigation
-                    navigation<AllDiariesParent>(startDestination = AllDiaries(profileId)) {
-                        composable<AllDiaries> {
+                    navigation<AllDiariesParentRoute>(startDestination = AllDiariesRoute(userId)) {
+                        composable<AllDiariesRoute> {
                             bottomBarVisibility = true
                             AllDiariesScreen(
-                                onNavigateToEditDiary = {pageId -> navController.navigate(EditDiary(pageId))},
+                                onNavigateToEditDiary = {pageId -> navController.navigate(EditDiaryRoute(pageId))},
                                 onNavigateToDiary = {diaryId -> navController.navigate(DiaryRoute(diaryId))}
                             )
                         }
@@ -189,7 +194,7 @@ fun MainComposable() {
                                 bottomBarVisibility = false
                                 EditDiaryPageScreen()
                             }
-                            composable<EditDiary> { backStackEntry ->
+                            composable<EditDiaryRoute> { backStackEntry ->
                                 bottomBarVisibility = false
                                 val parentEntry = remember(backStackEntry) {
                                     navController.getBackStackEntry<DiaryRoute>()
@@ -246,7 +251,7 @@ fun CustomBottomBar(navController: NavController, profileId: String) {
     data class TopLevelRoute<T : Any>(val name: String, val route: T, val icon: ImageVector)
 
     val topLevelRoutes = listOf(
-        TopLevelRoute(stringResource(R.string.all_diaries), AllDiaries(profileId), Icons.AutoMirrored.Rounded.LibraryBooks),
+        TopLevelRoute(stringResource(R.string.all_diaries), AllDiariesRoute(profileId), Icons.AutoMirrored.Rounded.LibraryBooks),
         TopLevelRoute(stringResource(R.string.time_capsule), TimeCapsule, Icons.Rounded.MailOutline)
     )
 

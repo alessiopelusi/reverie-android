@@ -7,6 +7,7 @@ import com.mirage.reverie.data.model.Diary
 import com.mirage.reverie.data.model.DiaryImage
 import com.mirage.reverie.data.model.DiaryPage
 import com.mirage.reverie.data.model.DiarySubPage
+import com.mirage.reverie.data.model.User
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.tasks.await
@@ -16,7 +17,12 @@ import javax.inject.Singleton
 
 // example of Database connection
 interface StorageService {
-    val diaries: Flow<List<Diary>>
+    //val diaries: Flow<List<Diary>>
+
+    suspend fun getUser(userId: String): User?
+    suspend fun saveUser(user: User): User
+    suspend fun updateUser(user: User)
+    suspend fun deleteUser(userId: String)
 
     suspend fun getDiary(diaryId: String): Diary?
     suspend fun saveDiary(diary: Diary): Diary
@@ -44,6 +50,7 @@ class StorageServiceImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val auth: AccountService,
 ) : StorageService {
+    val USER_COLLECTION = "users"
     val DIARY_COLLECTION = "diaries"
     val PAGE_COLLECTION = "pages"
     val SUB_PAGE_COLLECTION = "subPages"
@@ -51,11 +58,30 @@ class StorageServiceImpl @Inject constructor(
 
     val USER_ID_FIELD = "userId"
 
-    override val diaries: Flow<List<Diary>>
+    /*override val diaries: Flow<List<Diary>>
         get() =
             auth.currentUser.flatMapLatest { user ->
-              firestore.collection(DIARY_COLLECTION).whereEqualTo(USER_ID_FIELD, user.id).dataObjects()
+                firestore.collection(DIARY_COLLECTION).whereEqualTo(USER_ID_FIELD, user.id).dataObjects()
             }
+     */
+
+
+    override suspend fun getUser(userId: String): User? =
+        firestore.collection(USER_COLLECTION).document(userId).get().await().toObject()
+
+    override suspend fun saveUser(user: User): User {
+        val userId = firestore.collection(USER_COLLECTION).add(user).await().id
+        return user.copy(id = userId)
+    }
+
+    override suspend fun updateUser(user: User) {
+        firestore.collection(USER_COLLECTION).document(user.id).set(user).await()
+    }
+
+    override suspend fun deleteUser(userId: String) {
+        firestore.collection(USER_COLLECTION).document(userId).delete().await()
+    }
+
 
     override suspend fun getDiary(diaryId: String): Diary? =
         firestore.collection(DIARY_COLLECTION).document(diaryId).get().await().toObject()

@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,6 +28,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -48,231 +48,202 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewModelScope
-import androidx.navigation.toRoute
-import com.mirage.reverie.data.repository.DiaryRepository
-import com.mirage.reverie.navigation.AllDiaries
 import com.mirage.reverie.ui.theme.PaperColor
 import com.mirage.reverie.ui.theme.Purple80
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
+import com.mirage.reverie.viewmodel.AllDiariesUiState
+import com.mirage.reverie.viewmodel.AllDiariesViewModel
+import com.mirage.reverie.viewmodel.DiaryUiState
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.serialization.Serializable
 import kotlin.math.absoluteValue
 
-
-// HiltViewModel inject SavedStateHandle + other dependencies provided by AppModule
-@HiltViewModel
-class AllDiariesViewModel @Inject constructor(
-    private val savedStateHandle: SavedStateHandle,
-    private val repository: DiaryRepository
-) : ViewModel() {
-
-    private val allDiaries = savedStateHandle.toRoute<AllDiaries>()
-    // Expose screen UI state
-    private val _uiState = MutableStateFlow(
-        AllDiaries(
-        allDiaries.profileId,
-        repository.getAllProfileDiaries(allDiaries.profileId).map{it ->
-            it.map { DiaryStateSubset(it.id, it.profileId, it.title, it.cover) }
-                .distinctUntilChanged()
-                .stateIn(
-                    scope = viewModelScope,
-                    started = SharingStarted.WhileSubscribed(),
-                    initialValue = DiaryStateSubset(
-                        it.value.id,
-                        it.value.profileId,
-                        it.value.title,
-                        it.value.cover
-                    )
-                )
-        }
-    ))
-    val uiState = _uiState.asStateFlow()
-}
 
 @Composable
 fun AllDiariesScreen(onNavigateToDiary: (String) -> Unit, onNavigateToEditDiary: (String) -> Unit,  viewModel: AllDiariesViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val diariesStates = uiState.diaries.map{it.collectAsStateWithLifecycle()}
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize().border(width = 2.dp, color = Color.Magenta, shape = RectangleShape)
-            .verticalScroll(rememberScrollState())
-        ,
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        val pageInteractionSource = remember { MutableInteractionSource() }
+    when (uiState) {
+        is AllDiariesUiState.Loading -> CircularProgressIndicator()
+        is AllDiariesUiState.Success -> {
+            val diaries = (uiState as AllDiariesUiState.Success).diaries
+            val currentPage = (uiState as AllDiariesUiState.Success).currentPage
+            val pagerState = (uiState as AllDiariesUiState.Success).pagerState
 
-        Text(
-            modifier = Modifier.padding(8.dp),
-            text = diariesStates[uiState.currentPage].value.title
-        )
-
-        HorizontalPager(
-            modifier = Modifier
-                .border(width = 2.dp, color = Color.Red, shape = RectangleShape)
-                .weight(1f, false),
-            contentPadding = PaddingValues(50.dp),
-            state = uiState.pagerState
-        ) { absolutePage ->
-            val relativePage = absolutePage % diariesStates.size
-            Card (
-                Modifier
-                    .padding(8.dp)
-                    .graphicsLayer {
-                        // Calculate the absolute offset for the current page from the
-                        // scroll position. We use the absolute value which allows us to mirror
-                        // any effects for both directions
-                        val pageOffset = (
-                                (uiState.currentPage - relativePage) + uiState.pagerState
-                                    .currentPageOffsetFraction
-                                ).absoluteValue
-
-                        // We animate the alpha, between 50% and 100%
-                        alpha = lerp(
-                            start = 0.5f,
-                            stop = 1f,
-                            fraction = 1f - pageOffset.coerceIn(0f, 1f)
-                        )
-
-                        scaleX = lerp(
-                            start = 0.9f,
-                            stop = 1f,
-                            fraction = 1f - pageOffset.coerceIn(0f, 1f)
-                        )
-                        scaleY = lerp(
-                            start = 0.9f,
-                            stop = 1f,
-                            fraction = 1f - pageOffset.coerceIn(0f, 1f)
-                        )
-                    }
-                    .clickable(
-                        interactionSource = pageInteractionSource,
-                        indication = LocalIndication.current
-                    ) {
-                        onNavigateToDiary(uiState.diaries[uiState.currentPage].value.id)
-                    }
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .border(width = 2.dp, color = Color.Magenta, shape = RectangleShape)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                DiaryCover(
-                    modifier = Modifier.fillMaxSize(),
-                    text = diariesStates[uiState.currentPage].value.cover
-                )
-            }
-        }
+                val pageInteractionSource = remember { MutableInteractionSource() }
 
-        Row(
-            Modifier
-                .wrapContentHeight()
-                .fillMaxWidth()
-                .padding(bottom = 8.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            repeat(uiState.diaries.size) { iteration ->
-                val color = if (uiState.currentPage == iteration) Color.DarkGray else Color.LightGray
-                Box(
+                Text(
+                    modifier = Modifier.padding(8.dp),
+                    text = diaries[currentPage].title
+                )
+
+                HorizontalPager(
                     modifier = Modifier
-                        .padding(2.dp)
-                        .clip(CircleShape)
-                        .background(color)
-                        .size(16.dp)
-                )
-            }
-        }
+                        .border(width = 2.dp, color = Color.Red, shape = RectangleShape)
+                        .weight(1f, false),
+                    contentPadding = PaddingValues(50.dp),
+                    state = pagerState
+                ) { absolutePage ->
+                    val relativePage = absolutePage % diaries.size
+                    Card(
+                        Modifier
+                            .padding(8.dp)
+                            .graphicsLayer {
+                                // Calculate the absolute offset for the current page from the
+                                // scroll position. We use the absolute value which allows us to mirror
+                                // any effects for both directions
+                                val pageOffset = (
+                                        (currentPage - relativePage) + pagerState
+                                            .currentPageOffsetFraction
+                                        ).absoluteValue
 
-        Button(
-            // replace pagerState.currentPage with the actual id of the currentPage diary
-            onClick = { onNavigateToEditDiary(uiState.diaries[uiState.currentPage].value.id) },
-            colors = ButtonColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.primary,
-                disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                disabledContentColor = MaterialTheme.colorScheme.primary
-            ),
-            modifier = Modifier.align(Alignment.End)
-        ) {
-            Icon(Icons.Outlined.Edit, contentDescription = "Edit")
-        }
+                                // We animate the alpha, between 50% and 100%
+                                alpha = lerp(
+                                    start = 0.5f,
+                                    stop = 1f,
+                                    fraction = 1f - pageOffset.coerceIn(0f, 1f)
+                                )
 
-        val itemsList: List<String> = (1..5).map { "It $it" }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            val cornerRadius = 16.dp
-            var selectedIndex by remember { mutableIntStateOf(-1) }
-
-            itemsList.forEachIndexed { index, item ->
-                OutlinedButton (
-                    onClick = { selectedIndex = index },
-                    modifier = when (index) {
-                        0 ->
-                            Modifier
-                                .offset(0.dp, 0.dp)
-                                .zIndex(if (selectedIndex == index) 1f else 0f)
-                        else ->
-                            Modifier
-                                .offset((-1 * index).dp, 0.dp)
-                                .zIndex(if (selectedIndex == index) 1f else 0f)
-                    },
-                    shape = when (index) {
-                        0 -> RoundedCornerShape(
-                            topStart = cornerRadius,
-                            topEnd = 0.dp,
-                            bottomStart = cornerRadius,
-                            bottomEnd = 0.dp
-                        )
-                        itemsList.size - 1 -> RoundedCornerShape(
-                            topStart = 0.dp,
-                            topEnd = cornerRadius,
-                            bottomStart = 0.dp,
-                            bottomEnd = cornerRadius
-                        )
-                        else -> RoundedCornerShape(
-                            topStart = 0.dp,
-                            topEnd = 0.dp,
-                            bottomStart = 0.dp,
-                            bottomEnd = 0.dp
-                        )
-                    },
-                    border = BorderStroke(
-                        1.dp, if (selectedIndex == index) {
-                            Purple80
-                        } else {
-                            Purple80.copy(alpha = 0.75f)
-                        }
-                    ),
-                    colors = if (selectedIndex == index) {
-                        ButtonDefaults.outlinedButtonColors(
-                            containerColor = Purple80.copy(alpha = 0.1f),
-                            contentColor = Purple80
-                        )
-                    } else {
-                        ButtonDefaults.outlinedButtonColors(
-                            containerColor = MaterialTheme.colorScheme.background,
-                            contentColor = Purple80
+                                scaleX = lerp(
+                                    start = 0.9f,
+                                    stop = 1f,
+                                    fraction = 1f - pageOffset.coerceIn(0f, 1f)
+                                )
+                                scaleY = lerp(
+                                    start = 0.9f,
+                                    stop = 1f,
+                                    fraction = 1f - pageOffset.coerceIn(0f, 1f)
+                                )
+                            }
+                            .clickable(
+                                interactionSource = pageInteractionSource,
+                                indication = LocalIndication.current
+                            ) {
+                                onNavigateToDiary(diaries[currentPage].id)
+                            }
+                    ) {
+                        DiaryCover(
+                            modifier = Modifier.fillMaxSize(),
+                            text = diaries[currentPage].cover
                         )
                     }
+                }
+
+                Row(
+                    Modifier
+                        .wrapContentHeight()
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    horizontalArrangement = Arrangement.Center
                 ) {
-                    Text(item)
+                    repeat(diaries.size) { iteration ->
+                        val color =
+                            if (currentPage == iteration) Color.DarkGray else Color.LightGray
+                        Box(
+                            modifier = Modifier
+                                .padding(2.dp)
+                                .clip(CircleShape)
+                                .background(color)
+                                .size(16.dp)
+                        )
+                    }
+                }
+
+                Button(
+                    // replace pagerState.currentPage with the actual id of the currentPage diary
+                    onClick = { onNavigateToEditDiary(diaries[currentPage].id) },
+                    colors = ButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.primary,
+                        disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        disabledContentColor = MaterialTheme.colorScheme.primary
+                    ),
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Icon(Icons.Outlined.Edit, contentDescription = "Edit")
+                }
+
+                val itemsList: List<String> = (1..5).map { "It $it" }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    val cornerRadius = 16.dp
+                    var selectedIndex by remember { mutableIntStateOf(-1) }
+
+                    itemsList.forEachIndexed { index, item ->
+                        OutlinedButton(
+                            onClick = { selectedIndex = index },
+                            modifier = when (index) {
+                                0 ->
+                                    Modifier
+                                        .offset(0.dp, 0.dp)
+                                        .zIndex(if (selectedIndex == index) 1f else 0f)
+
+                                else ->
+                                    Modifier
+                                        .offset((-1 * index).dp, 0.dp)
+                                        .zIndex(if (selectedIndex == index) 1f else 0f)
+                            },
+                            shape = when (index) {
+                                0 -> RoundedCornerShape(
+                                    topStart = cornerRadius,
+                                    topEnd = 0.dp,
+                                    bottomStart = cornerRadius,
+                                    bottomEnd = 0.dp
+                                )
+
+                                itemsList.size - 1 -> RoundedCornerShape(
+                                    topStart = 0.dp,
+                                    topEnd = cornerRadius,
+                                    bottomStart = 0.dp,
+                                    bottomEnd = cornerRadius
+                                )
+
+                                else -> RoundedCornerShape(
+                                    topStart = 0.dp,
+                                    topEnd = 0.dp,
+                                    bottomStart = 0.dp,
+                                    bottomEnd = 0.dp
+                                )
+                            },
+                            border = BorderStroke(
+                                1.dp, if (selectedIndex == index) {
+                                    Purple80
+                                } else {
+                                    Purple80.copy(alpha = 0.75f)
+                                }
+                            ),
+                            colors = if (selectedIndex == index) {
+                                ButtonDefaults.outlinedButtonColors(
+                                    containerColor = Purple80.copy(alpha = 0.1f),
+                                    contentColor = Purple80
+                                )
+                            } else {
+                                ButtonDefaults.outlinedButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.background,
+                                    contentColor = Purple80
+                                )
+                            }
+                        ) {
+                            Text(item)
+                        }
+                    }
                 }
             }
         }
-    }
 
+        is AllDiariesUiState.Error -> Text(text = "Error: ${(uiState as AllDiariesUiState.Error).exception.message}")
+    }
 }
 
 @Composable
