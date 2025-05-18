@@ -69,6 +69,9 @@ import com.mirage.reverie.ui.screens.EditDiaryPageScreen
 import com.mirage.reverie.ui.screens.EditDiaryScreen
 import com.mirage.reverie.ui.screens.ViewDiaryScreen
 import com.mirage.reverie.viewmodel.DiaryViewModel
+import com.mirage.reverie.ui.screens.LoginScreen
+import com.mirage.reverie.ui.screens.RegisterScreen
+import com.mirage.reverie.ui.screens.ResetPasswordScreen
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -78,10 +81,57 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            ReverieStartAppComposable()
+        }
+    }
+}
+
+@Composable
+fun ReverieStartAppComposable() {
+    val navController = rememberNavController()
+
+    NavHost(navController = navController, startDestination = "Login") {
+        composable("Login") {
+            LoginScreen(
+                onLoginSuccess = {
+                    navController.navigate("Home") {
+                        popUpTo("Login") { inclusive = true }
+                    }
+                },
+                onNavigateToRegister = {
+                    navController.navigate("Register")
+                },
+                onNavigateToResetPassword = {
+                    navController.navigate("ResetPassword")
+                }
+            )
+        }
+
+        composable("Register") {
+            RegisterScreen(
+                onRegisterSuccess = {
+                    navController.popBackStack()  // Torna al login dopo registrazione
+                },
+                onNavigateToLogin = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable("ResetPassword") {
+            ResetPasswordScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable("Home") {
             MainComposable()
         }
     }
 }
+
 
 @Composable
 fun MainComposable() {
