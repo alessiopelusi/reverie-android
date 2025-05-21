@@ -25,6 +25,7 @@ interface StorageService {
     suspend fun getDiary(diaryId: String): Diary?
     suspend fun saveDiary(diary: Diary): Diary
     suspend fun updateDiary(diary: Diary)
+    suspend fun updateDiaryTitle(diaryId: String, title: String)
     suspend fun deleteDiary(diaryId: String)
 
     suspend fun getPage(pageId: String): DiaryPage?
@@ -93,6 +94,10 @@ class StorageServiceImpl @Inject constructor(
 
     override suspend fun updateDiary(diary: Diary) {
         firestore.collection(DIARY_COLLECTION).document(diary.id).set(diary.toFirestoreMap()).await()
+    }
+
+    override suspend fun updateDiaryTitle(diaryId: String, title: String) {
+        firestore.collection(DIARY_COLLECTION).document(diaryId).update("title", title).await()
     }
 
     override suspend fun deleteDiary(diaryId: String) {

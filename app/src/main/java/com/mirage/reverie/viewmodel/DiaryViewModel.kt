@@ -1,6 +1,5 @@
 package com.mirage.reverie.viewmodel
 
-import android.util.Log
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -43,8 +42,7 @@ class DiaryViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val repository: DiaryRepository,
 ) : ViewModel() {
-
-    private val diary = savedStateHandle.toRoute<ViewDiaryRoute>()
+    private val diaryId = savedStateHandle.toRoute<ViewDiaryRoute>().diaryId
     // Expose screen UI state
     /*
         val uiState : StateFlow<DiaryState> = repository.getDiaryById(diary.diaryId).stateIn(
@@ -57,10 +55,11 @@ class DiaryViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     init {
-        loadDiary(diary.diaryId)
+        onStart()
     }
 
-    private fun loadDiary(diaryId: String) {
+    // load diary
+    private fun onStart() {
         viewModelScope.launch {
             val diary = repository.getDiary(diaryId)
             val pagesMap = diary.pageIds.associateWith { pageId -> repository.getPage(pageId) }
@@ -330,27 +329,6 @@ class DiaryViewModel @Inject constructor(
                 val updatedDiaryImage = diaryImage.copy(offset = offset)
 
                 updateDiaryImage(updatedDiaryImage)
-            }
-        }
-    }
-
-    // Handle business logic
-    fun changeTitle(newTitle: String) {
-        val state = uiState.value
-        if (state is DiaryUiState.Success) {
-            viewModelScope.launch {
-                val updatedDiary = state.diary.copy(title = newTitle)
-                try {
-                    repository.updateDiary(updatedDiary)
-                    _uiState.value = DiaryUiState.Success( // Aggiorna lo stato con il nuovo diario
-                        updatedDiary,
-                        state.pagesMap,
-                        state.subPagesMap,
-                        state.imagesMap
-                    )
-                } catch (exception: Exception) {
-                    _uiState.value = DiaryUiState.Error(exception) // Gestisci errori
-                }
             }
         }
     }

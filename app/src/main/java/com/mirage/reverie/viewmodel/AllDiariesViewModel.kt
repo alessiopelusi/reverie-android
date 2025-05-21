@@ -52,15 +52,18 @@ class AllDiariesViewModel @Inject constructor(
 
     init {
         // TODO: it's correct?
-        auth.uid?.let { userId -> loadDiaries(userId) }
+        onStart()
     }
 
-    private fun loadDiaries(userId: String) {
-        viewModelScope.launch {
-            val diaries = repository.getUserDiaries(userId)
-            val allDiaries = AllDiaries(userId, diaries.map { diary -> diary.id })
-            val diariesMap = diaries.associateBy { diary -> diary.id }
-            _uiState.value = AllDiariesUiState.Success(allDiaries, diariesMap)
+    // load diaries
+    private fun onStart() {
+        auth.uid?.let { userId ->
+            viewModelScope.launch {
+                val diaries = repository.getUserDiaries(userId)
+                val allDiaries = AllDiaries(userId, diaries.map { diary -> diary.id })
+                val diariesMap = diaries.associateBy { diary -> diary.id }
+                _uiState.value = AllDiariesUiState.Success(allDiaries, diariesMap)
+            }
         }
     }
 }

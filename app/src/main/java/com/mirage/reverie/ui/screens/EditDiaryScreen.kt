@@ -1,7 +1,10 @@
 package com.mirage.reverie.ui.screens
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -12,22 +15,38 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mirage.reverie.viewmodel.DiaryUiState
 import com.mirage.reverie.viewmodel.DiaryViewModel
+import com.mirage.reverie.viewmodel.EditDiaryUiState
+import com.mirage.reverie.viewmodel.EditDiaryViewModel
+import com.mirage.reverie.viewmodel.LoginUiState
 
 @Composable
-fun EditDiaryScreen(viewModel: DiaryViewModel = hiltViewModel()){
+fun EditDiaryScreen(
+    viewModel: EditDiaryViewModel = hiltViewModel()
+){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     when(uiState) {
-        is DiaryUiState.Loading -> CircularProgressIndicator()
-        is DiaryUiState.Success -> {
-            val diary = (uiState as DiaryUiState.Success).diary
-            Text(
-                modifier = Modifier.padding(8.dp),
-                text = "You are editing your diary!",
-            )
-            EditTitleTextField(diary.title, onUpdateTitle = { viewModel.changeTitle(it) })
+        is EditDiaryUiState.Loading -> CircularProgressIndicator()
+        is EditDiaryUiState.Idle, is EditDiaryUiState.Error -> {
+            val formState by viewModel.formState.collectAsStateWithLifecycle()
+            Column {
+                Text(
+                    modifier = Modifier.padding(8.dp),
+                    text = "You are editing your diary!",
+                )
+                EditTitleTextField(formState.title, onUpdateTitle = viewModel::onUpdateTitle)
+                Button(
+                    onClick = viewModel::onUpdateDiary
+                ) {
+                    Text("Modifica")
+                }
+
+                if (uiState is EditDiaryUiState.Error) {
+                    Text(text = (uiState as EditDiaryUiState.Error).errorMessage, color = MaterialTheme.colorScheme.error)
+                }
+            }
         }
-        is DiaryUiState.Error -> Text(text = "Error: ${(uiState as DiaryUiState.Error).exception.message}")
+        is EditDiaryUiState.Success -> {}
     }
 }
 

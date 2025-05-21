@@ -188,7 +188,6 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: DiaryViewModel) 
             justification = TextFlowJustification.Auto,
             columns = 1,
             onTextFlowLayoutResult = { textFlowLayoutResult ->
-                Log.d("textflowlayoutresult", "ciao")
                 viewModel.updateSubPageOffset(
                     subPageId,
                     textFlowLayoutResult.lastOffset
