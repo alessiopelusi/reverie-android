@@ -1,5 +1,6 @@
 package com.mirage.reverie.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -39,6 +40,7 @@ import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.IntOffset
@@ -46,6 +48,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mirage.reverie.R
+import com.mirage.reverie.drawableToBitmap
 import com.mirage.reverie.viewmodel.DiaryUiState
 import com.mirage.reverie.viewmodel.DiaryViewModel
 import dev.romainguy.graphics.path.toPath
@@ -54,7 +58,10 @@ import dev.romainguy.text.combobreaker.TextFlowJustification
 import dev.romainguy.text.combobreaker.material3.TextFlow
 
 @Composable
-fun ViewDiaryScreen(onNavigateToEditDiaryPage: (String) -> Unit, viewModel: DiaryViewModel = hiltViewModel()) {
+fun ViewDiaryScreen(
+    onNavigateToEditDiaryPage: (String) -> Unit,
+    viewModel: DiaryViewModel = hiltViewModel()
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     when (uiState) {
@@ -77,7 +84,7 @@ fun ViewDiaryScreen(onNavigateToEditDiaryPage: (String) -> Unit, viewModel: Diar
                 val diaryPageListState = rememberLazyListState()
                 // start lazyrow from the end
                 LaunchedEffect(Unit) {
-                    diaryPageListState.scrollToItem(subPages.lastIndex)
+                    //diaryPageListState.scrollToItem(subPages.lastIndex)
                 }
 
                 BoxWithConstraints (
@@ -166,6 +173,8 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: DiaryViewModel) 
         TextStyle(color = colorScheme.onSurface, fontSize = 40.sp)
     )
 
+    /*viewModel.incrementSubPageCipolla(subPageId)*/
+
     BoxWithConstraints(
         modifier = modifier.fillMaxSize()
     ) {
@@ -179,6 +188,7 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: DiaryViewModel) 
             justification = TextFlowJustification.Auto,
             columns = 1,
             onTextFlowLayoutResult = { textFlowLayoutResult ->
+                Log.d("textflowlayoutresult", "ciao")
                 viewModel.updateSubPageOffset(
                     subPageId,
                     textFlowLayoutResult.lastOffset
@@ -186,6 +196,7 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: DiaryViewModel) 
                 // switch based on testOverflow state
             },
         ) {
+            // workaround to update textflow when changin contentEndIndex
             Text(
                 subPage.cipolla.toString(),
                 color = Color.Transparent,
@@ -193,7 +204,22 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: DiaryViewModel) 
                     .size(0.2f.dp)
                     .align(Alignment.BottomEnd)
             )
-            viewModel.getSubPageImages(subPageId).forEach { image ->
+
+            val bitmap = drawableToBitmap(LocalContext.current, R.drawable.ic_launcher_background)
+            // workaround to update textflow when there is no image
+            val subPageImages = viewModel.getSubPageImages(subPageId)
+            if (subPageImages.isEmpty()) {
+                Image(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        //.fillMaxSize()
+                        .flowShape(FlowType.None, 0.dp, bitmap.toPath(0.5f).asComposePath()),
+                    bitmap = bitmap.asImageBitmap(),
+                    contentDescription = "",
+                    alpha = 0f
+                )
+            }
+            subPageImages.forEach { image ->
                 Image(
                     modifier = Modifier
                         .align(Alignment.TopStart)

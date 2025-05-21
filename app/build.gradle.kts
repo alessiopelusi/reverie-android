@@ -114,4 +114,9 @@ dependencies {
     // Use this library and TextFlow() if you use material3
     implementation(libs.combo.breaker.material3)
     implementation(libs.pathway)
+
+    // moshi json
+    implementation(libs.moshi)
+    implementation(libs.moshi.kotlin)
+    ksp(libs.moshi.kotlin.codegen)
 }

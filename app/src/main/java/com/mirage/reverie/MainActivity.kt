@@ -55,12 +55,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.compose.navigation
-import androidx.navigation.toRoute
 import com.google.firebase.auth.FirebaseAuth
 import com.mirage.reverie.navigation.AllDiariesRoute
-import com.mirage.reverie.navigation.DiaryRoute
 import com.mirage.reverie.navigation.EditDiaryPageRoute
 import com.mirage.reverie.navigation.EditDiaryRoute
 import com.mirage.reverie.navigation.LoginRoute
@@ -72,7 +68,6 @@ import com.mirage.reverie.ui.screens.EditDiaryPageScreen
 import com.mirage.reverie.ui.screens.EditDiaryScreen
 import com.mirage.reverie.ui.screens.LoginScreen
 import com.mirage.reverie.ui.screens.ViewDiaryScreen
-import com.mirage.reverie.viewmodel.DiaryViewModel
 import com.mirage.reverie.ui.screens.ResetPasswordScreen
 import com.mirage.reverie.ui.screens.SignupScreen
 import dagger.hilt.android.AndroidEntryPoint
@@ -103,9 +98,6 @@ fun MainComposable() {
         val navController = rememberNavController()
 
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-
-        val diaryId = "0"
-        val userId = "0"
 
         ModalNavigationDrawer(
             drawerContent = {
@@ -197,35 +189,23 @@ fun MainComposable() {
                         bottomBarVisibility = true
                         AllDiariesScreen(
                             onNavigateToEditDiary = {diaryId -> navController.navigate(EditDiaryRoute(diaryId))},
-                            onNavigateToDiary = {diaryId -> navController.navigate(DiaryRoute(diaryId))}
+                            onNavigateToDiary = {diaryId -> navController.navigate(ViewDiaryRoute(diaryId))}
                         )
                     }
 
-                    navigation<DiaryRoute>(startDestination = ViewDiaryRoute(diaryId)) {
-                        composable<ViewDiaryRoute> { backStackEntry ->
-                            bottomBarVisibility = true
-                            val parentEntry = remember(backStackEntry) {
-                                navController.getBackStackEntry<DiaryRoute>()
-                            }
-                            val parentViewModel = hiltViewModel<DiaryViewModel>(parentEntry)
-                            val diary: DiaryRoute = parentEntry.toRoute()
-                            ViewDiaryScreen(
-                                onNavigateToEditDiaryPage = {page -> navController.navigate(EditDiaryPageRoute(page)) },
-                                viewModel = parentViewModel
-                            )
-                        }
-                        composable<EditDiaryPageRoute> { backStackEntry ->
-                            bottomBarVisibility = false
-                            EditDiaryPageScreen()
-                        }
-                        composable<EditDiaryRoute> { backStackEntry ->
-                            bottomBarVisibility = false
-                            val parentEntry = remember(backStackEntry) {
-                                navController.getBackStackEntry<DiaryRoute>()
-                            }
-                            val parentViewModel = hiltViewModel<DiaryViewModel>(parentEntry)
-                            EditDiaryScreen(viewModel = parentViewModel)
-                        }
+                    composable<ViewDiaryRoute> { backStackEntry ->
+                        bottomBarVisibility = true
+                        ViewDiaryScreen(
+                            onNavigateToEditDiaryPage = {page -> navController.navigate(EditDiaryPageRoute(page)) },
+                        )
+                    }
+                    composable<EditDiaryPageRoute> { backStackEntry ->
+                        bottomBarVisibility = false
+                        EditDiaryPageScreen()
+                    }
+                    composable<EditDiaryRoute> { backStackEntry ->
+                        bottomBarVisibility = false
+                        EditDiaryScreen()
                     }
 
                     composable<TimeCapsule> {

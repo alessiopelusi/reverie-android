@@ -1,5 +1,6 @@
 package com.mirage.reverie.viewmodel
 
+import android.util.Log
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -10,7 +11,8 @@ import com.mirage.reverie.data.model.DiaryImage
 import com.mirage.reverie.data.model.DiaryPage
 import com.mirage.reverie.data.model.DiarySubPage
 import com.mirage.reverie.data.repository.DiaryRepository
-import com.mirage.reverie.navigation.DiaryRoute
+import com.mirage.reverie.data.toFirestoreMap
+import com.mirage.reverie.navigation.ViewDiaryRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -42,7 +44,7 @@ class DiaryViewModel @Inject constructor(
     private val repository: DiaryRepository,
 ) : ViewModel() {
 
-    private val diary = savedStateHandle.toRoute<DiaryRoute>()
+    private val diary = savedStateHandle.toRoute<ViewDiaryRoute>()
     // Expose screen UI state
     /*
         val uiState : StateFlow<DiaryState> = repository.getDiaryById(diary.diaryId).stateIn(
@@ -55,7 +57,7 @@ class DiaryViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     init {
-        loadDiary(diary.id)
+        loadDiary(diary.diaryId)
     }
 
     private fun loadDiary(diaryId: String) {
@@ -159,79 +161,77 @@ class DiaryViewModel @Inject constructor(
         val state = uiState.value
         if (state !is DiaryUiState.Success) return
 
-        viewModelScope.launch {
-            repository.updateSubPage(updatedSubPage)
-            val updatedSubPagesMap = state.subPagesMap.toMutableMap()
-            updatedSubPagesMap[updatedSubPage.id] = updatedSubPage
+        // if equals to current, return
+        if (updatedSubPage == state.subPagesMap.getValue(updatedSubPage.id)) return
 
-            _uiState.value = DiaryUiState.Success(
-                state.diary,
-                state.pagesMap,
-                updatedSubPagesMap,
-                state.imagesMap
-            )
+        // firebase update
+        if (updatedSubPage.toFirestoreMap() != state.subPagesMap.getValue(updatedSubPage.id).toFirestoreMap()) {
+            viewModelScope.launch {
+                repository.updateSubPage(updatedSubPage)
+            }
         }
+
+        // local update
+        val updatedSubPagesMap = state.subPagesMap.toMutableMap()
+        updatedSubPagesMap[updatedSubPage.id] = updatedSubPage
+
+        _uiState.value = DiaryUiState.Success(
+            state.diary,
+            state.pagesMap,
+            updatedSubPagesMap,
+            state.imagesMap
+        )
     }
 
     private fun updateSubPageContentEndIndex(subPageId: String, contentEndIndex: Int) {
         val state = uiState.value
         if (state !is DiaryUiState.Success) return
 
-        viewModelScope.launch {
-            val subPagesMap = state.subPagesMap
-            val subPage = subPagesMap.getValue(subPageId)
-            val updatedSubPage = subPage.copy(contentEndIndex = contentEndIndex)
+        val subPagesMap = state.subPagesMap
+        val subPage = subPagesMap.getValue(subPageId)
+        val updatedSubPage = subPage.copy(contentEndIndex = contentEndIndex, cipolla = subPage.cipolla+1)
 
-            updateSubPage(updatedSubPage)
-        }
+        updateSubPage(updatedSubPage)
     }
 
     private fun resetSubPageContentEndIndex(subPageId: String) {
         val state = uiState.value
         if (state !is DiaryUiState.Success) return
 
-        viewModelScope.launch {
-            val subPagesMap = state.subPagesMap
-            val pagesMap = state.pagesMap
-            val pageId = subPagesMap.getValue(subPageId).pageId
-            val page = pagesMap.getValue(pageId)
+        val subPagesMap = state.subPagesMap
+        val pagesMap = state.pagesMap
+        val pageId = subPagesMap.getValue(subPageId).pageId
+        val page = pagesMap.getValue(pageId)
 
-            updateSubPageContentEndIndex(subPageId, page.content.length)
-        }
+        updateSubPageContentEndIndex(subPageId, page.content.length)
     }
 
     private fun updateSubPageTestOverflow(subPageId: String, testOverflow: Int) {
         val state = uiState.value
         if (state !is DiaryUiState.Success) return
 
-        viewModelScope.launch {
-            val subPagesMap = state.subPagesMap
-            val subPage = subPagesMap.getValue(subPageId)
-            val updatedSubPage = subPage.copy(testOverflow = testOverflow)
+        val subPagesMap = state.subPagesMap
+        val subPage = subPagesMap.getValue(subPageId)
+        val updatedSubPage = subPage.copy(testOverflow = testOverflow, cipolla = subPage.cipolla+1)
 
-            updateSubPage(updatedSubPage)
-        }
+        updateSubPage(updatedSubPage)
     }
 
     private fun incrementSubPageTestOverflow(subPageId: String) {
         val state = uiState.value
         if (state !is DiaryUiState.Success) return
 
-        viewModelScope.launch {
-            val subPagesMap = state.subPagesMap
-            val subPage = subPagesMap.getValue(subPageId)
+        val subPagesMap = state.subPagesMap
+        val subPage = subPagesMap.getValue(subPageId)
 
-            updateSubPageTestOverflow(subPageId, subPage.testOverflow+1)
-        }
+        updateSubPageTestOverflow(subPageId, subPage.testOverflow+1)
     }
 
     fun resetSubPageTestOverflow(subPageId: String) {
         val state = uiState.value
         if (state !is DiaryUiState.Success) return
 
-        viewModelScope.launch {
-            updateSubPageContentEndIndex(subPageId, 0)
-        }
+        updateSubPageContentEndIndex(subPageId, 0)
     }
 
     private fun addSubPage(subPage: DiarySubPage) {
@@ -259,20 +259,22 @@ class DiaryViewModel @Inject constructor(
         val state = uiState.value
         if (state !is DiaryUiState.Success) return
 
-        val subPagesMap = state.subPagesMap
-        val pagesMap = state.pagesMap
-        val pageId = subPagesMap.getValue(subPageId).pageId
-        val page = pagesMap.getValue(pageId)
-        val subPage = subPagesMap.getValue(subPageId)
+        var subPage = state.subPagesMap.getValue(subPageId)
+        val pageId = state.subPagesMap.getValue(subPageId).pageId
 
         when(subPage.testOverflow) {
             0 -> {
                 resetSubPageContentEndIndex(subPageId)
             }
             2 -> {
+                val page = state.pagesMap.getValue(pageId)
                 updateSubPageContentEndIndex(subPageId,
                     min(getSubPageStartIndex(subPageId) + offset, page.content.length)
                 )
+
+                // update subPage using fresh state value
+                subPage = (uiState.value as DiaryUiState.Success).subPagesMap.getValue(subPageId)
+
                 // if not last page
                 val nextSubPage = getNextSubPage(subPageId)
                 if (nextSubPage != null) {
@@ -288,7 +290,13 @@ class DiaryViewModel @Inject constructor(
                 }
             }
         }
-        if (subPage.testOverflow < 3) incrementSubPageTestOverflow(subPageId)
+
+        // we update one page at a time
+        if (subPage.testOverflow < 3) {
+            val prevSubPage = getPreviousSubPage(subPageId)
+            if (prevSubPage == null || prevSubPage.testOverflow == 3)
+                incrementSubPageTestOverflow(subPageId)
+        }
     }
 
     private fun updateDiaryImage(updatedDiaryImage: DiaryImage) {

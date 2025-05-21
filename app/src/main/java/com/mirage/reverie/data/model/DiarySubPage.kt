@@ -1,16 +1,13 @@
 package com.mirage.reverie.data.model
 
-import androidx.compose.ui.geometry.Offset
-import com.mirage.reverie.R
-import com.mirage.reverie.ReverieApp
-import com.mirage.reverie.drawableToBitmap
-import kotlin.random.Random
+import com.mirage.reverie.data.SerializableDataClass
+import com.squareup.moshi.Json
 
 data class DiarySubPage(
-    val id: String = "",
+    @Json(ignore = true) val id: String = "",
     val pageId: String = "",
-    var contentEndIndex: Int = 0,
-    var cipolla: Int = 0,
-    val testOverflow: Int = 0,
+    @Json(ignore = true) var contentEndIndex: Int = 0,
+    @Json(ignore = true) var cipolla: Int = 0,
+    @Json(ignore = true) val testOverflow: Int = 0,
     val imageIds: List<String> = listOf()
-)
+) : SerializableDataClass()
