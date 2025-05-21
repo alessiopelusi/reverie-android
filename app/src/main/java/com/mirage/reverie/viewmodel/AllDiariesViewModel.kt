@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.google.firebase.auth.FirebaseAuth
 import com.mirage.reverie.data.model.AllDiaries
 import com.mirage.reverie.data.model.Diary
 import com.mirage.reverie.data.repository.DiaryRepository
@@ -42,15 +43,16 @@ sealed class AllDiariesUiState {
 @HiltViewModel
 class AllDiariesViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
-    private val repository: DiaryRepository
+    private val repository: DiaryRepository,
+    private val auth: FirebaseAuth
 ) : ViewModel() {
-    private val allDiaries = savedStateHandle.toRoute<AllDiariesRoute>()
     // Expose screen UI state
     private val _uiState = MutableStateFlow<AllDiariesUiState>(AllDiariesUiState.Loading)
     val uiState = _uiState.asStateFlow()
 
     init {
-        loadDiaries(allDiaries.userId)
+        // TODO: it's correct?
+        auth.uid?.let { userId -> loadDiaries(userId) }
     }
 
     private fun loadDiaries(userId: String) {

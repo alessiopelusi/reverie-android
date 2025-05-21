@@ -19,7 +19,68 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.firebase.auth.FirebaseAuth
+import com.mirage.reverie.R
+import com.mirage.reverie.ui.components.EmailField
+import com.mirage.reverie.ui.components.PasswordField
+import com.mirage.reverie.viewmodel.LoginUiState
+import com.mirage.reverie.viewmodel.LoginViewModel
+import com.mirage.reverie.viewmodel.ResetPasswordUiState
+import com.mirage.reverie.viewmodel.ResetPasswordViewModel
+
+@Composable
+fun ResetPasswordScreen(
+    onNavigateBack: () -> Unit,
+    viewModel: ResetPasswordViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val inputState by viewModel.inputState.collectAsStateWithLifecycle()
+
+    when (uiState) {
+        is ResetPasswordUiState.Success -> {
+
+        }
+        is ResetPasswordUiState.Idle, is ResetPasswordUiState.Error -> {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = stringResource(R.string.login), style = MaterialTheme.typography.titleLarge)
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                EmailField(inputState.email, viewModel::onEmailChange)
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = viewModel::onResetPassword
+                ) {
+                    Text("Invia email di reset")
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                TextButton(onClick = onNavigateBack) {
+                    Text("Torna al login")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (uiState is ResetPasswordUiState.Error) {
+                    Text(text = (uiState as ResetPasswordUiState.Error).errorMessage, color = MaterialTheme.colorScheme.error)
+                }
+            }
+        }
+    }
+
+}
 
 
 @Composable

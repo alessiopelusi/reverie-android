@@ -3,7 +3,10 @@ package com.mirage.reverie.navigation
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class EditDiaryRoute(val diaryId: String)
+object LoginRoute
 
 @Serializable
-object AllDiariesRoute
+object ResetPasswordRoute
+
+@Serializable
+object SignupRoute

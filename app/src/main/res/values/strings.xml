@@ -5,4 +5,9 @@
     <string name="time_capsule">Time Capsule</string>
     <string name="navigation_drawer" translatable="false">Menu</string>
     <string name="account" translatable="false">Account</string>
+    <string name="email" translatable="false">Email</string>
+    <string name="username" translatable="false">Username</string>
+    <string name="password" translatable="false">Password</string>
+    <string name="login" translatable="false">Login</string>
+    <string name="signup" translatable="false">Signup</string>
 </resources>

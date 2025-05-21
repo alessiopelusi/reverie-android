@@ -13,14 +13,11 @@ class ReverieApp : Application() {
     companion object {
         lateinit var instance: ReverieApp
             private set
-        lateinit var auth: FirebaseAuth
-            private set
     }
 
     override fun onCreate() {
         super.onCreate()
         FirebaseApp.initializeApp(this)
-        auth = Firebase.auth
         instance = this
     }
 }

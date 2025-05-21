@@ -21,25 +21,25 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mirage.reverie.R
 import com.mirage.reverie.ui.components.EmailField
 import com.mirage.reverie.ui.components.PasswordField
-import com.mirage.reverie.viewmodel.LoginUiState
-import com.mirage.reverie.viewmodel.LoginViewModel
+import com.mirage.reverie.ui.components.UsernameField
+import com.mirage.reverie.viewmodel.SignupUiState
+import com.mirage.reverie.viewmodel.SignupViewModel
 
 
 @Composable
-fun LoginScreen(
-    onLoginSuccess: () -> Unit,
-    onNavigateToRegister: () -> Unit,
-    onNavigateToResetPassword: () -> Unit,
-    viewModel: LoginViewModel = hiltViewModel()
+fun SignupScreen(
+    onSignupSuccess: () -> Unit,
+    onNavigateToLogin: () -> Unit,
+    viewModel: SignupViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val inputState by viewModel.inputState.collectAsStateWithLifecycle()
 
     when (uiState) {
-        is LoginUiState.Success -> {
-            onLoginSuccess()
+        is SignupUiState.Success -> {
+            onSignupSuccess()
         }
-        is LoginUiState.Idle, is LoginUiState.Error -> {
+        is SignupUiState.Idle, is SignupUiState.Error -> {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -47,9 +47,13 @@ fun LoginScreen(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = stringResource(R.string.login), style = MaterialTheme.typography.titleLarge)
+                Text(text = stringResource(R.string.signup), style = MaterialTheme.typography.titleLarge)
 
                 Spacer(modifier = Modifier.height(16.dp))
+
+                UsernameField(inputState.username, viewModel::onUsernameChange)
+
+                Spacer(modifier = Modifier.height(8.dp))
 
                 EmailField(inputState.email, viewModel::onEmailChange)
 
@@ -60,27 +64,21 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
-                    onClick = viewModel::onLogin
+                    onClick = viewModel::onSignup
                 ) {
-                    Text("Login")
+                    Text("Signup")
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                TextButton(onClick = onNavigateToRegister) {
-                    Text("Non hai un account? Registrati")
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                TextButton(onClick = onNavigateToResetPassword) {
-                    Text("Hai dimenticato la password?")
+                TextButton(onClick = onNavigateToLogin) {
+                    Text("Hai già un account? Effettua il login")
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                if (uiState is LoginUiState.Error) {
-                    Text(text = (uiState as LoginUiState.Error).errorMessage, color = MaterialTheme.colorScheme.error)
+                if (uiState is SignupUiState.Error) {
+                    Text(text = (uiState as SignupUiState.Error).errorMessage, color = MaterialTheme.colorScheme.error)
                 }
             }
         }

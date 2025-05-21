@@ -21,26 +21,26 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object ServiceModule {
 
-    @Singleton
     @Provides
+    @Singleton
     fun provideStorageService(firestore: FirebaseFirestore, auth: AccountService): StorageService {
         return StorageServiceImpl(firestore, auth)
     }
 
-    @Singleton
     @Provides
+    @Singleton
     fun provideAccountService(auth: FirebaseAuth): AccountService {
         return AccountServiceImpl(auth)
     }
 
-    @Singleton
     @Provides
+    @Singleton
     fun provideDiaryRepository(storageService: StorageService, userRepository: UserRepository): DiaryRepository {
         return DiaryRepositoryImpl(storageService, userRepository)
     }
 
-    @Singleton
     @Provides
+    @Singleton
     fun provideUserRepository(storageService: StorageService): UserRepository {
         return UserRepositoryImpl(storageService)
     }

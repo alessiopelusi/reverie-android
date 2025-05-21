@@ -58,20 +58,23 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.navigation
 import androidx.navigation.toRoute
-import com.mirage.reverie.navigation.AllDiariesParentRoute
+import com.google.firebase.auth.FirebaseAuth
 import com.mirage.reverie.navigation.AllDiariesRoute
 import com.mirage.reverie.navigation.DiaryRoute
 import com.mirage.reverie.navigation.EditDiaryPageRoute
 import com.mirage.reverie.navigation.EditDiaryRoute
+import com.mirage.reverie.navigation.LoginRoute
+import com.mirage.reverie.navigation.ResetPasswordRoute
+import com.mirage.reverie.navigation.SignupRoute
 import com.mirage.reverie.navigation.ViewDiaryRoute
 import com.mirage.reverie.ui.screens.AllDiariesScreen
 import com.mirage.reverie.ui.screens.EditDiaryPageScreen
 import com.mirage.reverie.ui.screens.EditDiaryScreen
+import com.mirage.reverie.ui.screens.LoginScreen
 import com.mirage.reverie.ui.screens.ViewDiaryScreen
 import com.mirage.reverie.viewmodel.DiaryViewModel
-import com.mirage.reverie.ui.screens.LoginScreen
-import com.mirage.reverie.ui.screens.RegisterScreen
 import com.mirage.reverie.ui.screens.ResetPasswordScreen
+import com.mirage.reverie.ui.screens.SignupScreen
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -81,57 +84,18 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            ReverieStartAppComposable()
-        }
-    }
-}
-
-@Composable
-fun ReverieStartAppComposable() {
-    val navController = rememberNavController()
-
-    NavHost(navController = navController, startDestination = "Login") {
-        composable("Login") {
-            LoginScreen(
-                onLoginSuccess = {
-                    navController.navigate("Home") {
-                        popUpTo("Login") { inclusive = true }
-                    }
-                },
-                onNavigateToRegister = {
-                    navController.navigate("Register")
-                },
-                onNavigateToResetPassword = {
-                    navController.navigate("ResetPassword")
-                }
-            )
-        }
-
-        composable("Register") {
-            RegisterScreen(
-                onRegisterSuccess = {
-                    navController.popBackStack()  // Torna al login dopo registrazione
-                },
-                onNavigateToLogin = {
-                    navController.popBackStack()
-                }
-            )
-        }
-
-        composable("ResetPassword") {
-            ResetPasswordScreen(
-                onNavigateBack = {
-                    navController.popBackStack()
-                }
-            )
-        }
-
-        composable("Home") {
             MainComposable()
         }
     }
 }
 
+fun isUserAuthenticated(): Boolean {
+    return FirebaseAuth.getInstance().currentUser != null
+}
+
+fun logout() {
+    FirebaseAuth.getInstance().signOut()
+}
 
 @Composable
 fun MainComposable() {
@@ -189,6 +153,13 @@ fun MainComposable() {
                             onClick = { /* Handle click */ }
                         )
                         NavigationDrawerItem(
+                            label = { Text("Logout") },
+                            selected = false,
+                            icon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
+                            badge = { Text("20") }, // Placeholder
+                            onClick = { logout() }
+                        )
+                        NavigationDrawerItem(
                             label = { Text("Help and feedback") },
                             selected = false,
                             icon = {
@@ -210,53 +181,91 @@ fun MainComposable() {
             Scaffold(
                 topBar = { CustomTopBar(drawerState) },
                 // if bottomBarVisibility is set to none, we don't show the bottom bar
-                bottomBar = { if (bottomBarVisibility) CustomBottomBar(navController, userId) },
+                bottomBar = { if (bottomBarVisibility) CustomBottomBar(navController) },
             ) { innerPadding ->
-                NavHost(navController, startDestination = AllDiariesParentRoute(userId), Modifier.padding(innerPadding)) {
+                NavHost(
+                    navController,
+                    startDestination = if (isUserAuthenticated()) AllDiariesRoute else LoginRoute,
+                    Modifier.padding(innerPadding)
+                ) {
                     // for each composable we set the visibility for the bottom
 
                     // we create a navigation for Diary that contains ViewDiary and EditDiary
                     // in this way we can share the same viewModel between the various composable
                     // https://developer.android.com/develop/ui/compose/libraries#hilt-navigation
-                    navigation<AllDiariesParentRoute>(startDestination = AllDiariesRoute(userId)) {
-                        composable<AllDiariesRoute> {
+                    composable<AllDiariesRoute> {
+                        bottomBarVisibility = true
+                        AllDiariesScreen(
+                            onNavigateToEditDiary = {diaryId -> navController.navigate(EditDiaryRoute(diaryId))},
+                            onNavigateToDiary = {diaryId -> navController.navigate(DiaryRoute(diaryId))}
+                        )
+                    }
+
+                    navigation<DiaryRoute>(startDestination = ViewDiaryRoute(diaryId)) {
+                        composable<ViewDiaryRoute> { backStackEntry ->
                             bottomBarVisibility = true
-                            AllDiariesScreen(
-                                onNavigateToEditDiary = {pageId -> navController.navigate(EditDiaryRoute(pageId))},
-                                onNavigateToDiary = {diaryId -> navController.navigate(DiaryRoute(diaryId))}
+                            val parentEntry = remember(backStackEntry) {
+                                navController.getBackStackEntry<DiaryRoute>()
+                            }
+                            val parentViewModel = hiltViewModel<DiaryViewModel>(parentEntry)
+                            val diary: DiaryRoute = parentEntry.toRoute()
+                            ViewDiaryScreen(
+                                onNavigateToEditDiaryPage = {page -> navController.navigate(EditDiaryPageRoute(page)) },
+                                viewModel = parentViewModel
                             )
                         }
-
-                        navigation<DiaryRoute>(startDestination = ViewDiaryRoute(diaryId)) {
-                            composable<ViewDiaryRoute> { backStackEntry ->
-                                bottomBarVisibility = true
-                                val parentEntry = remember(backStackEntry) {
-                                    navController.getBackStackEntry<DiaryRoute>()
-                                }
-                                val parentViewModel = hiltViewModel<DiaryViewModel>(parentEntry)
-                                val diary: DiaryRoute = parentEntry.toRoute()
-                                ViewDiaryScreen(
-                                    onNavigateToEditDiaryPage = {page -> navController.navigate(EditDiaryPageRoute(page)) },
-                                    viewModel = parentViewModel
-                                )
+                        composable<EditDiaryPageRoute> { backStackEntry ->
+                            bottomBarVisibility = false
+                            EditDiaryPageScreen()
+                        }
+                        composable<EditDiaryRoute> { backStackEntry ->
+                            bottomBarVisibility = false
+                            val parentEntry = remember(backStackEntry) {
+                                navController.getBackStackEntry<DiaryRoute>()
                             }
-                            composable<EditDiaryPageRoute> { backStackEntry ->
-                                bottomBarVisibility = false
-                                EditDiaryPageScreen()
-                            }
-                            composable<EditDiaryRoute> { backStackEntry ->
-                                bottomBarVisibility = false
-                                val parentEntry = remember(backStackEntry) {
-                                    navController.getBackStackEntry<DiaryRoute>()
-                                }
-                                val parentViewModel = hiltViewModel<DiaryViewModel>(parentEntry)
-                                EditDiaryScreen(viewModel = parentViewModel)
-                            }
+                            val parentViewModel = hiltViewModel<DiaryViewModel>(parentEntry)
+                            EditDiaryScreen(viewModel = parentViewModel)
                         }
                     }
+
                     composable<TimeCapsule> {
                         bottomBarVisibility = true
                         TimeCapsuleScreen()
+                    }
+
+                    composable<LoginRoute> {
+                        LoginScreen(
+                            onLoginSuccess = {
+                                navController.navigate(AllDiariesRoute) {
+                                    popUpTo(LoginRoute) { inclusive = true }
+                                }
+                            },
+                            onNavigateToRegister = {
+                                navController.navigate(SignupRoute)
+                            },
+                            onNavigateToResetPassword = {
+                                navController.navigate(ResetPasswordRoute)
+                            }
+                        )
+                    }
+
+                    composable<SignupRoute> {
+                        SignupScreen (
+                            onSignupSuccess = {
+                                navController.popBackStack()  // Torna al login dopo registrazione
+                            },
+                            onNavigateToLogin = {
+                                navController.popBackStack()
+                            }
+                        )
+                    }
+
+                    composable<ResetPasswordRoute> {
+                        ResetPasswordScreen(
+                            onNavigateBack = {
+                                navController.popBackStack()
+                            }
+                        )
                     }
                 }
             }
@@ -297,11 +306,11 @@ fun CustomTopBar(drawerState: DrawerState) {
 }
 
 @Composable
-fun CustomBottomBar(navController: NavController, profileId: String) {
+fun CustomBottomBar(navController: NavController) {
     data class TopLevelRoute<T : Any>(val name: String, val route: T, val icon: ImageVector)
 
     val topLevelRoutes = listOf(
-        TopLevelRoute(stringResource(R.string.all_diaries), AllDiariesRoute(profileId), Icons.AutoMirrored.Rounded.LibraryBooks),
+        TopLevelRoute(stringResource(R.string.all_diaries), AllDiariesRoute, Icons.AutoMirrored.Rounded.LibraryBooks),
         TopLevelRoute(stringResource(R.string.time_capsule), TimeCapsule, Icons.Rounded.MailOutline)
     )
 
