@@ -57,17 +57,21 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.google.firebase.auth.FirebaseAuth
 import com.mirage.reverie.navigation.AllDiariesRoute
+import com.mirage.reverie.navigation.ViewDiaryRoute
 import com.mirage.reverie.navigation.EditDiaryPageRoute
 import com.mirage.reverie.navigation.EditDiaryRoute
+import com.mirage.reverie.navigation.EditProfileRoute
 import com.mirage.reverie.navigation.LoginRoute
 import com.mirage.reverie.navigation.ResetPasswordRoute
 import com.mirage.reverie.navigation.SignupRoute
-import com.mirage.reverie.navigation.ViewDiaryRoute
+import com.mirage.reverie.navigation.ProfileRoute
 import com.mirage.reverie.ui.screens.AllDiariesScreen
 import com.mirage.reverie.ui.screens.EditDiaryPageScreen
 import com.mirage.reverie.ui.screens.EditDiaryScreen
+import com.mirage.reverie.ui.screens.EditProfileScreen
 import com.mirage.reverie.ui.screens.LoginScreen
 import com.mirage.reverie.ui.screens.ViewDiaryScreen
+import com.mirage.reverie.ui.screens.ProfileScreen
 import com.mirage.reverie.ui.screens.ResetPasswordScreen
 import com.mirage.reverie.ui.screens.SignupScreen
 import dagger.hilt.android.AndroidEntryPoint
@@ -90,6 +94,10 @@ fun isUserAuthenticated(): Boolean {
 
 fun logout() {
     FirebaseAuth.getInstance().signOut()
+}
+
+fun getUserId() : String {
+    return FirebaseAuth.getInstance().uid.toString()
 }
 
 @Composable
@@ -171,7 +179,7 @@ fun MainComposable() {
             var bottomBarVisibility by remember { mutableStateOf(true) }
 
             Scaffold(
-                topBar = { CustomTopBar(drawerState) },
+                topBar = { CustomTopBar(navController, drawerState) },
                 // if bottomBarVisibility is set to none, we don't show the bottom bar
                 bottomBar = { if (bottomBarVisibility) CustomBottomBar(navController) },
             ) { innerPadding ->
@@ -247,6 +255,22 @@ fun MainComposable() {
                             }
                         )
                     }
+
+                    composable<ProfileRoute>{
+                        ProfileScreen(
+                            onEditProfile = { profileId ->
+                                navController.navigate(EditProfileRoute(profileId)) {}
+                            }
+                        )
+                    }
+
+                    composable<EditProfileRoute>{
+                        EditProfileScreen(
+                            onViewProfile = { profileId ->
+                                navController.navigate(ProfileRoute(profileId)) {}
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -255,7 +279,7 @@ fun MainComposable() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CustomTopBar(drawerState: DrawerState) {
+fun CustomTopBar(navController: NavController, drawerState: DrawerState) {
     val scope = rememberCoroutineScope()
     CenterAlignedTopAppBar(
         colors = topAppBarColors(
@@ -278,7 +302,9 @@ fun CustomTopBar(drawerState: DrawerState) {
             }
         },
         actions = {
-            IconButton(onClick = {}) {
+            IconButton(onClick = {
+                navController.navigate(ProfileRoute(getUserId()))
+            }) {
                 Icon(Icons.Rounded.Person, contentDescription = stringResource(R.string.account))
             }
         }
