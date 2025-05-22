@@ -7,3 +7,6 @@ data class EditDiaryRoute(val diaryId: String)
 
 @Serializable
 object AllDiariesRoute
+
+@Serializable
+object DiariesRoute
