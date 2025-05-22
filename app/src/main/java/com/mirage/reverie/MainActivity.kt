@@ -106,6 +106,8 @@ fun getUserId() : String {
 @Composable
 fun MainComposable() {
     ReverieTheme {
+        val scope = rememberCoroutineScope()
+
         val navController = rememberNavController()
 
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -160,7 +162,15 @@ fun MainComposable() {
                             selected = false,
                             icon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
                             badge = { Text("20") }, // Placeholder
-                            onClick = { logout() }
+                            onClick = {
+                                logout()
+                                navController.navigate(LoginRoute) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                                scope.launch {
+                                    drawerState.close()
+                                }
+                            }
                         )
                         NavigationDrawerItem(
                             label = { Text("Help and feedback") },
@@ -327,7 +337,10 @@ fun CustomTopBar(navController: NavController, drawerState: DrawerState) {
         },
         actions = {
             IconButton(onClick = {
-                navController.navigate(ProfileRoute(getUserId()))
+                navController.navigate(ProfileRoute(getUserId())) {
+                    popUpTo(ProfileRoute(getUserId())) { saveState = true }
+                    launchSingleTop = true
+                }
             }) {
                 Icon(Icons.Rounded.Person, contentDescription = stringResource(R.string.account))
             }
