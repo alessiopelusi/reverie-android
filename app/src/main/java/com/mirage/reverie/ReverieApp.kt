@@ -20,6 +20,6 @@ class ReverieApp : Application() {
         super.onCreate()
         FirebaseApp.initializeApp(this)
         instance = this
-        FirebaseFirestore.setLoggingEnabled(true)
+        //FirebaseFirestore.setLoggingEnabled(true)
     }
 }

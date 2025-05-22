@@ -34,6 +34,7 @@ interface DiaryRepository {
     suspend fun deleteDiaryImage(diaryImageId: String)
 
     suspend fun getDiaryCover(diaryCoverId: String): DiaryCover
+    suspend fun getAllDiaryCovers(): List<DiaryCover>
 }
 
 
@@ -150,8 +151,11 @@ class DiaryRepositoryImpl @Inject constructor(
     }
     }*/
 
-    override suspend fun getDiaryCover(diaryCoverId: String): DiaryCover {
-        return storageService.getDiaryCover(diaryCoverId)
+    override suspend fun getDiaryCover(diaryCoverId: String): DiaryCover =
+        storageService.getDiaryCover(diaryCoverId)
             ?: throw NoSuchElementException("DiaryCover with ID $diaryCoverId does not exists")
-    }
+
+
+    override suspend fun getAllDiaryCovers(): List<DiaryCover> =
+        storageService.getAllDiaryCovers()
 }

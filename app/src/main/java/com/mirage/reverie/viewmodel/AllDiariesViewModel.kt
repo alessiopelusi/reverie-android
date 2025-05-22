@@ -75,19 +75,19 @@ class AllDiariesViewModel @Inject constructor(
         if (state !is AllDiariesUiState.Success) return
 
         if (updatedDiary != null) {
-            val diariesMap = state.diariesMap.toMutableMap()
-            diariesMap[updatedDiary.id] = updatedDiary
-            val diaryCoversMap = state.diaryCoversMap.toMutableMap()
+            viewModelScope.launch {
+                val diariesMap = state.diariesMap.toMutableMap()
+                diariesMap[updatedDiary.id] = updatedDiary
+                val diaryCoversMap = state.diaryCoversMap.toMutableMap()
 
-            val diaryCoverId = updatedDiary.coverId
-            if (diaryCoverId !in diaryCoversMap) {
-                viewModelScope.launch {
+                val diaryCoverId = updatedDiary.coverId
+                if (diaryCoverId !in diaryCoversMap) {
                     diaryCoversMap[diaryCoverId] = repository.getDiaryCover(diaryCoverId)
                 }
-            }
 
-            _uiState.update {
-                AllDiariesUiState.Success(state.allDiaries, diariesMap, diaryCoversMap, state.pagerState)
+                _uiState.update {
+                    AllDiariesUiState.Success(state.allDiaries, diariesMap, diaryCoversMap, state.pagerState)
+                }
             }
         }
     }

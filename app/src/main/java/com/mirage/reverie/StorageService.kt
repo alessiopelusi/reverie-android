@@ -45,6 +45,7 @@ interface StorageService {
     suspend fun deleteDiaryImage(diaryImageId: String)
 
     suspend fun getDiaryCover(diaryCoverId: String): DiaryCover?
+    suspend fun getAllDiaryCovers(): List<DiaryCover>
 }
 
 @Singleton
@@ -171,4 +172,9 @@ class StorageServiceImpl @Inject constructor(
     override suspend fun getDiaryCover(diaryCoverId: String): DiaryCover? =
         firestore.collection(DIARY_COVER_COLLECTION).document(diaryCoverId).get().await()
             .toObject<DiaryCover?>()?.copy(id = diaryCoverId)
+
+
+    override suspend fun getAllDiaryCovers(): List<DiaryCover> =
+        firestore.collection(DIARY_COVER_COLLECTION)
+            .get().await().mapNotNull{ diary -> diary.toObject<DiaryCover?>()?.copy(id = diary.id) }
 }

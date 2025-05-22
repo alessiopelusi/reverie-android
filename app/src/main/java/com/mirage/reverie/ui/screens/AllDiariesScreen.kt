@@ -139,7 +139,7 @@ fun AllDiariesScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp), // Adds spacing between elements
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            DiaryCover(
+                            DiaryCoverComposable(
                                 modifier = Modifier,
                                 coverUrl = diaryCoversMap.getValue(diaries[currentPage].coverId).url
                             )
@@ -269,7 +269,7 @@ fun AllDiariesScreen(
 }
 
 @Composable
-fun DiaryCover(modifier: Modifier, coverUrl: String) {
+fun DiaryCoverComposable(modifier: Modifier, coverUrl: String) {
     Box(
         modifier = modifier
             .border(width = 2.dp, color = Color.Blue, shape = RectangleShape)

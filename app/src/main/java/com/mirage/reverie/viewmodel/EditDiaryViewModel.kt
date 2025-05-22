@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.mirage.reverie.data.model.Diary
+import com.mirage.reverie.data.model.DiaryCover
 import com.mirage.reverie.data.repository.DiaryRepository
 import com.mirage.reverie.navigation.EditDiaryRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,8 +16,14 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class EditDiaryFormState(
-    val diary: Diary = Diary()
-)
+    val diary: Diary = Diary(),
+    val allCoversMap: Map<String, DiaryCover> = mapOf(),
+    //val allCovers: List<DiaryCover> = listOf(),
+    val selectedCover: String = diary.coverId
+) {
+    //val allCovers: List<DiaryCover>
+    //    get() = allCoversMap.keys.map { coverId -> allCoversMap.getValue(coverId) }
+}
 
 sealed class EditDiaryUiState {
     data object Loading : EditDiaryUiState()
@@ -47,9 +54,11 @@ class EditDiaryViewModel @Inject constructor(
     private fun onStart() {
         viewModelScope.launch {
             val diary = repository.getDiary(diaryId)
+            val allCovers = repository.getAllDiaryCovers()
+            val allCoversMap = allCovers.associateBy { cover -> cover.id }
 
             _formState.update { state ->
-                state.copy(diary = diary)
+                state.copy(diary = diary, allCoversMap = allCoversMap)
             }
 
             _uiState.value = EditDiaryUiState.Idle
@@ -81,6 +90,16 @@ class EditDiaryViewModel @Inject constructor(
 
         _formState.update { state ->
             val updatedDiary = state.diary.copy(title = newTitle)
+            state.copy(diary = updatedDiary)
+        }
+    }
+
+    fun onUpdateCover(newCoverId: String) {
+        val currentState = uiState.value
+        if (currentState is EditDiaryUiState.Loading) return
+
+        _formState.update { state ->
+            val updatedDiary = state.diary.copy(coverId = newCoverId)
             state.copy(diary = updatedDiary)
         }
     }
