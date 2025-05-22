@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class EditDiaryFormState(
-    val title: String = ""
+    val diary: Diary = Diary()
 )
 
 sealed class EditDiaryUiState {
@@ -49,36 +49,28 @@ class EditDiaryViewModel @Inject constructor(
             val diary = repository.getDiary(diaryId)
 
             _formState.update { state ->
-                state.copy(title = diary.title)
+                state.copy(diary = diary)
             }
 
             _uiState.value = EditDiaryUiState.Idle
         }
     }
 
-    private fun updateDiary(diary: Diary) {
-        viewModelScope.launch {
-            try {
-                repository.updateDiary(diary)
-                _uiState.value = EditDiaryUiState.Success
-            } catch (exception: Exception) {
-                _uiState.value = EditDiaryUiState.Error(exception.message.toString()) // Gestisci errori
-            }
-        }
-    }
-
-
     fun onUpdateDiary() {
         _uiState.update { EditDiaryUiState.Idle }
 
         val state = formState.value
-        if (state.title.isBlank()) {
+        if (state.diary.title.isBlank()) {
             _uiState.update { EditDiaryUiState.Error("Il titolo è obbligatorio") }
         }
 
         viewModelScope.launch {
-            val diary = repository.getDiary(diaryId).copy(title = state.title)
-            updateDiary(diary)
+            try {
+                repository.updateDiary(state.diary)
+                _uiState.value = EditDiaryUiState.Success
+            } catch (exception: Exception) {
+                _uiState.value = EditDiaryUiState.Error(exception.message.toString()) // Gestisci errori
+            }
         }
     }
 
@@ -88,7 +80,8 @@ class EditDiaryViewModel @Inject constructor(
         if (currentState is EditDiaryUiState.Loading) return
 
         _formState.update { state ->
-            state.copy(title = newTitle)
+            val updatedDiary = state.diary.copy(title = newTitle)
+            state.copy(diary = updatedDiary)
         }
     }
 }

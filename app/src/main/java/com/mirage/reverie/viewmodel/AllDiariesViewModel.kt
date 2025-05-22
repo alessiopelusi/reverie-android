@@ -12,6 +12,7 @@ import com.mirage.reverie.data.repository.DiaryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -65,6 +66,28 @@ class AllDiariesViewModel @Inject constructor(
                 val diaryCoversSet = diaries.map { diary -> diary.coverId }.toSet()
                 val diaryCoversMap = diaryCoversSet.associateWith { diaryCoverId -> repository.getDiaryCover(diaryCoverId) }
                 _uiState.value = AllDiariesUiState.Success(allDiaries, diariesMap, diaryCoversMap)
+            }
+        }
+    }
+
+    fun overwriteDiary(updatedDiary: Diary?) {
+        val state = uiState.value
+        if (state !is AllDiariesUiState.Success) return
+
+        if (updatedDiary != null) {
+            val diariesMap = state.diariesMap.toMutableMap()
+            diariesMap[updatedDiary.id] = updatedDiary
+            val diaryCoversMap = state.diaryCoversMap.toMutableMap()
+
+            val diaryCoverId = updatedDiary.coverId
+            if (diaryCoverId !in diaryCoversMap) {
+                viewModelScope.launch {
+                    diaryCoversMap[diaryCoverId] = repository.getDiaryCover(diaryCoverId)
+                }
+            }
+
+            _uiState.update {
+                AllDiariesUiState.Success(state.allDiaries, diariesMap, diaryCoversMap, state.pagerState)
             }
         }
     }

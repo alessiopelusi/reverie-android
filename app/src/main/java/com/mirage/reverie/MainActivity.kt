@@ -57,6 +57,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.google.firebase.auth.FirebaseAuth
+import com.mirage.reverie.data.model.Diary
 import com.mirage.reverie.data.model.User
 import com.mirage.reverie.navigation.AllDiariesRoute
 import com.mirage.reverie.navigation.ViewDiaryRoute
@@ -195,11 +196,28 @@ fun MainComposable() {
                     // we create a navigation for Diary that contains ViewDiary and EditDiary
                     // in this way we can share the same viewModel between the various composable
                     // https://developer.android.com/develop/ui/compose/libraries#hilt-navigation
-                    composable<AllDiariesRoute> {
+                    composable<AllDiariesRoute> { backStackEntry ->
+                        val updatedDiary = backStackEntry.savedStateHandle.get<Diary>("diary")
+                        backStackEntry.savedStateHandle.remove<User>("profile")
+
                         bottomBarVisibility = true
                         AllDiariesScreen(
+                            updatedDiary = updatedDiary,
                             onNavigateToEditDiary = {diaryId -> navController.navigate(EditDiaryRoute(diaryId))},
                             onNavigateToDiary = {diaryId -> navController.navigate(ViewDiaryRoute(diaryId))}
+                        )
+                    }
+
+                    composable<EditDiaryRoute> { backStackEntry ->
+                        bottomBarVisibility = false
+                        EditDiaryScreen(
+                            onComplete = { diary ->
+                                navController.previousBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("diary", diary)
+
+                                navController.popBackStack()
+                            }
                         )
                     }
 
@@ -212,10 +230,6 @@ fun MainComposable() {
                     composable<EditDiaryPageRoute> { backStackEntry ->
                         bottomBarVisibility = false
                         EditDiaryPageScreen()
-                    }
-                    composable<EditDiaryRoute> { backStackEntry ->
-                        bottomBarVisibility = false
-                        EditDiaryScreen()
                     }
 
                     composable<TimeCapsule> {

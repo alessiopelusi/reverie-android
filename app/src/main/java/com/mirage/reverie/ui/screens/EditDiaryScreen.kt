@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mirage.reverie.data.model.Diary
 import com.mirage.reverie.viewmodel.DiaryUiState
 import com.mirage.reverie.viewmodel.DiaryViewModel
 import com.mirage.reverie.viewmodel.EditDiaryUiState
@@ -21,6 +22,7 @@ import com.mirage.reverie.viewmodel.LoginUiState
 
 @Composable
 fun EditDiaryScreen(
+    onComplete: (Diary) -> Unit,
     viewModel: EditDiaryViewModel = hiltViewModel()
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -29,12 +31,13 @@ fun EditDiaryScreen(
         is EditDiaryUiState.Loading -> CircularProgressIndicator()
         is EditDiaryUiState.Idle, is EditDiaryUiState.Error -> {
             val formState by viewModel.formState.collectAsStateWithLifecycle()
+            val diary = formState.diary
             Column {
                 Text(
                     modifier = Modifier.padding(8.dp),
                     text = "You are editing your diary!",
                 )
-                EditTitleTextField(formState.title, onUpdateTitle = viewModel::onUpdateTitle)
+                EditTitleTextField(diary.title, onUpdateTitle = viewModel::onUpdateTitle)
                 Button(
                     onClick = viewModel::onUpdateDiary
                 ) {
@@ -46,7 +49,10 @@ fun EditDiaryScreen(
                 }
             }
         }
-        is EditDiaryUiState.Success -> {}
+        is EditDiaryUiState.Success -> {
+            val formState by viewModel.formState.collectAsStateWithLifecycle()
+            onComplete(formState.diary)
+        }
     }
 }
 

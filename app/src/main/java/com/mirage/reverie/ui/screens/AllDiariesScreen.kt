@@ -52,6 +52,7 @@ import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.mirage.reverie.data.model.Diary
 import com.mirage.reverie.ui.theme.PaperColor
 import com.mirage.reverie.ui.theme.Purple80
 import com.mirage.reverie.viewmodel.AllDiariesUiState
@@ -60,7 +61,14 @@ import kotlin.math.absoluteValue
 
 
 @Composable
-fun AllDiariesScreen(onNavigateToDiary: (String) -> Unit, onNavigateToEditDiary: (String) -> Unit,  viewModel: AllDiariesViewModel = hiltViewModel()) {
+fun AllDiariesScreen(
+    updatedDiary: Diary? = null,
+    onNavigateToDiary: (String) -> Unit,
+    onNavigateToEditDiary: (String) -> Unit,
+    viewModel: AllDiariesViewModel = hiltViewModel()
+) {
+    viewModel.overwriteDiary(updatedDiary)
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     when (uiState) {
