@@ -49,12 +49,11 @@ import androidx.compose.ui.util.lerp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import com.mirage.reverie.ui.theme.PaperColor
 import com.mirage.reverie.ui.theme.Purple80
 import com.mirage.reverie.viewmodel.AllDiariesUiState
 import com.mirage.reverie.viewmodel.AllDiariesViewModel
-import com.mirage.reverie.viewmodel.DiaryUiState
-import kotlinx.coroutines.flow.map
 import kotlin.math.absoluteValue
 
 
@@ -68,7 +67,7 @@ fun AllDiariesScreen(onNavigateToDiary: (String) -> Unit, onNavigateToEditDiary:
             val diaries = (uiState as AllDiariesUiState.Success).diaries
             val currentPage = (uiState as AllDiariesUiState.Success).currentPage
             val pagerState = (uiState as AllDiariesUiState.Success).pagerState
-
+            val diaryCoversMap = (uiState as AllDiariesUiState.Success).diaryCoversMap
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -131,7 +130,7 @@ fun AllDiariesScreen(onNavigateToDiary: (String) -> Unit, onNavigateToEditDiary:
                     ) {
                         DiaryCover(
                             modifier = Modifier.fillMaxSize(),
-                            text = diaries[currentPage].cover
+                            coverUrl = diaryCoversMap.getValue(diaries[currentPage].coverId).url
                         )
                     }
                 }
@@ -247,12 +246,18 @@ fun AllDiariesScreen(onNavigateToDiary: (String) -> Unit, onNavigateToEditDiary:
 }
 
 @Composable
-fun DiaryCover(modifier: Modifier, text: String) {
+fun DiaryCover(modifier: Modifier, coverUrl: String) {
     Box(
         modifier = modifier
             .border(width = 2.dp, color = Color.Blue, shape = RectangleShape)
-            .background(PaperColor)
+            .background(PaperColor),
+        contentAlignment = Alignment.Center,
     ) {
-        Text(text = text)
+        AsyncImage(
+            modifier = Modifier
+                .fillMaxWidth(),
+            model = coverUrl,
+            contentDescription = null
+        )
     }
 }

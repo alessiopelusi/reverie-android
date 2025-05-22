@@ -2,12 +2,10 @@ package com.mirage.reverie.data.model
 
 import com.mirage.reverie.data.SerializableDataClass
 import com.squareup.moshi.Json
+import kotlinx.serialization.Serializable
 
-// DiaryState contains all the data of the diary
-data class Diary (
+data class DiaryCover (
     @Json(ignore = true) val id: String = "",
-    val userId: String = "",
-    val title: String = "",
-    val coverId: String = "",
-    val pageIds: List<String> = listOf()
+    val name: String = "",
+    val url: String = ""
 ) : SerializableDataClass()

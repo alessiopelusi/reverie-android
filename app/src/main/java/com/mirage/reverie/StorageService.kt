@@ -3,6 +3,7 @@ package com.mirage.reverie
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.toObject
 import com.mirage.reverie.data.model.Diary
+import com.mirage.reverie.data.model.DiaryCover
 import com.mirage.reverie.data.model.DiaryImage
 import com.mirage.reverie.data.model.DiaryPage
 import com.mirage.reverie.data.model.DiarySubPage
@@ -42,6 +43,8 @@ interface StorageService {
     suspend fun saveDiaryImage(diaryImage: DiaryImage): DiaryImage
     suspend fun updateDiaryImage(diaryImage: DiaryImage)
     suspend fun deleteDiaryImage(diaryImageId: String)
+
+    suspend fun getDiaryCover(diaryCoverId: String): DiaryCover?
 }
 
 @Singleton
@@ -54,7 +57,7 @@ class StorageServiceImpl @Inject constructor(
     val PAGE_COLLECTION = "pages"
     val SUB_PAGE_COLLECTION = "subPages"
     val DIARY_IMAGE_COLLECTION = "diaryImages"
-
+    val DIARY_COVER_COLLECTION = "diaryCovers"
     val USER_ID_FIELD = "userId"
 
     /*override val diaries: Flow<List<Diary>>
@@ -163,4 +166,9 @@ class StorageServiceImpl @Inject constructor(
     override suspend fun deleteDiaryImage(diaryImageId: String) {
         firestore.collection(DIARY_IMAGE_COLLECTION).document(diaryImageId).delete().await()
     }
+
+
+    override suspend fun getDiaryCover(diaryCoverId: String): DiaryCover? =
+        firestore.collection(DIARY_COVER_COLLECTION).document(diaryCoverId).get().await()
+            .toObject<DiaryCover?>()?.copy(id = diaryCoverId)
 }

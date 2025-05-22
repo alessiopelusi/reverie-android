@@ -2,6 +2,7 @@ package com.mirage.reverie.data.repository
 
 import com.mirage.reverie.StorageService
 import com.mirage.reverie.data.model.Diary
+import com.mirage.reverie.data.model.DiaryCover
 import com.mirage.reverie.data.model.DiaryImage
 import com.mirage.reverie.data.model.DiaryPage
 import com.mirage.reverie.data.model.DiarySubPage
@@ -31,6 +32,8 @@ interface DiaryRepository {
     suspend fun saveDiaryImage(diaryImage: DiaryImage): DiaryImage
     suspend fun updateDiaryImage(diaryImage: DiaryImage)
     suspend fun deleteDiaryImage(diaryImageId: String)
+
+    suspend fun getDiaryCover(diaryCoverId: String): DiaryCover
 }
 
 
@@ -146,4 +149,9 @@ class DiaryRepositoryImpl @Inject constructor(
         return _diaries.filter{ it.value.value.profileId == profileId }.map{ it.value.asStateFlow() }
     }
     }*/
+
+    override suspend fun getDiaryCover(diaryCoverId: String): DiaryCover {
+        return storageService.getDiaryCover(diaryCoverId)
+            ?: throw NoSuchElementException("DiaryCover with ID $diaryCoverId does not exists")
+    }
 }

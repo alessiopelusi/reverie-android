@@ -4,12 +4,11 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.toRoute
 import com.google.firebase.auth.FirebaseAuth
 import com.mirage.reverie.data.model.AllDiaries
 import com.mirage.reverie.data.model.Diary
+import com.mirage.reverie.data.model.DiaryCover
 import com.mirage.reverie.data.repository.DiaryRepository
-import com.mirage.reverie.navigation.AllDiariesRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,12 +21,13 @@ sealed class AllDiariesUiState {
     data class Success(
         val allDiaries: AllDiaries,
         val diariesMap: Map<String, Diary>,
+        val diaryCoversMap: Map<String, DiaryCover>,
         val pagerState: PagerState = PagerState(
             // endlessPagerMultiplier = 1000
             // endlessPagerMultiplier/2 = 500
             // offset = 1
-            pageCount = {allDiaries.diaryIds.size*1000},
-            currentPage = allDiaries.diaryIds.size*500 + 1
+            pageCount = {if (allDiaries.diaryIds.size > 1) allDiaries.diaryIds.size*1000 else 1},
+            currentPage = if (allDiaries.diaryIds.size > 1) allDiaries.diaryIds.size*500 + allDiaries.diaryIds.size/2 else 0
         ),
     ) : AllDiariesUiState() {
         val diaries: List<Diary>
@@ -62,7 +62,9 @@ class AllDiariesViewModel @Inject constructor(
                 val diaries = repository.getUserDiaries(userId)
                 val allDiaries = AllDiaries(userId, diaries.map { diary -> diary.id })
                 val diariesMap = diaries.associateBy { diary -> diary.id }
-                _uiState.value = AllDiariesUiState.Success(allDiaries, diariesMap)
+                val diaryCoversSet = diaries.map { diary -> diary.coverId }.toSet()
+                val diaryCoversMap = diaryCoversSet.associateWith { diaryCoverId -> repository.getDiaryCover(diaryCoverId) }
+                _uiState.value = AllDiariesUiState.Success(allDiaries, diariesMap, diaryCoversMap)
             }
         }
     }
