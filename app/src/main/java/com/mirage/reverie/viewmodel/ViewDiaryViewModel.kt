@@ -1,8 +1,7 @@
 package com.mirage.reverie.viewmodel
 
 import android.content.Context
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.platform.LocalContext
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,7 +9,6 @@ import androidx.navigation.toRoute
 import coil3.ImageLoader
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
-import coil3.request.allowHardware
 import coil3.toBitmap
 import com.mirage.reverie.data.model.Diary
 import com.mirage.reverie.data.model.DiaryImage
@@ -22,30 +20,31 @@ import com.mirage.reverie.navigation.ViewDiaryRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.math.min
 
-sealed class DiaryUiState {
-    data object Loading : DiaryUiState()
+sealed class ViewDiaryUiState {
+    data object Loading : ViewDiaryUiState()
     data class Success(
         val diary: Diary,
         val pagesMap: Map<String, DiaryPage>,
         val subPagesMap: Map<String, DiarySubPage>,
         val imagesMap: Map<String, DiaryImage>
-    ) : DiaryUiState() {
+    ) : ViewDiaryUiState() {
         val pages: List<DiaryPage>
             get() = diary.pageIds.map { pageId -> pagesMap.getValue(pageId) }
 
         val subPages: List<DiarySubPage>
             get() = pages.flatMap { page -> page.subPageIds }.map { subPageId -> subPagesMap.getValue(subPageId) }
     }
-    data class Error(val exception: Throwable) : DiaryUiState()
+    data class Error(val exception: Throwable) : ViewDiaryUiState()
 }
 
 // HiltViewModel inject SavedStateHandle + other dependencies provided by AppModule
 @HiltViewModel
-class DiaryViewModel @Inject constructor(
+class ViewDiaryViewModel @Inject constructor(
     private val context: Context,
     private val savedStateHandle: SavedStateHandle,
     private val repository: DiaryRepository,
@@ -59,7 +58,7 @@ class DiaryViewModel @Inject constructor(
             initialValue = repository.getDiaryById(diary.diaryId).value // Wrong?
         )
     */
-    private val _uiState = MutableStateFlow<DiaryUiState>(DiaryUiState.Loading)
+    private val _uiState = MutableStateFlow<ViewDiaryUiState>(ViewDiaryUiState.Loading)
     val uiState = _uiState.asStateFlow()
 
     init {
@@ -73,13 +72,34 @@ class DiaryViewModel @Inject constructor(
             val pagesMap = diary.pageIds.associateWith { pageId -> repository.getPage(pageId) }
             val subPagesMap = pagesMap.values.flatMap { page -> page.subPageIds }.associateWith { subPageId -> repository.getSubPage(subPageId) }
             val imagesMap = subPagesMap.values.flatMap { subPage -> subPage.imageIds }.associateWith { imageId -> repository.getDiaryImage(imageId) }
-            _uiState.value = DiaryUiState.Success(diary, pagesMap, subPagesMap, imagesMap)
+            _uiState.value = ViewDiaryUiState.Success(diary, pagesMap, subPagesMap, imagesMap)
+        }
+    }
+
+    fun overwritePage(page: DiaryPage?) {
+        val state = uiState.value
+        if (state !is ViewDiaryUiState.Success) return
+
+        if (page != null) {
+            val pagesMap = state.pagesMap.toMutableMap()
+            pagesMap[page.id] = page
+
+            val subPagesMap = state.subPagesMap.toMutableMap()
+            page.subPageIds.forEach{ subPageId ->
+                subPagesMap[subPageId] = subPagesMap.getValue(subPageId).copy(testOverflow = 0, contentEndIndex = 0)
+            }
+            Log.d("overwritePage", state.subPagesMap.toString())
+            Log.d("overwritePage", subPagesMap.toString())
+
+            _uiState.update {
+                ViewDiaryUiState.Success(state.diary, pagesMap, subPagesMap, state.imagesMap)
+            }
         }
     }
 
     fun loadImage(imageId: String) {
         val state = uiState.value
-        if (state !is DiaryUiState.Success) return
+        if (state !is ViewDiaryUiState.Success) return
 
         val imagesMap = state.imagesMap.toMutableMap()
         var image = imagesMap.getValue(imageId)
@@ -96,13 +116,13 @@ class DiaryViewModel @Inject constructor(
             image = image.copy(bitmap = bitmap)
             imagesMap[imageId] = image
 
-            _uiState.value = DiaryUiState.Success(state.diary, state.pagesMap, state.subPagesMap, imagesMap)
+            _uiState.value = ViewDiaryUiState.Success(state.diary, state.pagesMap, state.subPagesMap, imagesMap)
         }
     }
 
     private fun getPageSubPages(pageId: String): List<DiarySubPage> {
         val state = uiState.value
-        if (state !is DiaryUiState.Success) return listOf()
+        if (state !is ViewDiaryUiState.Success) return listOf()
 
         val subPagesMap = state.subPagesMap
         val pagesMap = state.pagesMap
@@ -114,7 +134,7 @@ class DiaryViewModel @Inject constructor(
 
     private fun getPreviousSubPage(subPageId: String): DiarySubPage? {
         val state = uiState.value
-        if (state !is DiaryUiState.Success) return null
+        if (state !is ViewDiaryUiState.Success) return null
 
         val subPagesMap = state.subPagesMap
         val subPage = subPagesMap.getValue(subPageId)
@@ -127,7 +147,7 @@ class DiaryViewModel @Inject constructor(
 
     private fun getNextSubPage(subPageId: String): DiarySubPage? {
         val state = uiState.value
-        if (state !is DiaryUiState.Success) return null
+        if (state !is ViewDiaryUiState.Success) return null
 
         val subPagesMap = state.subPagesMap
         val pagesMap = state.pagesMap
@@ -142,7 +162,7 @@ class DiaryViewModel @Inject constructor(
 
     private fun getSubPageStartIndex(subPageId: String): Int {
         val state = uiState.value
-        if (state !is DiaryUiState.Success) return 0
+        if (state !is ViewDiaryUiState.Success) return 0
 
         val previousSubPage = getPreviousSubPage(subPageId)
         return previousSubPage?.contentEndIndex ?: 0
@@ -150,7 +170,7 @@ class DiaryViewModel @Inject constructor(
 
     fun getSubPageContent(subPageId: String): String {
         val state = uiState.value
-        if (state !is DiaryUiState.Success) return ""
+        if (state !is ViewDiaryUiState.Success) return ""
 
         val subPagesMap = state.subPagesMap
         val pagesMap = state.pagesMap
@@ -162,7 +182,7 @@ class DiaryViewModel @Inject constructor(
 
     fun getSubPageImages(subPageId: String): List<DiaryImage> {
         val state = uiState.value
-        if (state !is DiaryUiState.Success) return listOf()
+        if (state !is ViewDiaryUiState.Success) return listOf()
 
         val subPagesMap = state.subPagesMap
         val updatedImageMap = state.imagesMap.toMutableMap()
@@ -170,13 +190,10 @@ class DiaryViewModel @Inject constructor(
 
         viewModelScope.launch {
             subPage.imageIds.forEach { imageId ->
-                if (updatedImageMap.getValue(imageId) == null) {
-                    updatedImageMap[imageId] = repository.getDiaryImage(imageId)
-                }
                 updatedImageMap.getValue(imageId)
             }
 
-            _uiState.value = DiaryUiState.Success(
+            _uiState.value = ViewDiaryUiState.Success(
                 state.diary,
                 state.pagesMap,
                 state.subPagesMap,
@@ -189,7 +206,7 @@ class DiaryViewModel @Inject constructor(
 
     private fun updateSubPage(updatedSubPage: DiarySubPage) {
         val state = uiState.value
-        if (state !is DiaryUiState.Success) return
+        if (state !is ViewDiaryUiState.Success) return
 
         // if equals to current, return
         if (updatedSubPage == state.subPagesMap.getValue(updatedSubPage.id)) return
@@ -205,7 +222,7 @@ class DiaryViewModel @Inject constructor(
         val updatedSubPagesMap = state.subPagesMap.toMutableMap()
         updatedSubPagesMap[updatedSubPage.id] = updatedSubPage
 
-        _uiState.value = DiaryUiState.Success(
+        _uiState.value = ViewDiaryUiState.Success(
             state.diary,
             state.pagesMap,
             updatedSubPagesMap,
@@ -215,7 +232,7 @@ class DiaryViewModel @Inject constructor(
 
     private fun updateSubPageContentEndIndex(subPageId: String, contentEndIndex: Int) {
         val state = uiState.value
-        if (state !is DiaryUiState.Success) return
+        if (state !is ViewDiaryUiState.Success) return
 
         val subPagesMap = state.subPagesMap
         val subPage = subPagesMap.getValue(subPageId)
@@ -226,7 +243,7 @@ class DiaryViewModel @Inject constructor(
 
     private fun resetSubPageContentEndIndex(subPageId: String) {
         val state = uiState.value
-        if (state !is DiaryUiState.Success) return
+        if (state !is ViewDiaryUiState.Success) return
 
         val subPagesMap = state.subPagesMap
         val pagesMap = state.pagesMap
@@ -238,7 +255,7 @@ class DiaryViewModel @Inject constructor(
 
     private fun updateSubPageTestOverflow(subPageId: String, testOverflow: Int) {
         val state = uiState.value
-        if (state !is DiaryUiState.Success) return
+        if (state !is ViewDiaryUiState.Success) return
 
         val subPagesMap = state.subPagesMap
         val subPage = subPagesMap.getValue(subPageId)
@@ -249,7 +266,7 @@ class DiaryViewModel @Inject constructor(
 
     private fun incrementSubPageTestOverflow(subPageId: String) {
         val state = uiState.value
-        if (state !is DiaryUiState.Success) return
+        if (state !is ViewDiaryUiState.Success) return
 
         val subPagesMap = state.subPagesMap
         val subPage = subPagesMap.getValue(subPageId)
@@ -259,14 +276,14 @@ class DiaryViewModel @Inject constructor(
 
     fun resetSubPageTestOverflow(subPageId: String) {
         val state = uiState.value
-        if (state !is DiaryUiState.Success) return
+        if (state !is ViewDiaryUiState.Success) return
 
         updateSubPageContentEndIndex(subPageId, 0)
     }
 
     private fun addSubPage(subPage: DiarySubPage) {
         val state = uiState.value
-        if (state !is DiaryUiState.Success) return
+        if (state !is ViewDiaryUiState.Success) return
 
         viewModelScope.launch {
             val subPageWithId = repository.saveSubPage(subPage)
@@ -281,13 +298,35 @@ class DiaryViewModel @Inject constructor(
 
             updatedPagesMap[subPageWithId.pageId] = updatedPage.copy(subPageIds = updatedSubPagesIds)
 
-            _uiState.value = DiaryUiState.Success(state.diary, updatedPagesMap, updatedSubPagesMap, state.imagesMap)
+            _uiState.value = ViewDiaryUiState.Success(state.diary, updatedPagesMap, updatedSubPagesMap, state.imagesMap)
+        }
+    }
+
+    private fun deleteSubPage(subPageId: String) {
+        val state = uiState.value
+        if (state !is ViewDiaryUiState.Success) return
+
+        viewModelScope.launch {
+            repository.deleteSubPage(subPageId)
+
+            val updatedSubPagesMap = state.subPagesMap.toMutableMap()
+            val subPage = updatedSubPagesMap.getValue(subPageId)
+            updatedSubPagesMap.remove(subPageId)
+
+            val updatedPagesMap = state.pagesMap.toMutableMap()
+            val updatedPage = updatedPagesMap.getValue(subPage.pageId)
+            val updatedSubPagesIds = updatedPage.subPageIds.toMutableList()
+            updatedSubPagesIds.remove(subPageId)
+
+            updatedPagesMap[subPage.pageId] = updatedPage.copy(subPageIds = updatedSubPagesIds)
+
+            _uiState.value = ViewDiaryUiState.Success(state.diary, updatedPagesMap, updatedSubPagesMap, state.imagesMap)
         }
     }
 
     fun updateSubPageOffset(subPageId: String, offset: Int) {
         val state = uiState.value
-        if (state !is DiaryUiState.Success) return
+        if (state !is ViewDiaryUiState.Success) return
 
         var subPage = state.subPagesMap.getValue(subPageId)
         val pageId = state.subPagesMap.getValue(subPageId).pageId
@@ -297,13 +336,17 @@ class DiaryViewModel @Inject constructor(
                 resetSubPageContentEndIndex(subPageId)
             }
             2 -> {
+                if (offset == 1 && subPage.imageIds.isEmpty()) {
+                    deleteSubPage(subPage.id)
+                    return
+                }
                 val page = state.pagesMap.getValue(pageId)
                 updateSubPageContentEndIndex(subPageId,
                     min(getSubPageStartIndex(subPageId) + offset, page.content.length)
                 )
 
                 // update subPage using fresh state value
-                subPage = (uiState.value as DiaryUiState.Success).subPagesMap.getValue(subPageId)
+                subPage = (uiState.value as ViewDiaryUiState.Success).subPagesMap.getValue(subPageId)
 
                 // if not last page
                 val nextSubPage = getNextSubPage(subPageId)
@@ -331,14 +374,14 @@ class DiaryViewModel @Inject constructor(
 
     private fun updateDiaryImage(updatedDiaryImage: DiaryImage) {
         val state = uiState.value
-        if (state !is DiaryUiState.Success) return
+        if (state !is ViewDiaryUiState.Success) return
 
         viewModelScope.launch {
             repository.updateDiaryImage(updatedDiaryImage)
             val updatedImageMap = state.imagesMap.toMutableMap()
             updatedImageMap[updatedDiaryImage.id] = updatedDiaryImage
 
-            _uiState.value = DiaryUiState.Success(
+            _uiState.value = ViewDiaryUiState.Success(
                 state.diary,
                 state.pagesMap,
                 state.subPagesMap,
@@ -349,7 +392,7 @@ class DiaryViewModel @Inject constructor(
 
     fun updateDiaryImageOffset(diaryImageId: String, offsetX: Int, offsetY: Int) {
         val state = uiState.value
-        if (state !is DiaryUiState.Success) return
+        if (state !is ViewDiaryUiState.Success) return
 
         viewModelScope.launch {
             val imageMap = state.imagesMap

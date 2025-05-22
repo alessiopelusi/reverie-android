@@ -60,10 +60,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.compose.navigation
 import com.google.firebase.auth.FirebaseAuth
 import com.mirage.reverie.data.model.Diary
+import com.mirage.reverie.data.model.DiaryPage
 import com.mirage.reverie.data.model.User
 import com.mirage.reverie.navigation.AllDiariesRoute
 import com.mirage.reverie.navigation.AuthenticationRoute
 import com.mirage.reverie.navigation.DiariesRoute
+import com.mirage.reverie.navigation.DiaryRoute
 import com.mirage.reverie.navigation.ViewDiaryRoute
 import com.mirage.reverie.navigation.EditDiaryPageRoute
 import com.mirage.reverie.navigation.EditDiaryRoute
@@ -220,7 +222,7 @@ fun MainComposable() {
                             AllDiariesScreen(
                                 updatedDiary = updatedDiary,
                                 onNavigateToEditDiary = {diaryId -> navController.navigate(EditDiaryRoute(diaryId))},
-                                onNavigateToDiary = {diaryId -> navController.navigate(ViewDiaryRoute(diaryId))}
+                                onNavigateToDiary = {diaryId -> navController.navigate(DiaryRoute(diaryId))}
                             )
                         }
 
@@ -237,15 +239,31 @@ fun MainComposable() {
                             )
                         }
 
-                        composable<ViewDiaryRoute> { backStackEntry ->
-                            bottomBarVisibility = true
-                            ViewDiaryScreen(
-                                onNavigateToEditDiaryPage = {page -> navController.navigate(EditDiaryPageRoute(page)) },
-                            )
-                        }
-                        composable<EditDiaryPageRoute> { backStackEntry ->
-                            bottomBarVisibility = false
-                            EditDiaryPageScreen()
+                        navigation<DiaryRoute>(startDestination = ViewDiaryRoute::class) {
+                            composable<ViewDiaryRoute> { backStackEntry ->
+                                val updatedPage = backStackEntry.savedStateHandle.get<DiaryPage>("page")
+                                backStackEntry.savedStateHandle.remove<DiaryPage>("page")
+
+                                bottomBarVisibility = true
+                                ViewDiaryScreen(
+                                    updatedPage = updatedPage,
+                                    onNavigateToEditDiaryPage = { page ->
+                                        navController.navigate(EditDiaryPageRoute(page))
+                                    }
+                                )
+                            }
+                            composable<EditDiaryPageRoute> { backStackEntry ->
+                                bottomBarVisibility = false
+                                EditDiaryPageScreen(
+                                    onComplete = { page ->
+                                        navController.previousBackStackEntry
+                                            ?.savedStateHandle
+                                            ?.set("page", page)
+
+                                        navController.popBackStack()
+                                    }
+                                )
+                            }
                         }
                     }
 
