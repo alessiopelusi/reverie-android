@@ -36,13 +36,16 @@ sealed class AllDiariesUiState {
             pageCount = {if (allDiaries.diaryIds.size > 1) allDiaries.diaryIds.size*1000 else 1},
             currentPage = if (allDiaries.diaryIds.size > 1) allDiaries.diaryIds.size*500 + allDiaries.diaryIds.size/2 else 0
         ),
-        val buttonState: ButtonState
+        val buttonState: ButtonState = ButtonState.IMAGES
     ) : AllDiariesUiState() {
         val diaries: List<Diary>
             get() = allDiaries.diaryIds.map { diaryId -> diariesMap.getValue(diaryId) }
 
         val currentPage: Int
             get() = pagerState.currentPage % allDiaries.diaryIds.size
+
+        val buttonElements: List<ButtonState>
+            get() = ButtonState.entries
     }
     data class Error(val exception: Throwable) : AllDiariesUiState()
 }
@@ -72,8 +75,8 @@ class AllDiariesViewModel @Inject constructor(
                 val diariesMap = diaries.associateBy { diary -> diary.id }
                 val diaryCoversSet = diaries.map { diary -> diary.coverId }.toSet()
                 val diaryCoversMap = diaryCoversSet.associateWith { diaryCoverId -> repository.getDiaryCover(diaryCoverId) }
-                val diaryPhotosMap =
-                _uiState.value = AllDiariesUiState.Success(allDiaries, diariesMap, diaryCoversMap)
+                val diaryPhotosMap = diaries.map { diary -> diary.id }.associateWith { diaryId -> repository.getAllDiaryImages(diaryId) }
+                _uiState.value = AllDiariesUiState.Success(allDiaries, diariesMap, diaryCoversMap, diaryPhotosMap)
             }
         }
     }
@@ -94,9 +97,25 @@ class AllDiariesViewModel @Inject constructor(
                 }
 
                 _uiState.update {
-                    AllDiariesUiState.Success(state.allDiaries, diariesMap, diaryCoversMap, state.pagerState)
+                    AllDiariesUiState.Success(state.allDiaries, diariesMap, diaryCoversMap, state.diaryPhotosMap, state.pagerState, state.buttonState)
                 }
             }
+        }
+    }
+
+    fun onButtonStateUpdate(newButtonState: ButtonState) {
+        val state = uiState.value
+        if (state !is AllDiariesUiState.Success) return
+
+        _uiState.update {
+            AllDiariesUiState.Success(
+                state.allDiaries,
+                state.diariesMap,
+                state.diaryCoversMap,
+                state.diaryPhotosMap,
+                state.pagerState,
+                newButtonState
+            )
         }
     }
 }

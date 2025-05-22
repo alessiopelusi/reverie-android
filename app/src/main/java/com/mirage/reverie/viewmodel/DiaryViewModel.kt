@@ -1,10 +1,17 @@
 package com.mirage.reverie.viewmodel
 
+import android.content.Context
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import coil3.ImageLoader
+import coil3.request.ImageRequest
+import coil3.request.SuccessResult
+import coil3.request.allowHardware
+import coil3.toBitmap
 import com.mirage.reverie.data.model.Diary
 import com.mirage.reverie.data.model.DiaryImage
 import com.mirage.reverie.data.model.DiaryPage
@@ -25,7 +32,7 @@ sealed class DiaryUiState {
         val diary: Diary,
         val pagesMap: Map<String, DiaryPage>,
         val subPagesMap: Map<String, DiarySubPage>,
-        val imagesMap: Map<String, DiaryImage?> // Lazy loading of images
+        val imagesMap: Map<String, DiaryImage>
     ) : DiaryUiState() {
         val pages: List<DiaryPage>
             get() = diary.pageIds.map { pageId -> pagesMap.getValue(pageId) }
@@ -39,6 +46,7 @@ sealed class DiaryUiState {
 // HiltViewModel inject SavedStateHandle + other dependencies provided by AppModule
 @HiltViewModel
 class DiaryViewModel @Inject constructor(
+    private val context: Context,
     private val savedStateHandle: SavedStateHandle,
     private val repository: DiaryRepository,
 ) : ViewModel() {
@@ -64,8 +72,31 @@ class DiaryViewModel @Inject constructor(
             val diary = repository.getDiary(diaryId)
             val pagesMap = diary.pageIds.associateWith { pageId -> repository.getPage(pageId) }
             val subPagesMap = pagesMap.values.flatMap { page -> page.subPageIds }.associateWith { subPageId -> repository.getSubPage(subPageId) }
-            val imagesMap = subPagesMap.values.flatMap { subPage -> subPage.imageIds }.associateWith { null }
+            val imagesMap = subPagesMap.values.flatMap { subPage -> subPage.imageIds }.associateWith { imageId -> repository.getDiaryImage(imageId) }
             _uiState.value = DiaryUiState.Success(diary, pagesMap, subPagesMap, imagesMap)
+        }
+    }
+
+    fun loadImage(imageId: String) {
+        val state = uiState.value
+        if (state !is DiaryUiState.Success) return
+
+        val imagesMap = state.imagesMap.toMutableMap()
+        var image = imagesMap.getValue(imageId)
+
+        val imageLoader = ImageLoader(context)
+        val request = ImageRequest.Builder(context)
+            .data(image.url)
+            //.allowHardware(false) // Required if you want to manipulate the bitmap later
+            .build()
+
+        viewModelScope.launch {
+            val result = imageLoader.execute(request)
+            val bitmap = (result as? SuccessResult)?.image?.toBitmap()
+            image = image.copy(bitmap = bitmap)
+            imagesMap[imageId] = image
+
+            _uiState.value = DiaryUiState.Success(state.diary, state.pagesMap, state.subPagesMap, imagesMap)
         }
     }
 
@@ -316,7 +347,7 @@ class DiaryViewModel @Inject constructor(
         }
     }
 
-    fun updateDiaryImageOffset(diaryImageId: String, offset: Offset) {
+    fun updateDiaryImageOffset(diaryImageId: String, offsetX: Int, offsetY: Int) {
         val state = uiState.value
         if (state !is DiaryUiState.Success) return
 
@@ -325,11 +356,9 @@ class DiaryViewModel @Inject constructor(
             val diaryImage = imageMap.getValue(diaryImageId)
 
             // should never be null (if we update, we loaded the image)
-            if (diaryImage != null) {
-                val updatedDiaryImage = diaryImage.copy(offset = offset)
+            val updatedDiaryImage = diaryImage.copy(offsetX = offsetX, offsetY = offsetY)
 
-                updateDiaryImage(updatedDiaryImage)
-            }
+            updateDiaryImage(updatedDiaryImage)
         }
     }
 }

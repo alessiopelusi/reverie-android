@@ -1,5 +1,6 @@
 package com.mirage.reverie
 
+import android.content.Context
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
@@ -12,6 +13,7 @@ import com.mirage.reverie.data.repository.UserRepositoryImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -56,5 +58,11 @@ object ServiceModule {
     fun provideFirebaseFirestore(): FirebaseFirestore {
         return Firebase.firestore
     }
+
+    @Singleton
+    @Provides
+    fun provideApplicationContext(
+        @ApplicationContext appContext: Context
+    ): Context = appContext
 
 }

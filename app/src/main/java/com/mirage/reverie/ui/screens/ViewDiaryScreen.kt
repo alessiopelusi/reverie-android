@@ -219,26 +219,32 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: DiaryViewModel) 
                 )
             }
             subPageImages.forEach { image ->
+                if (image.bitmap == null) {
+                    viewModel.loadImage(image.id)
+                    return@forEach
+                }
+
                 Image(
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         //.fillMaxSize()
-                        .offset { IntOffset(image.offset.x.toInt(), image.offset.y.toInt()) }
+                        .offset { IntOffset(image.offsetX, image.offsetY) }
                         .pointerInput(Unit) {
                             detectDragGestures(
                                 onDrag = { change, dragAmount ->
-                                    val newX = (image.offset.x + dragAmount.x)
+                                    val newX = (image.offsetX + dragAmount.x)
                                         .coerceIn(0f, parentWidth - image.bitmap.width)
-                                    val newY = (image.offset.y + dragAmount.y)
+                                    val newY = (image.offsetY + dragAmount.y)
                                         .coerceIn(0f, parentHeight - image.bitmap.height)
 
                                     // Aggiorna l'offset vincolato
                                     change.consume()
-                                    image.offset = Offset(newX, newY)
+                                    image.offsetX = newX.toInt()
+                                    image.offsetY = newY.toInt()
                                     viewModel.resetSubPageTestOverflow(subPageId)
                                 },
                                 onDragEnd = {
-                                    viewModel.updateDiaryImageOffset(image.id, image.offset)
+                                    viewModel.updateDiaryImageOffset(image.id, image.offsetX, image.offsetY)
                                 }
                             )
                         }

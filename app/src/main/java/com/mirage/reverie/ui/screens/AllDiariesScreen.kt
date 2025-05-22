@@ -1,5 +1,6 @@
 package com.mirage.reverie.ui.screens
 
+import android.widget.Button
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
@@ -36,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -57,6 +59,7 @@ import com.mirage.reverie.ui.theme.PaperColor
 import com.mirage.reverie.ui.theme.Purple80
 import com.mirage.reverie.viewmodel.AllDiariesUiState
 import com.mirage.reverie.viewmodel.AllDiariesViewModel
+import com.mirage.reverie.viewmodel.ButtonState
 import kotlin.math.absoluteValue
 
 
@@ -78,6 +81,9 @@ fun AllDiariesScreen(
             val currentPage = (uiState as AllDiariesUiState.Success).currentPage
             val pagerState = (uiState as AllDiariesUiState.Success).pagerState
             val diaryCoversMap = (uiState as AllDiariesUiState.Success).diaryCoversMap
+
+            val currentDiary = diaries[currentPage]
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -152,7 +158,7 @@ fun AllDiariesScreen(
                                 interactionSource = pageInteractionSource,
                                 indication = LocalIndication.current
                             ) {
-                                onNavigateToDiary(diaries[currentPage].id)
+                                onNavigateToDiary(currentDiary.id)
                             }
                     ) {
                         Column(
@@ -162,7 +168,7 @@ fun AllDiariesScreen(
                         ) {
                             Button(
                                 // replace pagerState.currentPage with the actual id of the currentPage diary
-                                onClick = { onNavigateToEditDiary(diaries[currentPage].id) },
+                                onClick = { onNavigateToEditDiary(currentDiary.id) },
                                 colors = ButtonColors(
                                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                                     contentColor = MaterialTheme.colorScheme.primary,
@@ -178,26 +184,26 @@ fun AllDiariesScreen(
 
                             DiaryCoverComposable(
                                 modifier = Modifier,
-                                coverUrl = diaryCoversMap.getValue(diaries[currentPage].coverId).url
+                                coverUrl = diaryCoversMap.getValue(currentDiary.coverId).url
                             )
                             Text(
                                 modifier = Modifier.fillMaxWidth(),
                                 textAlign = TextAlign.Center,
                                 fontWeight = FontWeight.Bold,
-                                text = diaries[currentPage].title
+                                text = currentDiary.title
                             )
                             Text(
                                 modifier = Modifier.fillMaxWidth(),
                                 textAlign = TextAlign.Center,
-                                text = diaries[currentPage].description
+                                text = currentDiary.description
                             )
                         }
                     }
                 }
 
 
-
-                val itemsList: List<String> = (1..5).map { "It $it" }
+                val buttonElements = (uiState as AllDiariesUiState.Success).buttonElements
+                val buttonState = (uiState as AllDiariesUiState.Success).buttonState
 
                 Row(
                     modifier = Modifier
@@ -205,21 +211,20 @@ fun AllDiariesScreen(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     val cornerRadius = 16.dp
-                    var selectedIndex by remember { mutableIntStateOf(-1) }
 
-                    itemsList.forEachIndexed { index, item ->
+                    buttonElements.forEachIndexed { index, item ->
                         OutlinedButton(
-                            onClick = { selectedIndex = index },
+                            onClick = { viewModel.onButtonStateUpdate(item) },
                             modifier = when (index) {
                                 0 ->
                                     Modifier
                                         .offset(0.dp, 0.dp)
-                                        .zIndex(if (selectedIndex == index) 1f else 0f)
+                                        .zIndex(if (buttonState == item) 1f else 0f)
 
                                 else ->
                                     Modifier
                                         .offset((-1 * index).dp, 0.dp)
-                                        .zIndex(if (selectedIndex == index) 1f else 0f)
+                                        .zIndex(if (buttonState == item) 1f else 0f)
                             },
                             shape = when (index) {
                                 0 -> RoundedCornerShape(
@@ -229,7 +234,7 @@ fun AllDiariesScreen(
                                     bottomEnd = 0.dp
                                 )
 
-                                itemsList.size - 1 -> RoundedCornerShape(
+                                buttonElements.size - 1 -> RoundedCornerShape(
                                     topStart = 0.dp,
                                     topEnd = cornerRadius,
                                     bottomStart = 0.dp,
@@ -244,13 +249,13 @@ fun AllDiariesScreen(
                                 )
                             },
                             border = BorderStroke(
-                                1.dp, if (selectedIndex == index) {
+                                1.dp, if (buttonState == item) {
                                     Purple80
                                 } else {
                                     Purple80.copy(alpha = 0.75f)
                                 }
                             ),
-                            colors = if (selectedIndex == index) {
+                            colors = if (buttonState == item) {
                                 ButtonDefaults.outlinedButtonColors(
                                     containerColor = Purple80.copy(alpha = 0.1f),
                                     contentColor = Purple80
@@ -262,26 +267,27 @@ fun AllDiariesScreen(
                                 )
                             }
                         ) {
-                            Text(item)
+                            Text(item.toString())
                         }
 
                     }
                 }
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ){
-                    Text("cioa")
-                    Text("cioa")
-                    Text("cioa")
-                    Text("cioa")
-                    Text("cioa")
-                    Text("cioa")
-                    Text("cioa")
-                    Text("cioa")
-                    Text("cioa")
-                    Text("cioa")
-                    Text("cioa")
-                    Text("cioa")
+                when(buttonState) {
+                    ButtonState.IMAGES -> {
+                        val diaryImages = (uiState as AllDiariesUiState.Success).diaryPhotosMap.getValue(currentDiary.id)
+                        diaryImages.forEach{ image ->
+                            AsyncImage(
+                                model = image.url,
+                                contentDescription = null
+                            )
+                        }
+                    }
+                    ButtonState.VIDEOS -> {
+                        
+                    }
+                    ButtonState.TEXTS -> {
+                        
+                    }
                 }
             }
         }
@@ -305,9 +311,9 @@ fun DiaryCoverComposable(modifier: Modifier, coverUrl: String) {
     }
 }
 
-@Composable
+/*@Composable
 fun DiaryContentBar(
     viewModel: AllDiariesViewModel = hiltViewModel()
 ){
     var selectedView by remember { mutableStateOf(ViewType.INFO) }
-}
+}*/

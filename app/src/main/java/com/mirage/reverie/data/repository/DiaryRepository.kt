@@ -123,7 +123,7 @@ class DiaryRepositoryImpl @Inject constructor(
         storageService.getDiaryImage(diaryImageId)
             ?: throw NoSuchElementException("DiaryImage with ID $diaryImageId does not exists")
 
-    suspend fun getAllDiaryImages(diaryId: String): List<DiaryImage> =
+    override suspend fun getAllDiaryImages(diaryId: String): List<DiaryImage> =
         storageService.getAllDiaryImages(diaryId)
 
     override suspend fun saveDiaryImage(diaryImage: DiaryImage): DiaryImage {

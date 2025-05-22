@@ -156,8 +156,11 @@ class StorageServiceImpl @Inject constructor(
         firestore.collection(DIARY_IMAGE_COLLECTION).document(diaryImageId).get().await()
             .toObject<DiaryImage?>()?.copy(id = diaryImageId)
 
-    suspend fun getAllDiaryImages(diaryId: String): List<DiaryImage> =
-        firestore.collection(DIARY_IMAGE_COLLECTION).
+    override suspend fun getAllDiaryImages(diaryId: String): List<DiaryImage> =
+        firestore.collectionGroup(DIARY_IMAGE_COLLECTION)
+            .whereEqualTo("diaryId", diaryId)
+            .get().await()
+            .mapNotNull{ image -> image.toObject<DiaryImage?>()?.copy(id = image.id) }
 
     override suspend fun saveDiaryImage(diaryImage: DiaryImage): DiaryImage {
         val diaryImageId = firestore.collection(DIARY_IMAGE_COLLECTION).add(diaryImage.toFirestoreMap()).await().id
