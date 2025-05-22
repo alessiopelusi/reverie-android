@@ -44,6 +44,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import androidx.compose.ui.zIndex
@@ -78,11 +80,6 @@ fun AllDiariesScreen(onNavigateToDiary: (String) -> Unit, onNavigateToEditDiary:
             ) {
                 val pageInteractionSource = remember { MutableInteractionSource() }
 
-                Text(
-                    modifier = Modifier.padding(8.dp),
-                    text = diaries[currentPage].title
-                )
-
                 HorizontalPager(
                     modifier = Modifier
                         .border(width = 2.dp, color = Color.Red, shape = RectangleShape)
@@ -94,6 +91,7 @@ fun AllDiariesScreen(onNavigateToDiary: (String) -> Unit, onNavigateToEditDiary:
                     Card(
                         Modifier
                             .padding(8.dp)
+                            .background(PaperColor)
                             .graphicsLayer {
                                 // Calculate the absolute offset for the current page from the
                                 // scroll position. We use the absolute value which allows us to mirror
@@ -128,10 +126,27 @@ fun AllDiariesScreen(onNavigateToDiary: (String) -> Unit, onNavigateToEditDiary:
                                 onNavigateToDiary(diaries[currentPage].id)
                             }
                     ) {
-                        DiaryCover(
-                            modifier = Modifier.fillMaxSize(),
-                            coverUrl = diaryCoversMap.getValue(diaries[currentPage].coverId).url
-                        )
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp), // Adds spacing between elements
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            DiaryCover(
+                                modifier = Modifier,
+                                coverUrl = diaryCoversMap.getValue(diaries[currentPage].coverId).url
+                            )
+                            Text(
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center,
+                                fontWeight = FontWeight.Bold,
+                                text = diaries[currentPage].title
+                            )
+                            Text(
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center,
+                                text = diaries[currentPage].description
+                            )
+                        }
                     }
                 }
 
@@ -250,12 +265,10 @@ fun DiaryCover(modifier: Modifier, coverUrl: String) {
     Box(
         modifier = modifier
             .border(width = 2.dp, color = Color.Blue, shape = RectangleShape)
-            .background(PaperColor),
+            .padding(16.dp),
         contentAlignment = Alignment.Center,
     ) {
         AsyncImage(
-            modifier = Modifier
-                .fillMaxWidth(),
             model = coverUrl,
             contentDescription = null
         )
