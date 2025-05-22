@@ -10,6 +10,8 @@ import com.mirage.reverie.navigation.ProfileRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -26,19 +28,26 @@ class ProfileViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val userRepository: UserRepository,
 ) : ViewModel() {
-    private val profileRoute = savedStateHandle.toRoute<ProfileRoute>()
+    private val profileId = savedStateHandle.toRoute<ProfileRoute>().profileId
 
     private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
     val uiState = _uiState.asStateFlow()
 
     init {
-        loadProfile(profileRoute.profileId)
+        onStart()
     }
 
-    private fun loadProfile(profileId: String) {
+    // load profile
+    private fun onStart() {
         viewModelScope.launch {
             val user = userRepository.getUser(profileId)
             _uiState.value = ProfileUiState.Success(user)
         }
     }
+
+    fun overwriteProfile(profile: User?) {
+        if (profile != null)
+            _uiState.value = ProfileUiState.Success(profile)
+    }
+
 }

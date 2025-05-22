@@ -49,6 +49,7 @@ import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -56,6 +57,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.google.firebase.auth.FirebaseAuth
+import com.mirage.reverie.data.model.User
 import com.mirage.reverie.navigation.AllDiariesRoute
 import com.mirage.reverie.navigation.ViewDiaryRoute
 import com.mirage.reverie.navigation.EditDiaryPageRoute
@@ -256,18 +258,26 @@ fun MainComposable() {
                         )
                     }
 
-                    composable<ProfileRoute>{
+                    composable<ProfileRoute>{ backStackEntry ->
+                        val updatedProfile = backStackEntry.savedStateHandle.get<User>("profile")
+                        backStackEntry.savedStateHandle.remove<User>("profile")
+
                         ProfileScreen(
                             onEditProfile = { profileId ->
-                                navController.navigate(EditProfileRoute(profileId)) {}
-                            }
+                                navController.navigate(EditProfileRoute(profileId))
+                            },
+                            updatedProfile = updatedProfile
                         )
                     }
 
                     composable<EditProfileRoute>{
                         EditProfileScreen(
-                            onViewProfile = { profileId ->
-                                navController.navigate(ProfileRoute(profileId)) {}
+                            onComplete = { profile ->
+                                navController.previousBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("profile", profile)
+
+                                navController.popBackStack()
                             }
                         )
                     }

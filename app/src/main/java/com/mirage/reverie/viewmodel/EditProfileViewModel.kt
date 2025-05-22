@@ -47,7 +47,7 @@ class EditProfileViewModel @Inject constructor(
     }
 
     private fun loadProfile(profileId: String) {
-        _uiState.value = EditProfileUiState.Loading
+        //_uiState.value = EditProfileUiState.Loading
         viewModelScope.launch {
             runCatching {
                 userRepository.getUser(profileId)
@@ -68,7 +68,7 @@ class EditProfileViewModel @Inject constructor(
         if (state !is EditProfileUiState.Success) return
 
         viewModelScope.launch {
-            _uiState.value = EditProfileUiState.Loading
+            //_uiState.value = EditProfileUiState.Loading
             val updatedUser = state.profile.copy(
                 name = _inputState.value.name,
                 surname = _inputState.value.surname

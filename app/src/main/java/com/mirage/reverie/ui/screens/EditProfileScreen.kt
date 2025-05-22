@@ -20,13 +20,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mirage.reverie.data.model.User
 import com.mirage.reverie.viewmodel.EditProfileUiState
 import com.mirage.reverie.viewmodel.EditProfileViewModel
 
 
 @Composable
 fun EditProfileScreen(
-    onViewProfile: (String) -> Unit,
+    onComplete: (User) -> Unit,
     viewModel: EditProfileViewModel = hiltViewModel()
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -78,7 +79,7 @@ fun EditProfileScreen(
             }
         }
         is EditProfileUiState.Complete -> {
-            onViewProfile((uiState as EditProfileUiState.Complete).profile.id)
+            onComplete((uiState as EditProfileUiState.Complete).profile)
         }
         is EditProfileUiState.Error -> Text(text = "Error: ${(uiState as EditProfileUiState.Error).exception.message}")
     }

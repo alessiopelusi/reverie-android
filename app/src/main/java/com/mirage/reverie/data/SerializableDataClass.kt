@@ -1,8 +1,11 @@
 package com.mirage.reverie.data
 
+import android.os.Parcelable
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
+import kotlinx.parcelize.Parcelize
+import kotlinx.serialization.Serializable
 
 abstract class SerializableDataClass
 

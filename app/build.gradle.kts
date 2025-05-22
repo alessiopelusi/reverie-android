@@ -15,6 +15,9 @@ plugins {
 
     // Add the Google services Gradle plugin
     id("com.google.gms.google-services")
+
+    // parcelable
+    id("kotlin-parcelize")
 }
 
 android {
@@ -119,4 +122,7 @@ dependencies {
     implementation(libs.moshi)
     implementation(libs.moshi.kotlin)
     ksp(libs.moshi.kotlin.codegen)
+
+    // runtime livedata
+    implementation(libs.androidx.runtime.livedata)
 }

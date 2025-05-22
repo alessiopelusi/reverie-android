@@ -18,14 +18,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mirage.reverie.data.model.User
 import com.mirage.reverie.viewmodel.ProfileUiState
 import com.mirage.reverie.viewmodel.ProfileViewModel
 
 @Composable
 fun ProfileScreen(
     onEditProfile: (String) -> Unit,
+    updatedProfile: User? = null,
     viewModel: ProfileViewModel = hiltViewModel()
 ){
+    viewModel.overwriteProfile(updatedProfile)
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     when (uiState) {
         is ProfileUiState.Loading -> CircularProgressIndicator()
