@@ -29,6 +29,7 @@ interface DiaryRepository {
     suspend fun deleteSubPage(subPageId: String)
 
     suspend fun getDiaryImage(diaryImageId: String): DiaryImage
+    suspend fun getAllDiaryImages(diaryId: String): List<DiaryImage>
     suspend fun saveDiaryImage(diaryImage: DiaryImage): DiaryImage
     suspend fun updateDiaryImage(diaryImage: DiaryImage)
     suspend fun deleteDiaryImage(diaryImageId: String)
@@ -118,10 +119,12 @@ class DiaryRepositoryImpl @Inject constructor(
         storageService.deleteSubPage(subPageId)
     }
 
-    override suspend fun getDiaryImage(diaryImageId: String): DiaryImage {
-        return storageService.getDiaryImage(diaryImageId)
+    override suspend fun getDiaryImage(diaryImageId: String): DiaryImage =
+        storageService.getDiaryImage(diaryImageId)
             ?: throw NoSuchElementException("DiaryImage with ID $diaryImageId does not exists")
-    }
+
+    suspend fun getAllDiaryImages(diaryId: String): List<DiaryImage> =
+        storageService.getAllDiaryImages(diaryId)
 
     override suspend fun saveDiaryImage(diaryImage: DiaryImage): DiaryImage {
         return storageService.saveDiaryImage(diaryImage)

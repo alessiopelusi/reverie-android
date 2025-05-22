@@ -10,5 +10,5 @@ data class DiaryImage(
     val subPageId: String,
     val subPagePosition: Int,
     var offset: Offset,
-    val bitmap: Bitmap
+    val url: String
 ) : SerializableDataClass()

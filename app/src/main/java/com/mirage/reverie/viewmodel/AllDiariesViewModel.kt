@@ -8,6 +8,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.mirage.reverie.data.model.AllDiaries
 import com.mirage.reverie.data.model.Diary
 import com.mirage.reverie.data.model.DiaryCover
+import com.mirage.reverie.data.model.DiaryImage
 import com.mirage.reverie.data.repository.DiaryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,12 +18,17 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
+enum class ButtonState {
+    TEXTS, IMAGES, VIDEOS // puoi aggiungere altre sezioni
+}
+
 sealed class AllDiariesUiState {
     data object Loading : AllDiariesUiState()
     data class Success(
         val allDiaries: AllDiaries,
         val diariesMap: Map<String, Diary>,
         val diaryCoversMap: Map<String, DiaryCover>,
+        val diaryPhotosMap: Map<String, List<DiaryImage>>,
         val pagerState: PagerState = PagerState(
             // endlessPagerMultiplier = 1000
             // endlessPagerMultiplier/2 = 500
@@ -30,6 +36,7 @@ sealed class AllDiariesUiState {
             pageCount = {if (allDiaries.diaryIds.size > 1) allDiaries.diaryIds.size*1000 else 1},
             currentPage = if (allDiaries.diaryIds.size > 1) allDiaries.diaryIds.size*500 + allDiaries.diaryIds.size/2 else 0
         ),
+        val buttonState: ButtonState
     ) : AllDiariesUiState() {
         val diaries: List<Diary>
             get() = allDiaries.diaryIds.map { diaryId -> diariesMap.getValue(diaryId) }
@@ -65,6 +72,7 @@ class AllDiariesViewModel @Inject constructor(
                 val diariesMap = diaries.associateBy { diary -> diary.id }
                 val diaryCoversSet = diaries.map { diary -> diary.coverId }.toSet()
                 val diaryCoversMap = diaryCoversSet.associateWith { diaryCoverId -> repository.getDiaryCover(diaryCoverId) }
+                val diaryPhotosMap =
                 _uiState.value = AllDiariesUiState.Success(allDiaries, diariesMap, diaryCoversMap)
             }
         }

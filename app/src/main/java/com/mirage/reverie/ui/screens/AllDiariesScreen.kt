@@ -86,19 +86,40 @@ fun AllDiariesScreen(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
+                Row(
+                    Modifier
+                        .wrapContentHeight()
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    repeat(diaries.size) { iteration ->
+                        val color =
+                            if (currentPage == iteration) Color.DarkGray else Color.LightGray
+                        Box(
+                            modifier = Modifier
+                                .padding(2.dp)
+                                .clip(CircleShape)
+                                .background(color)
+                                .size(16.dp)
+                        )
+                    }
+                }
+
                 val pageInteractionSource = remember { MutableInteractionSource() }
 
                 HorizontalPager(
                     modifier = Modifier
-                        .border(width = 2.dp, color = Color.Red, shape = RectangleShape)
-                        .weight(1f, false),
-                    contentPadding = PaddingValues(50.dp),
+                        .border(width = 2.dp, color = Color.Red, shape = RectangleShape),
+                    contentPadding = PaddingValues(35.dp),
                     state = pagerState
                 ) { absolutePage ->
                     val relativePage = absolutePage % diaries.size
                     Card(
                         Modifier
                             .padding(8.dp)
+                            .border(width = 2.dp, color = Color.Black)
                             .background(PaperColor)
                             .graphicsLayer {
                                 // Calculate the absolute offset for the current page from the
@@ -139,6 +160,22 @@ fun AllDiariesScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp), // Adds spacing between elements
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
+                            Button(
+                                // replace pagerState.currentPage with the actual id of the currentPage diary
+                                onClick = { onNavigateToEditDiary(diaries[currentPage].id) },
+                                colors = ButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.primary,
+                                    disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    disabledContentColor = MaterialTheme.colorScheme.primary
+                                ),
+                                modifier = Modifier
+                                    .align(Alignment.End)
+                                    .background(Purple80)
+                            ) {
+                                Icon(Icons.Outlined.Edit, contentDescription = "Edit")
+                            }
+
                             DiaryCoverComposable(
                                 modifier = Modifier,
                                 coverUrl = diaryCoversMap.getValue(diaries[currentPage].coverId).url
@@ -158,39 +195,7 @@ fun AllDiariesScreen(
                     }
                 }
 
-                Row(
-                    Modifier
-                        .wrapContentHeight()
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    repeat(diaries.size) { iteration ->
-                        val color =
-                            if (currentPage == iteration) Color.DarkGray else Color.LightGray
-                        Box(
-                            modifier = Modifier
-                                .padding(2.dp)
-                                .clip(CircleShape)
-                                .background(color)
-                                .size(16.dp)
-                        )
-                    }
-                }
 
-                Button(
-                    // replace pagerState.currentPage with the actual id of the currentPage diary
-                    onClick = { onNavigateToEditDiary(diaries[currentPage].id) },
-                    colors = ButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.primary,
-                        disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        disabledContentColor = MaterialTheme.colorScheme.primary
-                    ),
-                    modifier = Modifier.align(Alignment.End)
-                ) {
-                    Icon(Icons.Outlined.Edit, contentDescription = "Edit")
-                }
 
                 val itemsList: List<String> = (1..5).map { "It $it" }
 
@@ -259,7 +264,24 @@ fun AllDiariesScreen(
                         ) {
                             Text(item)
                         }
+
                     }
+                }
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ){
+                    Text("cioa")
+                    Text("cioa")
+                    Text("cioa")
+                    Text("cioa")
+                    Text("cioa")
+                    Text("cioa")
+                    Text("cioa")
+                    Text("cioa")
+                    Text("cioa")
+                    Text("cioa")
+                    Text("cioa")
+                    Text("cioa")
                 }
             }
         }
@@ -281,4 +303,11 @@ fun DiaryCoverComposable(modifier: Modifier, coverUrl: String) {
             contentDescription = null
         )
     }
+}
+
+@Composable
+fun DiaryContentBar(
+    viewModel: AllDiariesViewModel = hiltViewModel()
+){
+    var selectedView by remember { mutableStateOf(ViewType.INFO) }
 }

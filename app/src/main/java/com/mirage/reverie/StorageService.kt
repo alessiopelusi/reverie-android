@@ -40,6 +40,7 @@ interface StorageService {
     suspend fun deleteSubPage(subPageId: String)
 
     suspend fun getDiaryImage(diaryImageId: String): DiaryImage?
+    suspend fun getAllDiaryImages(diaryId: String): List<DiaryImage>
     suspend fun saveDiaryImage(diaryImage: DiaryImage): DiaryImage
     suspend fun updateDiaryImage(diaryImage: DiaryImage)
     suspend fun deleteDiaryImage(diaryImageId: String)
@@ -154,6 +155,9 @@ class StorageServiceImpl @Inject constructor(
     override suspend fun getDiaryImage(diaryImageId: String): DiaryImage? =
         firestore.collection(DIARY_IMAGE_COLLECTION).document(diaryImageId).get().await()
             .toObject<DiaryImage?>()?.copy(id = diaryImageId)
+
+    suspend fun getAllDiaryImages(diaryId: String): List<DiaryImage> =
+        firestore.collection(DIARY_IMAGE_COLLECTION).
 
     override suspend fun saveDiaryImage(diaryImage: DiaryImage): DiaryImage {
         val diaryImageId = firestore.collection(DIARY_IMAGE_COLLECTION).add(diaryImage.toFirestoreMap()).await().id
