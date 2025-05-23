@@ -1,13 +1,17 @@
 package com.mirage.reverie.ui.screens
 
+import android.graphics.Bitmap
+import android.graphics.Matrix
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
@@ -22,14 +26,18 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,6 +49,7 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,6 +64,16 @@ import dev.romainguy.graphics.path.toPath
 import dev.romainguy.text.combobreaker.FlowType
 import dev.romainguy.text.combobreaker.TextFlowJustification
 import dev.romainguy.text.combobreaker.material3.TextFlow
+import androidx.compose.material.DropdownMenuItem
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.graphics.graphicsLayer
+import dev.romainguy.graphics.path.toPaths
+import kotlinx.coroutines.delay
+import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.sin
 
 @Composable
 fun ViewDiaryScreen(
@@ -210,6 +229,7 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val subPagesMap = (uiState as ViewDiaryUiState.Success).subPagesMap
+    val subPagesImagesMap = (uiState as ViewDiaryUiState.Success).subPageImagesMap
     val subPage = subPagesMap.getValue(subPageId)
 
     val textStyle = LocalTextStyle.current.merge(
@@ -221,6 +241,24 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
     BoxWithConstraints(
         modifier = modifier.fillMaxSize()
     ) {
+        var isContextMenuVisible by rememberSaveable {
+            mutableStateOf(false)
+        }
+        var pressOffset by remember {
+            mutableStateOf(DpOffset.Zero)
+        }
+        /*var itemHeight by remember {
+            mutableStateOf(0.dp)
+        }
+        val density = LocalDensity.current*/
+        data class DropDownItem(
+            val text: String
+        )
+        val dropdownItems = listOf(
+            DropDownItem("Delete"),
+        )
+
+        val context = LocalContext.current
         val parentWidth = constraints.maxWidth.toFloat()
         val parentHeight = constraints.maxHeight.toFloat()
         TextFlow (
@@ -247,55 +285,170 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
                     .align(Alignment.BottomEnd)
             )
 
-            val bitmap = drawableToBitmap(LocalContext.current, R.drawable.ic_launcher_background)
+            val exampleBitmap = drawableToBitmap(LocalContext.current, R.drawable.ic_launcher_background)
             // workaround to update textflow when there is no image
-            val subPageImages = viewModel.getSubPageImages(subPageId)
+            val subPageImages = subPagesImagesMap.getValue(subPageId)
             if (subPageImages.isEmpty()) {
                 Image(
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         //.fillMaxSize()
-                        .flowShape(FlowType.None, 0.dp, bitmap.toPath(0.5f).asComposePath()),
-                    bitmap = bitmap.asImageBitmap(),
+                        .flowShape(FlowType.None, 0.dp, exampleBitmap.toPath(0.5f).asComposePath()),
+                    bitmap = exampleBitmap.asImageBitmap(),
                     contentDescription = "",
                     alpha = 0f
                 )
             }
-            subPageImages.forEach { image ->
-                if (image.bitmap == null) {
+            subPageImages.forEach { currentImage ->
+                // necessary to prevent block on pointerInput and to pass the actual updated value
+                val image by rememberUpdatedState(currentImage)
+
+                if (currentImage.bitmap == null) {
                     viewModel.loadImage(image.id)
                     return@forEach
                 }
+
+                var lastUpdateTime by remember { mutableStateOf(System.currentTimeMillis()) }
+                var updated by remember { mutableStateOf(false) }
+
+                LaunchedEffect(Unit) {
+                    while (true) {
+                        val currentTime = System.currentTimeMillis()
+                        if (!updated && currentTime - lastUpdateTime > 300) {
+                            viewModel.updateDiaryImage(image)
+                            updated = true
+                        }
+                        delay(100) // Small delay to avoid busy looping
+                    }
+                }
+
+                val scaledBitmap by rememberUpdatedState(Bitmap.createBitmap(
+                    currentImage.bitmap,
+                    0,
+                    0,
+                    currentImage.bitmap.width,
+                    currentImage.bitmap.height,
+                    Matrix().apply {
+                        postScale(image.scale, image.scale)
+                        postRotate(image.rotation)
+                    },
+                    true
+                ))
+
+                val matrix = androidx.compose.ui.graphics.Matrix()
+                matrix.scale(image.scale, image.scale)
+                matrix.rotateZ(image.rotation)
+
+                val path = currentImage.bitmap.toPath().asComposePath()
+                path.transform(matrix)
+
+                val rotationRad = Math.toRadians(image.rotation.toDouble())
+                val cosTheta = abs(cos(rotationRad)).toFloat()
+                val sinTheta = abs(sin(rotationRad)).toFloat()
+
+                val originalWidth = currentImage.bitmap.width
+                val originalHeight = currentImage.bitmap.height
+
+                val scaledWidth = originalWidth * image.scale
+                val scaledHeight = originalHeight * image.scale
+
+                val scaledRotatedWidth = scaledWidth * cosTheta + scaledHeight * sinTheta
+                val scaledRotateHeight = scaledWidth * sinTheta + scaledHeight * cosTheta
+
+                // Calculate half difference for padding similar to your scale logic
+                val halfWidthDiff = abs(originalWidth - scaledRotatedWidth) / 2
+                val halfHeightDiff = abs(originalHeight - scaledRotateHeight) / 2
 
                 Image(
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         //.fillMaxSize()
                         .offset { IntOffset(image.offsetX, image.offsetY) }
+                        .graphicsLayer(
+                            scaleX = image.scale,
+                            scaleY = image.scale,
+                            rotationZ = image.rotation,
+                        )
                         .pointerInput(Unit) {
-                            detectDragGestures(
-                                onDrag = { change, dragAmount ->
-                                    val newX = (image.offsetX + dragAmount.x)
-                                        .coerceIn(0f, parentWidth - image.bitmap.width)
-                                    val newY = (image.offsetY + dragAmount.y)
-                                        .coerceIn(0f, parentHeight - image.bitmap.height)
-
-                                    // Aggiorna l'offset vincolato
-                                    change.consume()
-                                    image.offsetX = newX.toInt()
-                                    image.offsetY = newY.toInt()
-                                    viewModel.resetSubPageTestOverflow(subPageId)
-                                },
-                                onDragEnd = {
-                                    viewModel.updateDiaryImageOffset(image.id, image.offsetX, image.offsetY)
+                            detectTapGestures(
+                                onLongPress = {
+                                    isContextMenuVisible = true
+                                    pressOffset = DpOffset(it.x.toDp() + image.offsetX.toDp(), it.y.toDp() + image.offsetY.toDp())
                                 }
                             )
                         }
-                        .flowShape(FlowType.Outside, 0.dp, image.bitmap.toPath(0.5f).asComposePath()),
-                    bitmap = image.bitmap.asImageBitmap(),
+                        .pointerInput(currentImage.bitmap) {
+                            detectTransformGestures { centroid, pan, zoom, rotation ->
+                                // Rotation in radians
+                                val rotationInRadians = Math.toRadians(image.rotation.toDouble())
+
+                                // Adjust pan to rotation space
+                                val adjustedPanX = (pan.x * cos(rotationInRadians) - pan.y * sin(rotationInRadians)).toFloat()
+                                val adjustedPanY = (pan.x * sin(rotationInRadians) + pan.y * cos(rotationInRadians)).toFloat()
+
+                                // Divide pan by scale to compensate for zoom level
+                                val correctedPanX = adjustedPanX * image.scale
+                                val correctedPanY = adjustedPanY * image.scale
+
+                                val newX = (image.offsetX + correctedPanX)
+                                    .coerceIn(
+                                        halfWidthDiff,
+                                        parentWidth - originalWidth - halfWidthDiff
+                                    )
+                                    .toInt()
+
+                                val newY = (image.offsetY + correctedPanY)
+                                    .coerceIn(
+                                        halfHeightDiff,
+                                        parentHeight - originalHeight - halfHeightDiff
+                                    )
+                                    .toInt()
+
+                                viewModel.updateDiaryImageTransform(
+                                    diaryImageId = image.id,
+                                    offsetX = newX,
+                                    offsetY = newY,
+                                    scale = image.scale * zoom,
+                                    rotation = image.rotation + rotation,
+                                    locally = true
+                                )
+                                viewModel.resetSubPageTestOverflow(subPageId)
+
+                                lastUpdateTime = System.currentTimeMillis()
+                                updated = false
+                            }
+                        }
+                        /*.onSizeChanged {
+                            itemHeight = with(density) { it.height.toDp() }
+                        }*/
+                        .flowShape(FlowType.Outside, 0.dp, path),
+                    bitmap = currentImage.bitmap.asImageBitmap(),
                     contentDescription = "",
                     alpha = if (transparent) 0f else 1f
                 )
+            }
+        }
+        DropdownMenu (
+            expanded = isContextMenuVisible,
+            onDismissRequest = {
+                isContextMenuVisible = false
+            },
+            offset = pressOffset
+                /*.copy(
+                y = pressOffset.y - itemHeight
+            )*/
+        ) {
+            dropdownItems.forEach {
+                DropdownMenuItem(onClick = {
+                    Toast.makeText(
+                        context,
+                        it.text,
+                        Toast.LENGTH_LONG
+                    ).show()
+                    isContextMenuVisible = false
+                }) {
+                    Text(text = it.text)
+                }
             }
         }
     }

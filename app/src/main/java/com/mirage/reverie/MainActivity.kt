@@ -144,7 +144,6 @@ fun MainComposable(
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
         ModalNavigationDrawer(
-
             drawerContent = {
                 when (uiState) {
                     is ModalNavigationDrawerUiState.Loading -> CircularProgressIndicator()
