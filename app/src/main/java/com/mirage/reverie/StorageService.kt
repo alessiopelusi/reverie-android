@@ -148,7 +148,16 @@ class StorageServiceImpl @Inject constructor(
     }
 
     override suspend fun deleteSubPage(subPageId: String) {
-        firestore.collection(SUB_PAGE_COLLECTION).document(subPageId).delete().await()
+        val subPage = getSubPage(subPageId)
+        if (subPage != null) {
+            firestore.collection(SUB_PAGE_COLLECTION).document(subPageId).delete().await()
+            val page = getPage(subPage.pageId)
+            if (page != null) {
+                val subPageIds = page.subPageIds.toMutableList()
+                subPageIds.remove(subPageId)
+                updatePage(page.copy(subPageIds = subPageIds))
+            }
+        }
     }
 
 

@@ -44,7 +44,7 @@ import kotlinx.serialization.Serializable
 import kotlin.math.absoluteValue
 
 
-@Serializable object TimeCapsule
+@Serializable object TimeCapsuleRoute
 
 @Composable
 fun TimeCapsuleScreen() {

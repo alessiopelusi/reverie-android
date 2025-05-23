@@ -1,6 +1,5 @@
 package com.mirage.reverie.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -8,6 +7,7 @@ import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
@@ -30,10 +30,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.asComposePath
@@ -49,9 +47,10 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mirage.reverie.R
+import com.mirage.reverie.data.model.DiaryPage
 import com.mirage.reverie.drawableToBitmap
-import com.mirage.reverie.viewmodel.DiaryUiState
-import com.mirage.reverie.viewmodel.DiaryViewModel
+import com.mirage.reverie.viewmodel.ViewDiaryUiState
+import com.mirage.reverie.viewmodel.ViewDiaryViewModel
 import dev.romainguy.graphics.path.toPath
 import dev.romainguy.text.combobreaker.FlowType
 import dev.romainguy.text.combobreaker.TextFlowJustification
@@ -60,15 +59,18 @@ import dev.romainguy.text.combobreaker.material3.TextFlow
 @Composable
 fun ViewDiaryScreen(
     onNavigateToEditDiaryPage: (String) -> Unit,
-    viewModel: DiaryViewModel = hiltViewModel()
+    updatedPage: DiaryPage? = null,
+    viewModel: ViewDiaryViewModel = hiltViewModel()
 ) {
+    viewModel.overwritePage(updatedPage)
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     when (uiState) {
-        is DiaryUiState.Loading -> CircularProgressIndicator()
-        is DiaryUiState.Success -> {
-            val diary = (uiState as DiaryUiState.Success).diary
-            val subPages = (uiState as DiaryUiState.Success).subPages
+        is ViewDiaryUiState.Loading -> CircularProgressIndicator()
+        is ViewDiaryUiState.Success -> {
+            val diary = (uiState as ViewDiaryUiState.Success).diary
+            val subPages = (uiState as ViewDiaryUiState.Success).subPages
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -81,11 +83,11 @@ fun ViewDiaryScreen(
                     text = diary.title
                 )
 
-                val diaryPageListState = rememberLazyListState()
+                val diaryPageListState = rememberLazyListState(initialFirstVisibleItemIndex = subPages.lastIndex)
                 // start lazyrow from the end
-                LaunchedEffect(Unit) {
-                    //diaryPageListState.scrollToItem(subPages.lastIndex)
-                }
+                /*LaunchedEffect(Unit) {
+                    diaryPageListState.scrollToItem(subPages.lastIndex)
+                }*/
 
                 BoxWithConstraints (
                     modifier = Modifier
@@ -93,6 +95,47 @@ fun ViewDiaryScreen(
                         .weight(1f, false),
                 ) {
                     val boxWithConstraintsScope = this
+
+                    // TODO: big big hack to load everything and update end indices
+                    subPages.forEachIndexed{ index, item ->
+                        Layout(
+                            content = {
+                                // Here's the content of each list item.
+                                val widthFraction = 0.90f
+                                DiaryPage(
+                                    modifier = Modifier
+                                        .widthIn(max = LocalWindowInfo.current.containerSize.width.dp * widthFraction)
+                                        .aspectRatio(9f / 16f),
+                                    item.id,
+                                    viewModel,
+                                    transparent = true
+                                )
+                            },
+                            measurePolicy = { measurables, constraints ->
+                                // I'm assuming you'll declaring just one root
+                                // composable in the content function above
+                                // so it's measuring just the Box
+                                val placeable = measurables.first().measure(constraints)
+                                // maxWidth is from the BoxWithConstraints
+                                val maxWidthInPx = boxWithConstraintsScope.maxWidth.roundToPx()
+                                // Box width
+                                val itemWidth = placeable.width
+                                // Calculating the space for the first and last item
+                                val startSpace =
+                                    if (index == 0) (maxWidthInPx - itemWidth) / 2 else 0
+                                val endSpace =
+                                    if (index == subPages.lastIndex) (maxWidthInPx - itemWidth) / 2 else 0
+                                // The width of the box + extra space
+                                val width = startSpace + placeable.width + endSpace
+                                layout(width, placeable.height) {
+                                    // Placing the Box in the right X position
+                                    val x = if (index == 0) startSpace else 0
+                                    placeable.place(x, 0)
+                                }
+                            }
+                        )
+                    }
+
                     LazyRow (
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         state = diaryPageListState,
@@ -157,20 +200,20 @@ fun ViewDiaryScreen(
                 }
             }
         }
-        is DiaryUiState.Error -> Text(text = "Error: ${(uiState as DiaryUiState.Error).exception.message}")
+        is ViewDiaryUiState.Error -> Text(text = "Error: ${(uiState as ViewDiaryUiState.Error).exception.message}")
     }
 
 }
 
 @Composable
-fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: DiaryViewModel) {
+fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewModel, transparent: Boolean = false) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val subPagesMap = (uiState as DiaryUiState.Success).subPagesMap
+    val subPagesMap = (uiState as ViewDiaryUiState.Success).subPagesMap
     val subPage = subPagesMap.getValue(subPageId)
 
     val textStyle = LocalTextStyle.current.merge(
-        TextStyle(color = colorScheme.onSurface, fontSize = 40.sp)
+        TextStyle(color = if (transparent) Color.Transparent else colorScheme.onSurface, fontSize = 40.sp)
     )
 
     /*viewModel.incrementSubPageCipolla(subPageId)*/
@@ -250,7 +293,8 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: DiaryViewModel) 
                         }
                         .flowShape(FlowType.Outside, 0.dp, image.bitmap.toPath(0.5f).asComposePath()),
                     bitmap = image.bitmap.asImageBitmap(),
-                    contentDescription = ""
+                    contentDescription = "",
+                    alpha = if (transparent) 0f else 1f
                 )
             }
         }
