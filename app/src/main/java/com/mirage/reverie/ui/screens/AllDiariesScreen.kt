@@ -69,6 +69,8 @@ import kotlin.math.absoluteValue
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonColors
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -188,18 +190,17 @@ fun AllDiariesScreen(
                                 verticalArrangement = Arrangement.spacedBy(8.dp), // Adds spacing between elements
                                 horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
-                                Button(
+                                IconButton (
                                     // replace pagerState.currentPage with the actual id of the currentPage diary
                                     onClick = { onNavigateToEditDiary(currentDiary.id) },
-                                    colors = ButtonColors(
-                                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    colors = IconButtonColors(
+                                        containerColor = PaperColor,
                                         contentColor = MaterialTheme.colorScheme.primary,
                                         disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
                                         disabledContentColor = MaterialTheme.colorScheme.primary
                                     ),
                                     modifier = Modifier
-                                        .align(Alignment.End)
-                                        .background(Purple80)
+                                        .align(Alignment.End),
                                 ) {
                                     Icon(Icons.Outlined.Edit, contentDescription = "Edit")
                                 }

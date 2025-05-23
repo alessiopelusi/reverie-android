@@ -4,10 +4,16 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.NavigationBar
@@ -33,30 +39,40 @@ import com.mirage.reverie.ui.theme.ReverieTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Help
 import androidx.compose.material.icons.automirrored.rounded.LibraryBooks
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.ExitToApp
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.MailOutline
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.navigation
 import com.google.firebase.auth.FirebaseAuth
 import com.mirage.reverie.data.model.Diary
@@ -84,6 +100,10 @@ import com.mirage.reverie.ui.screens.ViewDiaryScreen
 import com.mirage.reverie.ui.screens.ProfileScreen
 import com.mirage.reverie.ui.screens.ResetPasswordScreen
 import com.mirage.reverie.ui.screens.SignupScreen
+import com.mirage.reverie.ui.theme.PaperColor
+import com.mirage.reverie.viewmodel.AllDiariesUiState
+import com.mirage.reverie.viewmodel.ModalNavigationDrawerUiState
+import com.mirage.reverie.viewmodel.ModalNavigationDrawerViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -111,7 +131,9 @@ fun getUserId() : String {
 }
 
 @Composable
-fun MainComposable() {
+fun MainComposable(
+    viewModel: ModalNavigationDrawerViewModel = hiltViewModel()
+) {
     ReverieTheme {
         val scope = rememberCoroutineScope()
 
@@ -119,79 +141,152 @@ fun MainComposable() {
 
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
+        val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
         ModalNavigationDrawer(
+
             drawerContent = {
-                ModalDrawerSheet {
-                    Column(
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                            .verticalScroll(rememberScrollState())
-                    ) {
-                        Spacer(Modifier.height(12.dp))
-                        Text(
-                            "Drawer Title",
-                            modifier = Modifier.padding(16.dp),
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                        HorizontalDivider()
-
-                        Text(
-                            "Section 1",
-                            modifier = Modifier.padding(16.dp),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        NavigationDrawerItem(
-                            label = { Text("Item 1") },
-                            selected = false,
-                            onClick = { /* Handle click */ }
-                        )
-                        NavigationDrawerItem(
-                            label = { Text("Item 2") },
-                            selected = false,
-                            onClick = { /* Handle click */ }
-                        )
-
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-                        Text(
-                            "Section 2",
-                            modifier = Modifier.padding(16.dp),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        NavigationDrawerItem(
-                            label = { Text("Settings") },
-                            selected = false,
-                            icon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
-                            badge = { Text("20") }, // Placeholder
-                            onClick = { /* Handle click */ }
-                        )
-                        NavigationDrawerItem(
-                            label = { Text("Logout") },
-                            selected = false,
-                            icon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
-                            badge = { Text("20") }, // Placeholder
-                            onClick = {
-                                logout()
-                                navController.navigate(LoginRoute) {
-                                    popUpTo(0) { inclusive = true }
+                when (uiState) {
+                    is ModalNavigationDrawerUiState.Loading -> CircularProgressIndicator()
+                    is ModalNavigationDrawerUiState.Success -> {
+                        val diaries = (uiState as ModalNavigationDrawerUiState.Success).diaries
+                        ModalDrawerSheet {
+                            LazyColumn(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+//                                    .verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+//                                Spacer(Modifier.height(12.dp))
+                                item {
+                                    Text(
+                                        "Impostazioni",
+                                        modifier = Modifier.padding(16.dp),
+                                        style = MaterialTheme.typography.titleLarge
+                                    )
                                 }
-                                scope.launch {
-                                    drawerState.close()
+                                item{
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                                }
+                                item{
+                                    Text(
+                                        "I tuoi Diari",
+                                        modifier = Modifier.padding(16.dp),
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                }
+                                itemsIndexed (diaries) { index, diary ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 32.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            diaries[index].title,
+                                            style = MaterialTheme.typography.titleMedium
+                                        )
+                                        IconButton(
+                                            onClick = {
+                                                viewModel.onDeleteDiary(
+                                                    diaries[index].id,
+                                                )
+                                                scope.launch {
+                                                    drawerState.close()
+                                                }
+                                            },
+                                            colors = IconButtonColors(
+                                                containerColor = Color.White,
+                                                contentColor = MaterialTheme.colorScheme.primary,
+                                                disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                                disabledContentColor = MaterialTheme.colorScheme.primary
+                                            ),
+                                            modifier = Modifier
+                                                .align(Alignment.Bottom),
+                                        ) {
+                                            Icon(Icons.Outlined.Delete, contentDescription = "Delete")
+                                        }
+                                    }
+                                }
+                                item{
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Button(
+                                            onClick = {
+                                                viewModel.onCreateDiary(
+                                                    onSuccess = { diary ->
+                                                        scope.launch {
+                                                            drawerState.close()
+                                                            navController.navigate(EditDiaryRoute(diary.id))
+                                                        }
+                                                    },
+                                                )
+                                            },
+                                            modifier = Modifier.padding(8.dp),
+                                        ) {
+                                            Text(
+                                                "Crea nuovo Diario",
+                                                style = MaterialTheme.typography.titleMedium
+                                            )
+                                        }
+                                    }
+                                }
+                                item{
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                                }
+                                item{
+                                    Text(
+                                        "Altro",
+                                        modifier = Modifier.padding(16.dp),
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                    //                        NavigationDrawerItem(
+                                    //                            label = { Text("Settings") },
+                                    //                            selected = false,
+                                    //                            icon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
+                                    //                            badge = { Text("20") }, // Placeholder
+                                    //                            onClick = { /* Handle click */ }
+                                    //                        )
+                                    NavigationDrawerItem(
+                                        label = { Text("Logout") },
+                                        selected = false,
+                                        icon = {
+                                            Icon(
+                                                Icons.Outlined.ExitToApp,
+                                                contentDescription = null
+                                            )
+                                        },
+                                        badge = { Text("20") }, // Placeholder
+                                        onClick = {
+                                            logout()
+                                            navController.navigate(LoginRoute) {
+                                                popUpTo(0) { inclusive = true }
+                                            }
+                                            scope.launch {
+                                                drawerState.close()
+                                            }
+                                        }
+                                    )
+                                    NavigationDrawerItem(
+                                        label = { Text("Aiuto e feedback") },
+                                        selected = false,
+                                        icon = {
+                                            Icon(
+                                                Icons.AutoMirrored.Outlined.Help,
+                                                contentDescription = null
+                                            )
+                                        },
+                                        onClick = { /* Handle click */ },
+                                    )
                                 }
                             }
-                        )
-                        NavigationDrawerItem(
-                            label = { Text("Help and feedback") },
-                            selected = false,
-                            icon = {
-                                Icon(
-                                    Icons.AutoMirrored.Outlined.Help,
-                                    contentDescription = null
-                                )
-                            },
-                            onClick = { /* Handle click */ },
-                        )
-                        Spacer(Modifier.height(12.dp))
+                        }
                     }
+                    is ModalNavigationDrawerUiState.Error -> Text(text = "Error: ${(uiState as ModalNavigationDrawerUiState.Error).exception.message}")
                 }
             },
             drawerState = drawerState
