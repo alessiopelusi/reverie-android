@@ -185,26 +185,52 @@ fun MainComposable(
                                             diaries[index].title,
                                             style = MaterialTheme.typography.titleMedium
                                         )
-                                        IconButton(
-                                            onClick = {
-                                                viewModel.onDeleteDiary(
-                                                    diaries[index].id,
-                                                )
-                                                scope.launch {
-                                                    drawerState.close()
-                                                }
-                                            },
-                                            colors = IconButtonColors(
-                                                containerColor = Color.White,
-                                                contentColor = MaterialTheme.colorScheme.primary,
-                                                disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                                disabledContentColor = MaterialTheme.colorScheme.primary
-                                            ),
-                                            modifier = Modifier
-                                                .align(Alignment.Bottom),
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
-                                            Icon(Icons.Outlined.Delete, contentDescription = "Delete")
+                                            IconButton (
+                                                // replace pagerState.currentPage with the actual id of the currentPage diary
+//                                                onClick = { onNavigateToEditDiary(currentDiary.id) },
+                                                onClick = {
+                                                    scope.launch {
+                                                        drawerState.close()
+                                                        navController.navigate(EditDiaryRoute(diaries[index].id))
+                                                    }
+                                                },
+                                                colors = IconButtonColors(
+                                                    containerColor = PaperColor,
+                                                    contentColor = MaterialTheme.colorScheme.primary,
+                                                    disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                                    disabledContentColor = MaterialTheme.colorScheme.primary
+                                                ),
+//                                                modifier = Modifier
+//                                                    .align(Alignment.Bottom),
+                                            ) {
+                                                Icon(Icons.Outlined.Edit, contentDescription = "Edit")
+                                            }
+                                            IconButton(
+                                                onClick = {
+                                                    viewModel.onDeleteDiary(
+                                                        diaries[index].id,
+                                                    )
+                                                    scope.launch {
+                                                        drawerState.close()
+                                                    }
+                                                },
+                                                colors = IconButtonColors(
+                                                    containerColor = Color.White,
+                                                    contentColor = MaterialTheme.colorScheme.primary,
+                                                    disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                                    disabledContentColor = MaterialTheme.colorScheme.primary
+                                                ),
+//                                                modifier = Modifier
+//                                                    .align(Alignment.Bottom),
+                                            ) {
+                                                Icon(Icons.Outlined.Delete, contentDescription = "Delete")
+                                            }
                                         }
+
                                     }
                                 }
                                 item{

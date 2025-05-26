@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -69,6 +70,7 @@ import kotlin.math.absoluteValue
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.ui.platform.LocalConfiguration
@@ -102,15 +104,10 @@ fun AllDiariesScreen(
 
             LazyVerticalStaggeredGrid(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .border(width = 2.dp, color = Color.Magenta, shape = RectangleShape),
-//                    .verticalScroll(rememberScrollState()),
+                    .fillMaxSize(),
+//                    .border(width = 2.dp, color = Color.Magenta, shape = RectangleShape),
                 columns = StaggeredGridCells.Fixed(3),
-//                verticalArrangement = Arrangement.Center,
-//                horizontalAlignment = Alignment.CenterHorizontally
-
             ) {
-
                 item(
                     span = StaggeredGridItemSpan.FullLine
                 ) {
@@ -118,7 +115,7 @@ fun AllDiariesScreen(
                         Modifier
                             .wrapContentHeight()
                             .fillMaxWidth()
-                            .padding(bottom = 8.dp),
+                            .padding(16.dp),
                         horizontalArrangement = Arrangement.Center
                     ) {
                         repeat(diaries.size) { iteration ->
@@ -129,7 +126,7 @@ fun AllDiariesScreen(
                                     .padding(2.dp)
                                     .clip(CircleShape)
                                     .background(color)
-                                    .size(16.dp)
+                                    .size(12.dp)
                             )
                         }
                     }
@@ -140,9 +137,9 @@ fun AllDiariesScreen(
                     val pageInteractionSource = remember { MutableInteractionSource() }
 
                     HorizontalPager(
-                        modifier = Modifier
-                            .border(width = 2.dp, color = Color.Red, shape = RectangleShape),
-                        contentPadding = PaddingValues(35.dp),
+//                        modifier = Modifier
+//                            .border(width = 2.dp, color = Color.Red, shape = RectangleShape),
+                        contentPadding = PaddingValues(horizontal = 35.dp),
                         state = pagerState
                     ) { absolutePage ->
                         val relativePage = absolutePage % diaries.size
@@ -150,60 +147,47 @@ fun AllDiariesScreen(
                             Modifier
                                 .padding(8.dp)
                                 .border(width = 2.dp, color = Color.Black)
-                                .background(PaperColor)
-                                .graphicsLayer {
-                                    // Calculate the absolute offset for the current page from the
-                                    // scroll position. We use the absolute value which allows us to mirror
-                                    // any effects for both directions
-                                    val pageOffset = (
-                                            (currentPage - relativePage) + pagerState
-                                                .currentPageOffsetFraction
-                                            ).absoluteValue
-
-                                    // We animate the alpha, between 50% and 100%
-                                    alpha = lerp(
-                                        start = 0.5f,
-                                        stop = 1f,
-                                        fraction = 1f - pageOffset.coerceIn(0f, 1f)
-                                    )
-
-                                    scaleX = lerp(
-                                        start = 0.9f,
-                                        stop = 1f,
-                                        fraction = 1f - pageOffset.coerceIn(0f, 1f)
-                                    )
-                                    scaleY = lerp(
-                                        start = 0.9f,
-                                        stop = 1f,
-                                        fraction = 1f - pageOffset.coerceIn(0f, 1f)
-                                    )
-                                }
+//                                .graphicsLayer {
+//                                    // Calculate the absolute offset for the current page from the
+//                                    // scroll position. We use the absolute value which allows us to mirror
+//                                    // any effects for both directions
+//                                    val pageOffset = (
+//                                            (currentPage - relativePage) + pagerState
+//                                                .currentPageOffsetFraction
+//                                            ).absoluteValue
+//
+//                                    // We animate the alpha, between 50% and 100%
+//                                    alpha = lerp(
+//                                        start = 0.5f,
+//                                        stop = 1f,
+//                                        fraction = 1f - pageOffset.coerceIn(0f, 1f)
+//                                    )
+//
+//                                    scaleX = lerp(
+//                                        start = 0.9f,
+//                                        stop = 1f,
+//                                        fraction = 1f - pageOffset.coerceIn(0f, 1f)
+//                                    )
+//                                    scaleY = lerp(
+//                                        start = 0.9f,
+//                                        stop = 1f,
+//                                        fraction = 1f - pageOffset.coerceIn(0f, 1f)
+//                                    )
+//                                }
                                 .clickable(
                                     interactionSource = pageInteractionSource,
                                     indication = LocalIndication.current
                                 ) {
                                     onNavigateToDiary(currentDiary.id)
-                                }
+                                },
+                            colors = CardDefaults.cardColors(containerColor = Color.White)
                         ) {
                             Column(
                                 modifier = Modifier.padding(16.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp), // Adds spacing between elements
                                 horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
-                                IconButton (
-                                    // replace pagerState.currentPage with the actual id of the currentPage diary
-                                    onClick = { onNavigateToEditDiary(currentDiary.id) },
-                                    colors = IconButtonColors(
-                                        containerColor = PaperColor,
-                                        contentColor = MaterialTheme.colorScheme.primary,
-                                        disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                        disabledContentColor = MaterialTheme.colorScheme.primary
-                                    ),
-                                    modifier = Modifier
-                                        .align(Alignment.End),
-                                ) {
-                                    Icon(Icons.Outlined.Edit, contentDescription = "Edit")
-                                }
+
 
                                 DiaryCoverComposable(
                                     modifier = Modifier,
@@ -227,10 +211,10 @@ fun AllDiariesScreen(
                 item(
                     span = StaggeredGridItemSpan.FullLine
                 ) {
-
                     Row(
                         modifier = Modifier
-                            .fillMaxWidth(),
+                            .fillMaxWidth()
+                            .padding(16.dp),
                         horizontalArrangement = Arrangement.Center
                     ) {
                         val cornerRadius = 16.dp
@@ -240,17 +224,17 @@ fun AllDiariesScreen(
                                 onClick = {
                                     viewModel.onButtonStateUpdate(item)
                                 },
-                                modifier = when (index) {
-                                    0 ->
-                                        Modifier
-                                            .offset(0.dp, 0.dp)
-                                            .zIndex(if (buttonState == item) 1f else 0f)
-
-                                    else ->
-                                        Modifier
-                                            .offset((-1 * index).dp, 0.dp)
-                                            .zIndex(if (buttonState == item) 1f else 0f)
-                                },
+//                                modifier = when (index) {
+//                                    0 ->
+//                                        Modifier
+//                                            .offset(0.dp, 0.dp)
+//                                            .zIndex(if (buttonState == item) 1f else 0f)
+//
+//                                    else ->
+//                                        Modifier
+//                                            .offset((-1 * index).dp, 0.dp)
+//                                            .zIndex(if (buttonState == item) 1f else 0f)
+//                                },
                                 shape = when (index) {
                                     0 -> RoundedCornerShape(
                                         topStart = cornerRadius,
@@ -330,7 +314,7 @@ fun AllDiariesScreen(
 fun DiaryCoverComposable(modifier: Modifier, coverUrl: String) {
     Box(
         modifier = modifier
-            .border(width = 2.dp, color = Color.Blue, shape = RectangleShape)
+//            .border(width = 2.dp, color = Color.Blue, shape = RectangleShape)
             .padding(16.dp),
         contentAlignment = Alignment.Center,
     ) {

@@ -82,7 +82,7 @@ fun EditDiaryScreen(
                 Button(
                     onClick = viewModel::onUpdateDiary
                 ) {
-                    Text("Modifica")
+                    Text("Salva")
                 }
 
                 if (uiState is EditDiaryUiState.Error) {
