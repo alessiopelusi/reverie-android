@@ -363,6 +363,7 @@ class ViewDiaryViewModel @Inject constructor(
                     addSubPage(
                         DiarySubPage(
                             pageId = pageId,
+                            diaryId = page.diaryId,
                             contentEndIndex = page.content.length
                         )
                     )

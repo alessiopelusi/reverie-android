@@ -66,11 +66,14 @@ import dev.romainguy.text.combobreaker.TextFlowJustification
 import dev.romainguy.text.combobreaker.material3.TextFlow
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import dev.romainguy.graphics.path.toPaths
 import kotlinx.coroutines.delay
+import java.time.format.DateTimeFormatter
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
@@ -89,7 +92,10 @@ fun ViewDiaryScreen(
         is ViewDiaryUiState.Loading -> CircularProgressIndicator()
         is ViewDiaryUiState.Success -> {
             val diary = (uiState as ViewDiaryUiState.Success).diary
+            val pages = (uiState as ViewDiaryUiState.Success).pages
+            val pagesMap = (uiState as ViewDiaryUiState.Success).pagesMap
             val subPages = (uiState as ViewDiaryUiState.Success).subPages
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -103,6 +109,23 @@ fun ViewDiaryScreen(
                 )
 
                 val diaryPageListState = rememberLazyListState(initialFirstVisibleItemIndex = subPages.lastIndex)
+                val currentSubPageIndex by remember {
+                    derivedStateOf {
+                        val layoutInfo = diaryPageListState.layoutInfo
+                        val visibleItems = layoutInfo.visibleItemsInfo
+                        if (visibleItems.isEmpty()) return@derivedStateOf 0
+
+                        val viewportCenter = layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset / 2
+
+                        // Find the item whose center is closest to the viewport center
+                        visibleItems.minByOrNull { item ->
+                            val itemCenter = item.offset + item.size / 2
+                            kotlin.math.abs(itemCenter - viewportCenter)
+                        }?.index ?: 0
+                    }
+                }
+                val currentSubPage = subPages[currentSubPageIndex]
+                val currentPage = pagesMap.getValue(currentSubPage.pageId)
                 // start lazyrow from the end
                 /*LaunchedEffect(Unit) {
                     diaryPageListState.scrollToItem(subPages.lastIndex)
@@ -116,7 +139,7 @@ fun ViewDiaryScreen(
                     val boxWithConstraintsScope = this
 
                     // TODO: big big hack to load everything and update end indices
-                    subPages.forEachIndexed{ index, item ->
+                    subPages.forEachIndexed{ index, subPage ->
                         Layout(
                             content = {
                                 // Here's the content of each list item.
@@ -125,7 +148,7 @@ fun ViewDiaryScreen(
                                     modifier = Modifier
                                         .widthIn(max = LocalWindowInfo.current.containerSize.width.dp * widthFraction)
                                         .aspectRatio(9f / 16f),
-                                    item.id,
+                                    subPage.id,
                                     viewModel,
                                     transparent = true
                                 )
@@ -160,7 +183,7 @@ fun ViewDiaryScreen(
                         state = diaryPageListState,
                         flingBehavior = rememberSnapFlingBehavior(lazyListState = diaryPageListState)
                     ) {
-                        itemsIndexed(subPages) { index, item ->
+                        itemsIndexed(subPages) { index, subPage ->
                             Layout(
                                 content = {
                                     // Here's the content of each list item.
@@ -169,7 +192,7 @@ fun ViewDiaryScreen(
                                         modifier = Modifier
                                             .widthIn(max = LocalWindowInfo.current.containerSize.width.dp * widthFraction)
                                             .aspectRatio(9f / 16f),
-                                        item.id,
+                                        subPage.id,
                                         viewModel
                                     )
                                 },
@@ -202,7 +225,15 @@ fun ViewDiaryScreen(
 
                 Text(
                     modifier = Modifier.padding(8.dp),
-                    text = "Page 1/1",
+                    text = "${stringResource(R.string.day)} ${currentPage.date.format(DateTimeFormatter.ofPattern("dd MM YYYY"))}",
+                )
+                Text(
+                    modifier = Modifier.padding(8.dp),
+                    text = "${stringResource(R.string.page)} ${pages.indexOf(currentPage) + 1}/${pages.size}",
+                )
+                Text(
+                    modifier = Modifier.padding(8.dp),
+                    text = "${stringResource(R.string.sub_page)} ${currentPage.subPageIds.indexOf(currentSubPage.id) + 1}/${currentPage.subPageIds.size}",
                 )
 
                 Button(

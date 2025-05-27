@@ -4,7 +4,7 @@ import android.graphics.Bitmap
 import com.google.firebase.firestore.Exclude
 
 data class DiaryImage(
-    @Exclude val id: String = "",
+    @get:Exclude val id: String = "",
     val subPageId: String = "",
     val diaryId: String = "",
     val offsetX: Int = 0,
@@ -12,5 +12,5 @@ data class DiaryImage(
     val scale: Float = 1f,
     val rotation: Float = 0f,
     val url: String = "",
-    @Exclude val bitmap: Bitmap? = null
+    @get:Exclude val bitmap: Bitmap? = null
 )

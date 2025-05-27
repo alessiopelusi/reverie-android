@@ -11,4 +11,7 @@
     <string name="login" translatable="false">Login</string>
     <string name="signup" translatable="false">Signup</string>
     <string name="title">Title</string>
+    <string name="page">Page</string>
+    <string name="sub_page">Sub Page</string>
+    <string name="day">Day</string>
 </resources>

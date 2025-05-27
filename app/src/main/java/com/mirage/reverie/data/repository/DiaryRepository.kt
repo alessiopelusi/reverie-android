@@ -112,7 +112,7 @@ class DiaryRepositoryImpl @Inject constructor(
         val savedPage = storageService.savePage(page)
 
         // add first subPage
-        saveSubPage(DiarySubPage(pageId = savedPage.id))
+        saveSubPage(DiarySubPage(pageId = savedPage.id, diaryId = page.diaryId))
 
         // add page to diary
         val diary = getDiary(page.diaryId)

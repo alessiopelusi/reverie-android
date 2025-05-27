@@ -6,10 +6,16 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class User(
-    @Exclude val id: String = "",
+    @get:Exclude val id: String = "",
     val email: String = "",
     val name: String = "",
     val surname: String = "",
     val diaryIds: List<String> = listOf()
-): Parcelable
+): Parcelable {
+    // shadows Parcelable stability attribute
+    @Exclude
+    fun getStability(): Int {
+        return this.getStability()
+    }
+}
 

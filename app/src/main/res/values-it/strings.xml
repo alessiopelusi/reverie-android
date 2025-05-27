@@ -4,4 +4,7 @@
     <string name="diary">Diario</string>
     <string name="time_capsule">Capsule del Tempo</string>
     <string name="title">Titolo</string>
+    <string name="page">Pagina</string>
+    <string name="sub_page">Sotto Pagina</string>
+    <string name="day">Giorno</string>
 </resources>
