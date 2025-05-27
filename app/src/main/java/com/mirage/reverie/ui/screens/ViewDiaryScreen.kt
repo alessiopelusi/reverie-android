@@ -334,7 +334,8 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
                 // necessary to prevent block on pointerInput and to pass the actual updated value
                 val image by rememberUpdatedState(currentImage)
 
-                if (currentImage.bitmap == null) {
+                // TODO: it means null bitmap... bad, really bad
+                if (currentImage.bitmap.width == 1 && currentImage.bitmap.height == 1 && currentImage.bitmap.config == Bitmap.Config.ALPHA_8) {
                     viewModel.loadImage(image.id)
                     return@forEach
                 }

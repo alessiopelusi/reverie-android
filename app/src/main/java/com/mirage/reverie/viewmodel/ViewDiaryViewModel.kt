@@ -141,7 +141,7 @@ class ViewDiaryViewModel @Inject constructor(
 
         viewModelScope.launch {
             val result = imageLoader.execute(request)
-            val bitmap = (result as? SuccessResult)?.image?.toBitmap()
+            val bitmap = (result as SuccessResult).image.toBitmap()
             image = image.copy(bitmap = bitmap)
             imagesMap[imageId] = image
 
