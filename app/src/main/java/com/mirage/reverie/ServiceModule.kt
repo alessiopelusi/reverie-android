@@ -15,6 +15,10 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.storage.Storage
+import io.github.jan.supabase.storage.storage
+import javax.inject.Provider
 import javax.inject.Singleton
 
 // object used to provide dependencies to other classes
@@ -22,11 +26,18 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object ServiceModule {
+    // TODO: unsafe to push on github?
+    private val supabase = createSupabaseClient(
+        supabaseUrl = "https://wjecfnvsxxnvgheqdnpx.supabase.co",
+        supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqZWNmbnZzeHhudmdoZXFkbnB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5MDg0MzIsImV4cCI6MjA2MzQ4NDQzMn0.LrI65dbt0L0WkM6uEFzoKpvzNt8Xy6_QI8LbWj9LVxE"
+    ) {
+        install(Storage)
+    }
 
     @Provides
     @Singleton
-    fun provideStorageService(firestore: FirebaseFirestore, auth: AccountService): StorageService {
-        return StorageServiceImpl(firestore, auth)
+    fun provideStorageService(firestore: FirebaseFirestore, storage: Storage): StorageService {
+        return StorageServiceImpl(firestore, storage)
     }
 
     @Provides
@@ -35,16 +46,23 @@ object ServiceModule {
         return AccountServiceImpl(auth)
     }
 
+    // We use Provider to break circular dependency
     @Provides
     @Singleton
-    fun provideDiaryRepository(storageService: StorageService, userRepository: UserRepository): DiaryRepository {
+    fun provideDiaryRepository(
+        storageService: StorageService,
+        userRepository: Provider<UserRepository>
+    ): DiaryRepository {
         return DiaryRepositoryImpl(storageService, userRepository)
     }
 
     @Provides
     @Singleton
-    fun provideUserRepository(storageService: StorageService): UserRepository {
-        return UserRepositoryImpl(storageService)
+    fun provideUserRepository(
+        storageService: StorageService,
+        diaryRepository: Provider<DiaryRepository>
+    ): UserRepository {
+        return UserRepositoryImpl(storageService, diaryRepository)
     }
 
     @Provides
@@ -64,5 +82,11 @@ object ServiceModule {
     fun provideApplicationContext(
         @ApplicationContext appContext: Context
     ): Context = appContext
+
+    @Singleton
+    @Provides
+    fun provideStorage(): Storage {
+        return supabase.storage
+    }
 
 }

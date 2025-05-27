@@ -9,7 +9,11 @@ import com.mirage.reverie.data.model.DiaryPage
 import com.mirage.reverie.data.model.DiarySubPage
 import com.mirage.reverie.data.model.User
 import com.mirage.reverie.data.toFirestoreMap
+import io.github.jan.supabase.storage.Storage
+import io.github.jan.supabase.storage.upload
 import kotlinx.coroutines.tasks.await
+import java.io.File
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -45,6 +49,8 @@ interface StorageService {
     suspend fun updateDiaryImage(diaryImage: DiaryImage)
     suspend fun deleteDiaryImage(diaryImageId: String)
 
+    suspend fun saveImage(file: File): String
+
     suspend fun getDiaryCover(diaryCoverId: String): DiaryCover?
     suspend fun getAllDiaryCovers(): List<DiaryCover>
 }
@@ -52,7 +58,7 @@ interface StorageService {
 @Singleton
 class StorageServiceImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val auth: AccountService,
+    private val storage: Storage // Supabase
 ) : StorageService {
     val USER_COLLECTION = "users"
     val DIARY_COLLECTION = "diaries"
@@ -61,6 +67,8 @@ class StorageServiceImpl @Inject constructor(
     val DIARY_IMAGE_COLLECTION = "diaryImages"
     val DIARY_COVER_COLLECTION = "diaryCovers"
     val USER_ID_FIELD = "userId"
+
+    val DIARY_IMAGE_BUCKET = "diary-images"
 
     /*override val diaries: Flow<List<Diary>>
         get() =
@@ -84,9 +92,6 @@ class StorageServiceImpl @Inject constructor(
     }
 
     override suspend fun deleteUser(userId: String) {
-        val user = getUser(userId) ?: return
-        user.diaryIds.forEach { diaryId -> deleteDiary(diaryId) }
-
         firestore.collection(USER_COLLECTION).document(userId).delete().await()
     }
 
@@ -96,15 +101,7 @@ class StorageServiceImpl @Inject constructor(
             ?.copy(id = diaryId)
 
     override suspend fun saveDiary(diary: Diary): Diary {
-        // TODO: bad...
-        val user = getUser(diary.userId) ?: return Diary()
-
         val diaryId = firestore.collection(DIARY_COLLECTION).add(diary.toFirestoreMap()).await().id
-
-        val diaryIds = user.diaryIds.toMutableList()
-        diaryIds.add(diaryId)
-        updateUser(user.copy(diaryIds = diaryIds))
-
         return diary.copy(id = diaryId)
     }
 
@@ -117,15 +114,7 @@ class StorageServiceImpl @Inject constructor(
     }
 
     override suspend fun deleteDiary(diaryId: String) {
-        val diary = getDiary(diaryId) ?: return
-        diary.pageIds.forEach { pageId -> deletePage(pageId) }
-
         firestore.collection(DIARY_COLLECTION).document(diaryId).delete().await()
-
-        val user = getUser(diary.userId) ?: return
-        val diaryIds = user.diaryIds.toMutableList()
-        diaryIds.remove(diaryId)
-        updateUser(user.copy(diaryIds = diaryIds))
     }
 
 
@@ -134,15 +123,7 @@ class StorageServiceImpl @Inject constructor(
             ?.copy(id = pageId)
 
     override suspend fun savePage(page: DiaryPage): DiaryPage {
-        // TODO: bad...
-        val diary = getDiary(page.diaryId) ?: return DiaryPage()
-
         val pageId = firestore.collection(PAGE_COLLECTION).add(page.toFirestoreMap()).await().id
-
-        val pageIds = diary.pageIds.toMutableList()
-        pageIds.add(pageId)
-        updateDiary(diary.copy(pageIds = pageIds))
-
         return page.copy(id = pageId)
     }
 
@@ -151,15 +132,7 @@ class StorageServiceImpl @Inject constructor(
     }
 
     override suspend fun deletePage(pageId: String) {
-        val page = getPage(pageId) ?: return
-        page.subPageIds.forEach { subPageId -> deleteSubPage(subPageId) }
-
         firestore.collection(PAGE_COLLECTION).document(pageId).delete().await()
-
-        val diary = getDiary(page.diaryId) ?: return
-        val pageIds = diary.pageIds.toMutableList()
-        pageIds.remove(pageId)
-        updateDiary(diary.copy(pageIds = pageIds))
     }
 
 
@@ -168,15 +141,7 @@ class StorageServiceImpl @Inject constructor(
             .toObject<DiarySubPage?>()?.copy(id = subPageId)
 
     override suspend fun saveSubPage(subPage: DiarySubPage): DiarySubPage {
-        // TODO: bad...
-        val page = getPage(subPage.pageId) ?: return DiarySubPage()
-
         val subPageId = firestore.collection(SUB_PAGE_COLLECTION).add(subPage.toFirestoreMap()).await().id
-
-        val subPageIds = page.subPageIds.toMutableList()
-        subPageIds.add(subPageId)
-        updatePage(page.copy(subPageIds = subPageIds))
-
         return subPage.copy(id = subPageId)
     }
 
@@ -185,15 +150,7 @@ class StorageServiceImpl @Inject constructor(
     }
 
     override suspend fun deleteSubPage(subPageId: String) {
-        val subPage = getSubPage(subPageId) ?: return
-        subPage.imageIds.forEach { imageId -> deleteDiaryImage(imageId) }
-
         firestore.collection(SUB_PAGE_COLLECTION).document(subPageId).delete().await()
-
-        val page = getPage(subPage.pageId) ?: return
-        val subPageIds = page.subPageIds.toMutableList()
-        subPageIds.remove(subPageId)
-        updatePage(page.copy(subPageIds = subPageIds))
     }
 
 
@@ -208,15 +165,7 @@ class StorageServiceImpl @Inject constructor(
             .mapNotNull{ image -> image.toObject<DiaryImage?>()?.copy(id = image.id) }
 
     override suspend fun saveDiaryImage(diaryImage: DiaryImage): DiaryImage {
-        // TODO: bad...
-        val subPage = getSubPage(diaryImage.subPageId) ?: return DiaryImage()
-
         val diaryImageId = firestore.collection(DIARY_IMAGE_COLLECTION).add(diaryImage.toFirestoreMap()).await().id
-
-        val imageIds = subPage.imageIds.toMutableList()
-        imageIds.add(diaryImageId)
-        updateSubPage(subPage.copy(imageIds = imageIds))
-
         return diaryImage.copy(id = diaryImageId)
     }
 
@@ -225,14 +174,19 @@ class StorageServiceImpl @Inject constructor(
     }
 
     override suspend fun deleteDiaryImage(diaryImageId: String) {
-        val image = getDiaryImage(diaryImageId) ?: return
-
         firestore.collection(DIARY_IMAGE_COLLECTION).document(diaryImageId).delete().await()
+    }
 
-        val subPage = getSubPage(image.subPageId) ?: return
-        val imageIds = subPage.imageIds.toMutableList()
-        imageIds.remove(diaryImageId)
-        updateSubPage(subPage.copy(imageIds = imageIds))
+
+    override suspend fun saveImage(file: File): String {
+        val bucket = storage.from(DIARY_IMAGE_BUCKET)
+
+        val fileName = "${UUID.randomUUID()}.${file.extension}"
+        bucket.upload(fileName, file) {
+            upsert = false
+        }
+
+        return bucket.publicUrl(fileName)
     }
 
 

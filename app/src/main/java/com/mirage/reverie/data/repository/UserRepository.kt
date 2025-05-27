@@ -1,12 +1,9 @@
 package com.mirage.reverie.data.repository
 
 import com.mirage.reverie.StorageService
-import com.mirage.reverie.data.model.Diary
-import com.mirage.reverie.data.model.DiaryImage
-import com.mirage.reverie.data.model.DiaryPage
-import com.mirage.reverie.data.model.DiarySubPage
 import com.mirage.reverie.data.model.User
 import javax.inject.Inject
+import javax.inject.Provider
 
 interface UserRepository {
     suspend fun getUser(userId: String): User
@@ -18,8 +15,12 @@ interface UserRepository {
 
 // Using Hilt we inject a dependency (apiSevice)
 class UserRepositoryImpl @Inject constructor(
-    private val storageService: StorageService
+    private val storageService: StorageService,
+    private val diaryRepositoryProvider: Provider<DiaryRepository>
 ): UserRepository {
+    private val diaryRepository
+        get() = diaryRepositoryProvider.get()
+
     override suspend fun getUser(userId: String): User {
         return storageService.getUser(userId)
             ?: throw NoSuchElementException("User with ID $userId does not exists")
@@ -34,6 +35,9 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteUser(userId: String) {
+        val user = getUser(userId)
+        user.diaryIds.forEach { diaryId -> diaryRepository.deleteDiary(diaryId) }
+
         storageService.deleteUser(userId)
     }
 }

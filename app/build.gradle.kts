@@ -104,13 +104,6 @@ dependencies {
     implementation(platform(libs.firebase.bom))
 
     // When using the BoM, you don't specify versions in Firebase library dependencies
-
-    // Add the dependency for the Firebase SDK for Google Analytics
-    implementation(libs.firebase.analytics)
-
-    // TODO: Add the dependencies for any other Firebase products you want to use
-    // See https://firebase.google.com/docs/android/setup#available-libraries
-    // For example, add the dependencies for Firebase Authentication and Cloud Firestore
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
 
@@ -129,4 +122,8 @@ dependencies {
 
     // runtime livedata
     implementation(libs.androidx.runtime.livedata)
+
+    // supabase
+    implementation(libs.supabase.storage.kt)
+    implementation(libs.ktor.client.okhttp)
 }
