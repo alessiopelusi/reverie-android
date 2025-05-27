@@ -71,6 +71,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.zIndex
 import dev.romainguy.graphics.path.toPaths
 import kotlinx.coroutines.delay
 import java.time.format.DateTimeFormatter
@@ -287,6 +288,8 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
         )
         val dropdownItems = listOf(
             DropDownItem("Delete"),
+            DropDownItem("Move up"),
+            DropDownItem("Move down"),
         )
 
         val context = LocalContext.current
@@ -337,7 +340,6 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
                 // TODO: it means null bitmap... bad, really bad
                 if (currentImage.bitmap.width == 1 && currentImage.bitmap.height == 1 && currentImage.bitmap.config == Bitmap.Config.ALPHA_8) {
                     viewModel.loadImage(image.id)
-                    return@forEach
                 }
 
                 var lastUpdateTime by remember { mutableStateOf(System.currentTimeMillis()) }
@@ -353,19 +355,6 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
                         delay(100) // Small delay to avoid busy looping
                     }
                 }
-
-                val scaledBitmap by rememberUpdatedState(Bitmap.createBitmap(
-                    currentImage.bitmap,
-                    0,
-                    0,
-                    currentImage.bitmap.width,
-                    currentImage.bitmap.height,
-                    Matrix().apply {
-                        postScale(image.scale, image.scale)
-                        postRotate(image.rotation)
-                    },
-                    true
-                ))
 
                 val matrix = androidx.compose.ui.graphics.Matrix()
                 matrix.scale(image.scale, image.scale)
