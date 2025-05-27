@@ -10,6 +10,7 @@ import coil3.ImageLoader
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
 import coil3.toBitmap
+import com.google.firebase.Timestamp
 import com.mirage.reverie.data.model.Diary
 import com.mirage.reverie.data.model.DiaryImage
 import com.mirage.reverie.data.model.DiaryPage
@@ -86,9 +87,8 @@ class ViewDiaryViewModel @Inject constructor(
             }
 
             val state = newState as ViewDiaryUiState.Success
-            if (state.pages.isEmpty() || state.pages.last().date != LocalDate.now()) {
-                newState = addEmptyPage(state)
-            }
+            // add empty page if needed
+            newState = addEmptyPage(state)
 
             _uiState.update { newState }
         }
@@ -96,21 +96,34 @@ class ViewDiaryViewModel @Inject constructor(
 
     private suspend fun addEmptyPage(state: ViewDiaryUiState): ViewDiaryUiState {
         if (state !is ViewDiaryUiState.Success) return state
+        // if no necessity to add empty page return
+        if (state.pages.isNotEmpty() && state.pages.last().date == LocalDate.now()) return state
 
-        val pageWithId = repository.savePage(DiaryPage(diaryId = state.diary.id))
+        // if last page has no content and no images we can simply change the date
+        if (state.pages.isNotEmpty() && state.pages.last().content.isEmpty() && state.subPages.last().imageIds.isEmpty()) {
+            val page = state.pages.last().copy(timestamp = Timestamp.now())
+            repository.updatePage(page)
 
-        val updatedPagesMap = state.pagesMap.toMutableMap()
-        updatedPagesMap[pageWithId.id] = pageWithId
+            val updatedPagesMap = state.pagesMap.toMutableMap()
+            updatedPagesMap[page.id] = page
 
-        val updatedPagesIds = state.diary.pageIds.toMutableList()
-        updatedPagesIds.add(pageWithId.id)
-        val updatedDiary = state.diary.copy(pageIds = updatedPagesIds)
+            return ViewDiaryUiState.Success(state.diary, updatedPagesMap, state.subPagesMap, state.imagesMap)
+        } else {
+            val pageWithId = repository.savePage(DiaryPage(diaryId = state.diary.id))
 
-        val updatedSubPagesMap = state.subPagesMap.toMutableMap()
-        val firstSubPage = pageWithId.subPageIds.first()
-        updatedSubPagesMap[firstSubPage] = repository.getSubPage(firstSubPage)
+            val updatedPagesMap = state.pagesMap.toMutableMap()
+            updatedPagesMap[pageWithId.id] = pageWithId
 
-        return ViewDiaryUiState.Success(updatedDiary, updatedPagesMap, updatedSubPagesMap, state.imagesMap)
+            val updatedPagesIds = state.diary.pageIds.toMutableList()
+            updatedPagesIds.add(pageWithId.id)
+            val updatedDiary = state.diary.copy(pageIds = updatedPagesIds)
+
+            val updatedSubPagesMap = state.subPagesMap.toMutableMap()
+            val firstSubPage = pageWithId.subPageIds.first()
+            updatedSubPagesMap[firstSubPage] = repository.getSubPage(firstSubPage)
+
+            return ViewDiaryUiState.Success(updatedDiary, updatedPagesMap, updatedSubPagesMap, state.imagesMap)
+        }
     }
 
     fun overwritePage(page: DiaryPage?) {
