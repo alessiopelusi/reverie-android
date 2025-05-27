@@ -80,6 +80,11 @@ class ViewDiaryViewModel @Inject constructor(
             val imagesMap = subPagesMap.values.flatMap { subPage -> subPage.imageIds }.associateWith { imageId -> repository.getDiaryImage(imageId) }
             var newState: ViewDiaryUiState = ViewDiaryUiState.Success(diary, pagesMap, subPagesMap, imagesMap)
 
+            // loading images bitmap
+            imagesMap.keys.forEach { diaryImageId ->
+                newState = loadImage(diaryImageId, newState)
+            }
+
             val state = newState as ViewDiaryUiState.Success
             if (state.pages.isEmpty() || state.pages.last().date != LocalDate.now()) {
                 newState = addEmptyPage(state)
@@ -148,8 +153,31 @@ class ViewDiaryViewModel @Inject constructor(
             image = image.copy(bitmap = bitmap)
             imagesMap[imageId] = image
 
-            _uiState.value = ViewDiaryUiState.Success(state.diary, state.pagesMap, state.subPagesMap, imagesMap)
+            _uiState.update {
+                ViewDiaryUiState.Success(state.diary, state.pagesMap, state.subPagesMap, imagesMap)
+            }
         }
+    }
+
+
+    suspend fun loadImage(imageId: String, state: ViewDiaryUiState): ViewDiaryUiState {
+        if (state !is ViewDiaryUiState.Success) return state
+
+        val imagesMap = state.imagesMap.toMutableMap()
+        var image = imagesMap.getValue(imageId)
+
+        val imageLoader = ImageLoader(context)
+        val request = ImageRequest.Builder(context)
+            .data(image.url)
+            //.allowHardware(false) // Required if you want to manipulate the bitmap later
+            .build()
+
+        val result = imageLoader.execute(request)
+        val bitmap = (result as SuccessResult).image.toBitmap()
+        image = image.copy(bitmap = bitmap)
+        imagesMap[imageId] = image
+
+        return ViewDiaryUiState.Success(state.diary, state.pagesMap, state.subPagesMap, imagesMap)
     }
 
     private fun getPageSubPages(pageId: String): List<DiarySubPage> {
@@ -230,12 +258,14 @@ class ViewDiaryViewModel @Inject constructor(
         val updatedSubPagesMap = state.subPagesMap.toMutableMap()
         updatedSubPagesMap[updatedSubPage.id] = updatedSubPage
 
-        _uiState.value = ViewDiaryUiState.Success(
-            state.diary,
-            state.pagesMap,
-            updatedSubPagesMap,
-            state.imagesMap
-        )
+        _uiState.update {
+            ViewDiaryUiState.Success(
+                state.diary,
+                state.pagesMap,
+                updatedSubPagesMap,
+                state.imagesMap
+            )
+        }
     }
 
     private fun updateSubPageContentEndIndex(subPageId: String, contentEndIndex: Int) {
@@ -306,7 +336,14 @@ class ViewDiaryViewModel @Inject constructor(
 
             updatedPagesMap[subPageWithId.pageId] = updatedPage.copy(subPageIds = updatedSubPagesIds)
 
-            _uiState.value = ViewDiaryUiState.Success(state.diary, updatedPagesMap, updatedSubPagesMap, state.imagesMap)
+            _uiState.update {
+                ViewDiaryUiState.Success(
+                    state.diary,
+                    updatedPagesMap,
+                    updatedSubPagesMap,
+                    state.imagesMap
+                )
+            }
         }
     }
 
@@ -328,7 +365,14 @@ class ViewDiaryViewModel @Inject constructor(
 
             updatedPagesMap[subPage.pageId] = updatedPage.copy(subPageIds = updatedSubPagesIds)
 
-            _uiState.value = ViewDiaryUiState.Success(state.diary, updatedPagesMap, updatedSubPagesMap, state.imagesMap)
+            _uiState.update{
+                ViewDiaryUiState.Success(
+                    state.diary,
+                    updatedPagesMap,
+                    updatedSubPagesMap,
+                    state.imagesMap
+                )
+            }
         }
     }
 
@@ -434,7 +478,14 @@ class ViewDiaryViewModel @Inject constructor(
 
             updatedSubPagesMap[diaryImage.subPageId] = updatedSubPage.copy(imageIds = updatedImageIds)
 
-            _uiState.value = ViewDiaryUiState.Success(state.diary, state.pagesMap, updatedSubPagesMap, updatedImagesMap)
+            _uiState.update {
+                ViewDiaryUiState.Success(
+                    state.diary,
+                    state.pagesMap,
+                    updatedSubPagesMap,
+                    updatedImagesMap
+                )
+            }
         }
 
     }
