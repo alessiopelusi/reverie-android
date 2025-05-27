@@ -14,7 +14,7 @@ data class DiaryPage(
     val pageNumber: Int = 0,
     val content: String = "",
     val subPageIds: List<String> = listOf(),
-    private val timestamp: Timestamp = Timestamp.now()
+    val timestamp: Timestamp = Timestamp.now()
 ): Parcelable {
     val date: LocalDate
         @Exclude get() = timestamp.toDate().toLocalDate()
