@@ -15,13 +15,13 @@ import com.mirage.reverie.data.model.DiaryImage
 import com.mirage.reverie.data.model.DiaryPage
 import com.mirage.reverie.data.model.DiarySubPage
 import com.mirage.reverie.data.repository.DiaryRepository
-import com.mirage.reverie.data.toFirestoreMap
 import com.mirage.reverie.navigation.ViewDiaryRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import javax.inject.Inject
 import kotlin.math.min
 
@@ -75,8 +75,34 @@ class ViewDiaryViewModel @Inject constructor(
             val pagesMap = diary.pageIds.associateWith { pageId -> repository.getPage(pageId) }
             val subPagesMap = pagesMap.values.flatMap { page -> page.subPageIds }.associateWith { subPageId -> repository.getSubPage(subPageId) }
             val imagesMap = subPagesMap.values.flatMap { subPage -> subPage.imageIds }.associateWith { imageId -> repository.getDiaryImage(imageId) }
-            _uiState.value = ViewDiaryUiState.Success(diary, pagesMap, subPagesMap, imagesMap)
+            var newState: ViewDiaryUiState = ViewDiaryUiState.Success(diary, pagesMap, subPagesMap, imagesMap)
+
+            val state = newState as ViewDiaryUiState.Success
+            if (state.pages.isEmpty() || state.pages.last().date != LocalDate.now()) {
+                newState = addEmptyPage(state)
+            }
+
+            _uiState.update { newState }
         }
+    }
+
+    private suspend fun addEmptyPage(state: ViewDiaryUiState): ViewDiaryUiState {
+        if (state !is ViewDiaryUiState.Success) return state
+
+        val pageWithId = repository.savePage(DiaryPage(diaryId = state.diary.id))
+
+        val updatedPagesMap = state.pagesMap.toMutableMap()
+        updatedPagesMap[pageWithId.id] = pageWithId
+
+        val updatedPagesIds = state.diary.pageIds.toMutableList()
+        updatedPagesIds.add(pageWithId.id)
+        val updatedDiary = state.diary.copy(pageIds = updatedPagesIds)
+
+        val updatedSubPagesMap = state.subPagesMap.toMutableMap()
+        val firstSubPage = pageWithId.subPageIds.first()
+        updatedSubPagesMap[firstSubPage] = repository.getSubPage(firstSubPage)
+
+        return ViewDiaryUiState.Success(updatedDiary, updatedPagesMap, updatedSubPagesMap, state.imagesMap)
     }
 
     fun overwritePage(page: DiaryPage?) {
@@ -191,11 +217,11 @@ class ViewDiaryViewModel @Inject constructor(
         if (updatedSubPage == state.subPagesMap.getValue(updatedSubPage.id)) return
 
         // firebase update
-        if (updatedSubPage.toFirestoreMap() != state.subPagesMap.getValue(updatedSubPage.id).toFirestoreMap()) {
-            viewModelScope.launch {
-                repository.updateSubPage(updatedSubPage)
-            }
+        //if (updatedSubPage != state.subPagesMap.getValue(updatedSubPage.id)) {
+        viewModelScope.launch {
+            repository.updateSubPage(updatedSubPage)
         }
+        //}
 
         // local update
         val updatedSubPagesMap = state.subPagesMap.toMutableMap()
@@ -315,7 +341,8 @@ class ViewDiaryViewModel @Inject constructor(
                 resetSubPageContentEndIndex(subPageId)
             }
             2 -> {
-                if (offset == 1 && subPage.imageIds.isEmpty()) {
+                // if empty page, page not last and page without images
+                if (offset == 1 && getPreviousSubPage(subPageId) != null && subPage.imageIds.isEmpty()) {
                     deleteSubPage(subPage.id)
                     return
                 }

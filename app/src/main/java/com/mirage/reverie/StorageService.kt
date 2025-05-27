@@ -8,7 +8,6 @@ import com.mirage.reverie.data.model.DiaryImage
 import com.mirage.reverie.data.model.DiaryPage
 import com.mirage.reverie.data.model.DiarySubPage
 import com.mirage.reverie.data.model.User
-import com.mirage.reverie.data.toFirestoreMap
 import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.storage.upload
 import kotlinx.coroutines.tasks.await
@@ -83,12 +82,12 @@ class StorageServiceImpl @Inject constructor(
             ?.copy(id = userId)
 
     override suspend fun saveUser(user: User): User {
-        val userId = firestore.collection(USER_COLLECTION).add(user.toFirestoreMap()).await().id
+        val userId = firestore.collection(USER_COLLECTION).add(user).await().id
         return user.copy(id = userId)
     }
 
     override suspend fun updateUser(user: User) {
-        firestore.collection(USER_COLLECTION).document(user.id).set(user.toFirestoreMap()).await()
+        firestore.collection(USER_COLLECTION).document(user.id).set(user).await()
     }
 
     override suspend fun deleteUser(userId: String) {
@@ -101,12 +100,12 @@ class StorageServiceImpl @Inject constructor(
             ?.copy(id = diaryId)
 
     override suspend fun saveDiary(diary: Diary): Diary {
-        val diaryId = firestore.collection(DIARY_COLLECTION).add(diary.toFirestoreMap()).await().id
+        val diaryId = firestore.collection(DIARY_COLLECTION).add(diary).await().id
         return diary.copy(id = diaryId)
     }
 
     override suspend fun updateDiary(diary: Diary) {
-        firestore.collection(DIARY_COLLECTION).document(diary.id).set(diary.toFirestoreMap()).await()
+        firestore.collection(DIARY_COLLECTION).document(diary.id).set(diary).await()
     }
 
     override suspend fun updateDiaryTitle(diaryId: String, title: String) {
@@ -123,12 +122,12 @@ class StorageServiceImpl @Inject constructor(
             ?.copy(id = pageId)
 
     override suspend fun savePage(page: DiaryPage): DiaryPage {
-        val pageId = firestore.collection(PAGE_COLLECTION).add(page.toFirestoreMap()).await().id
+        val pageId = firestore.collection(PAGE_COLLECTION).add(page).await().id
         return page.copy(id = pageId)
     }
 
     override suspend fun updatePage(page: DiaryPage) {
-        firestore.collection(PAGE_COLLECTION).document(page.id).set(page.toFirestoreMap()).await()
+        firestore.collection(PAGE_COLLECTION).document(page.id).set(page).await()
     }
 
     override suspend fun deletePage(pageId: String) {
@@ -141,12 +140,12 @@ class StorageServiceImpl @Inject constructor(
             .toObject<DiarySubPage?>()?.copy(id = subPageId)
 
     override suspend fun saveSubPage(subPage: DiarySubPage): DiarySubPage {
-        val subPageId = firestore.collection(SUB_PAGE_COLLECTION).add(subPage.toFirestoreMap()).await().id
+        val subPageId = firestore.collection(SUB_PAGE_COLLECTION).add(subPage).await().id
         return subPage.copy(id = subPageId)
     }
 
     override suspend fun updateSubPage(subPage: DiarySubPage) {
-        firestore.collection(SUB_PAGE_COLLECTION).document(subPage.id).set(subPage.toFirestoreMap()).await()
+        firestore.collection(SUB_PAGE_COLLECTION).document(subPage.id).set(subPage).await()
     }
 
     override suspend fun deleteSubPage(subPageId: String) {
@@ -165,12 +164,12 @@ class StorageServiceImpl @Inject constructor(
             .mapNotNull{ image -> image.toObject<DiaryImage?>()?.copy(id = image.id) }
 
     override suspend fun saveDiaryImage(diaryImage: DiaryImage): DiaryImage {
-        val diaryImageId = firestore.collection(DIARY_IMAGE_COLLECTION).add(diaryImage.toFirestoreMap()).await().id
+        val diaryImageId = firestore.collection(DIARY_IMAGE_COLLECTION).add(diaryImage).await().id
         return diaryImage.copy(id = diaryImageId)
     }
 
     override suspend fun updateDiaryImage(diaryImage: DiaryImage) {
-        firestore.collection(DIARY_IMAGE_COLLECTION).document(diaryImage.id).set(diaryImage.toFirestoreMap()).await()
+        firestore.collection(DIARY_IMAGE_COLLECTION).document(diaryImage.id).set(diaryImage).await()
     }
 
     override suspend fun deleteDiaryImage(diaryImageId: String) {

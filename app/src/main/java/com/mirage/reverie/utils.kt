@@ -5,6 +5,11 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
+import com.google.firebase.Timestamp
+import java.time.LocalDate
+import java.time.ZoneId
+import java.util.Date
+
 
 fun drawableToBitmap(context: Context, drawableResId: Int): Bitmap {
     val drawable = ContextCompat.getDrawable(context, drawableResId)
@@ -21,5 +26,12 @@ fun drawableToBitmap(context: Context, drawableResId: Int): Bitmap {
 
 
     return bitmap
+}
+
+
+fun Date.toLocalDate(): LocalDate {
+    return this.toInstant()
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
 }
 

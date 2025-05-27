@@ -1,12 +1,10 @@
 package com.mirage.reverie.data.model
 
 import android.graphics.Bitmap
-import androidx.compose.ui.geometry.Offset
-import com.mirage.reverie.data.SerializableDataClass
-import com.squareup.moshi.Json
+import com.google.firebase.firestore.Exclude
 
 data class DiaryImage(
-    @Json(ignore = true) val id: String = "",
+    @Exclude val id: String = "",
     val subPageId: String = "",
     val diaryId: String = "",
     val offsetX: Int = 0,
@@ -14,5 +12,5 @@ data class DiaryImage(
     val scale: Float = 1f,
     val rotation: Float = 0f,
     val url: String = "",
-    @Json(ignore = true) val bitmap: Bitmap? = null
-) : SerializableDataClass()
+    @Exclude val bitmap: Bitmap? = null
+)

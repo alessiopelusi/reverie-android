@@ -37,6 +37,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.mirage.reverie.ui.theme.ReverieTheme
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ExitToApp
 import androidx.compose.material.icons.automirrored.outlined.Help
 import androidx.compose.material.icons.automirrored.rounded.LibraryBooks
 import androidx.compose.material.icons.outlined.Delete
@@ -281,7 +282,7 @@ fun MainComposable(
                                         selected = false,
                                         icon = {
                                             Icon(
-                                                Icons.Outlined.ExitToApp,
+                                                Icons.AutoMirrored.Outlined.ExitToApp,
                                                 contentDescription = null
                                             )
                                         },
