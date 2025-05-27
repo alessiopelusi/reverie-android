@@ -41,6 +41,9 @@ sealed class ViewDiaryUiState {
 
         val subPageImagesMap: Map<String, List<DiaryImage>>
             get() = subPages.map { subPage -> subPage.id }.associateWith { subPageId -> subPagesMap.getValue(subPageId).imageIds.map { imageId -> imagesMap.getValue(imageId) } }
+
+        val images: List<DiaryImage>
+            get() = subPages.flatMap { subPage -> subPage.imageIds }.map { imageId -> imagesMap.getValue(imageId) }
     }
     data class Error(val exception: Throwable) : ViewDiaryUiState()
 }
@@ -458,6 +461,8 @@ class ViewDiaryViewModel @Inject constructor(
         val state = uiState.value
         if (state !is ViewDiaryUiState.Success) return
 
+        if (!state.imagesMap.containsKey(diaryImageId)) return
+
         val imageMap = state.imagesMap
         val diaryImage = imageMap.getValue(diaryImageId)
         val subPagesMap = state.subPagesMap
@@ -470,5 +475,35 @@ class ViewDiaryViewModel @Inject constructor(
             updatedImageIds.add(imageIndex-1, diaryImageId)       // Insert it at the previous index
             updateSubPage(subPage.copy(imageIds = updatedImageIds))
         }
+    }
+
+    fun isLastSubPageImage(diaryImageId: String): Boolean {
+        val state = uiState.value
+        if (state !is ViewDiaryUiState.Success) return false
+
+        if (!state.imagesMap.containsKey(diaryImageId)) return false
+
+        val imageMap = state.imagesMap
+        val diaryImage = imageMap.getValue(diaryImageId)
+        val subPagesMap = state.subPagesMap
+        val subPage = subPagesMap.getValue(diaryImage.subPageId)
+
+        val imageIndex = subPage.imageIds.indexOf(diaryImageId)
+        return imageIndex == subPage.imageIds.size-1
+    }
+
+    fun isFirstSubPageImage(diaryImageId: String): Boolean {
+        val state = uiState.value
+        if (state !is ViewDiaryUiState.Success) return false
+
+        if (!state.imagesMap.containsKey(diaryImageId)) return false
+
+        val imageMap = state.imagesMap
+        val diaryImage = imageMap.getValue(diaryImageId)
+        val subPagesMap = state.subPagesMap
+        val subPage = subPagesMap.getValue(diaryImage.subPageId)
+
+        val imageIndex = subPage.imageIds.indexOf(diaryImageId)
+        return imageIndex == 0
     }
 }

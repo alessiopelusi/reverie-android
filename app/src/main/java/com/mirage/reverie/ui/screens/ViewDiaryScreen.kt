@@ -291,10 +291,10 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
             val text: String,
             val onClick: (String) -> Unit
         )
-        val dropdownItems = listOf(
-            DropDownItem("Delete", viewModel::deleteImage),
-            DropDownItem("Move up", viewModel::moveImageUp),
-            DropDownItem("Move down", viewModel::moveImageDown),
+        val dropdownItems = listOfNotNull(
+            DropDownItem(stringResource(R.string.delete), viewModel::deleteImage),
+            if (!viewModel.isLastSubPageImage(contextMenuImageId)) DropDownItem(stringResource(R.string.move_up), viewModel::moveImageUp) else null,
+            if (!viewModel.isFirstSubPageImage(contextMenuImageId)) DropDownItem(stringResource(R.string.move_down), viewModel::moveImageDown) else null,
         )
 
         val parentWidth = constraints.maxWidth.toFloat()
