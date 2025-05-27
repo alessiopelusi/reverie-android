@@ -67,6 +67,7 @@ import dev.romainguy.text.combobreaker.material3.TextFlow
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.graphics.graphicsLayer
@@ -276,6 +277,9 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
         var isContextMenuVisible by rememberSaveable {
             mutableStateOf(false)
         }
+        var contextMenuImageId by rememberSaveable {
+            mutableStateOf("")
+        }
         var pressOffset by remember {
             mutableStateOf(DpOffset.Zero)
         }
@@ -284,15 +288,15 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
         }
         val density = LocalDensity.current*/
         data class DropDownItem(
-            val text: String
+            val text: String,
+            val onClick: (String) -> Unit
         )
         val dropdownItems = listOf(
-            DropDownItem("Delete"),
-            DropDownItem("Move up"),
-            DropDownItem("Move down"),
+            DropDownItem("Delete", viewModel::deleteImage),
+            DropDownItem("Move up", viewModel::moveImageUp),
+            DropDownItem("Move down", viewModel::moveImageDown),
         )
 
-        val context = LocalContext.current
         val parentWidth = constraints.maxWidth.toFloat()
         val parentHeight = constraints.maxHeight.toFloat()
         TextFlow (
@@ -394,6 +398,7 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
                             detectTapGestures(
                                 onLongPress = {
                                     isContextMenuVisible = true
+                                    contextMenuImageId = image.id
                                     pressOffset = DpOffset(it.x.toDp() + image.offsetX.toDp(), it.y.toDp() + image.offsetY.toDp())
                                 }
                             )
@@ -459,16 +464,12 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
                 y = pressOffset.y - itemHeight
             )*/
         ) {
-            dropdownItems.forEach {
+            dropdownItems.forEach { item ->
                 DropdownMenuItem(onClick = {
-                    Toast.makeText(
-                        context,
-                        it.text,
-                        Toast.LENGTH_LONG
-                    ).show()
+                    item.onClick(contextMenuImageId)
                     isContextMenuVisible = false
                 }) {
-                    Text(text = it.text)
+                    Text(text = item.text)
                 }
             }
         }

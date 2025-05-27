@@ -412,4 +412,63 @@ class ViewDiaryViewModel @Inject constructor(
 
         updateDiaryImage(updatedDiaryImage, locally = locally)
     }
+
+    fun deleteImage(diaryImageId: String) {
+        val state = uiState.value
+        if (state !is ViewDiaryUiState.Success) return
+
+        viewModelScope.launch {
+            repository.deleteDiaryImage(diaryImageId)
+
+            val updatedImagesMap = state.imagesMap.toMutableMap()
+            val diaryImage = updatedImagesMap.getValue(diaryImageId)
+            updatedImagesMap.remove(diaryImageId)
+
+            val updatedSubPagesMap = state.subPagesMap.toMutableMap()
+            val updatedSubPage = updatedSubPagesMap.getValue(diaryImage.subPageId)
+            val updatedImageIds = updatedSubPage.imageIds.toMutableList()
+            updatedImageIds.remove(diaryImageId)
+
+            updatedSubPagesMap[diaryImage.subPageId] = updatedSubPage.copy(imageIds = updatedImageIds)
+
+            _uiState.value = ViewDiaryUiState.Success(state.diary, state.pagesMap, updatedSubPagesMap, updatedImagesMap)
+        }
+
+    }
+
+    fun moveImageUp(diaryImageId: String) {
+        val state = uiState.value
+        if (state !is ViewDiaryUiState.Success) return
+
+        val imageMap = state.imagesMap
+        val diaryImage = imageMap.getValue(diaryImageId)
+        val subPagesMap = state.subPagesMap
+        val subPage = subPagesMap.getValue(diaryImage.subPageId)
+
+        val updatedImageIds = subPage.imageIds.toMutableList()
+        val imageIndex = updatedImageIds.indexOf(diaryImageId)
+        if (imageIndex < updatedImageIds.size-1) { // Ensure the index is valid and not the last element
+            updatedImageIds.removeAt(imageIndex)  // Remove the element at the current index
+            updatedImageIds.add(imageIndex+1, diaryImageId)       // Insert it at the previous index
+            updateSubPage(subPage.copy(imageIds = updatedImageIds))
+        }
+    }
+
+    fun moveImageDown(diaryImageId: String) {
+        val state = uiState.value
+        if (state !is ViewDiaryUiState.Success) return
+
+        val imageMap = state.imagesMap
+        val diaryImage = imageMap.getValue(diaryImageId)
+        val subPagesMap = state.subPagesMap
+        val subPage = subPagesMap.getValue(diaryImage.subPageId)
+
+        val updatedImageIds = subPage.imageIds.toMutableList()
+        val imageIndex = updatedImageIds.indexOf(diaryImageId)
+        if (imageIndex > 0) { // Ensure the index is valid and not the first element
+            updatedImageIds.removeAt(imageIndex)  // Remove the element at the current index
+            updatedImageIds.add(imageIndex-1, diaryImageId)       // Insert it at the previous index
+            updateSubPage(subPage.copy(imageIds = updatedImageIds))
+        }
+    }
 }
