@@ -121,4 +121,7 @@ dependencies {
     // supabase
     implementation(libs.supabase.storage.kt)
     implementation(libs.ktor.client.okhttp)
+
+    // google accompanist permissions
+    implementation(libs.accompanist.permissions)
 }

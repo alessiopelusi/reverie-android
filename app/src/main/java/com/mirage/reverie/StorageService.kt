@@ -1,5 +1,6 @@
 package com.mirage.reverie
 
+import android.net.Uri
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.toObject
 import com.mirage.reverie.data.model.Diary
@@ -48,7 +49,7 @@ interface StorageService {
     suspend fun updateDiaryImage(diaryImage: DiaryImage)
     suspend fun deleteDiaryImage(diaryImageId: String)
 
-    suspend fun saveImage(file: File): String
+    suspend fun saveImage(imageUri: Uri): String
 
     suspend fun getDiaryCover(diaryCoverId: String): DiaryCover?
     suspend fun getAllDiaryCovers(): List<DiaryCover>
@@ -177,11 +178,11 @@ class StorageServiceImpl @Inject constructor(
     }
 
 
-    override suspend fun saveImage(file: File): String {
+    override suspend fun saveImage(imageUri: Uri): String {
         val bucket = storage.from(DIARY_IMAGE_BUCKET)
 
-        val fileName = "${UUID.randomUUID()}.${file.extension}"
-        bucket.upload(fileName, file) {
+        val fileName = "${UUID.randomUUID()}"
+        bucket.upload(fileName, imageUri) {
             upsert = false
         }
 

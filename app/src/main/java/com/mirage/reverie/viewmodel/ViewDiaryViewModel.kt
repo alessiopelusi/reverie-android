@@ -1,7 +1,10 @@
 package com.mirage.reverie.viewmodel
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.net.Uri
 import android.util.Log
+import androidx.core.net.toFile
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -22,9 +25,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
 import java.time.LocalDate
 import javax.inject.Inject
 import kotlin.math.min
+import androidx.core.graphics.scale
 
 sealed class ViewDiaryUiState {
     data object Loading : ViewDiaryUiState()
@@ -78,13 +83,8 @@ class ViewDiaryViewModel @Inject constructor(
             val diary = repository.getDiary(diaryId)
             val pagesMap = diary.pageIds.associateWith { pageId -> repository.getPage(pageId) }
             val subPagesMap = pagesMap.values.flatMap { page -> page.subPageIds }.associateWith { subPageId -> repository.getSubPage(subPageId) }
-            val imagesMap = subPagesMap.values.flatMap { subPage -> subPage.imageIds }.associateWith { imageId -> repository.getDiaryImage(imageId) }
+            val imagesMap = subPagesMap.values.flatMap { subPage -> subPage.imageIds }.associateWith { imageId -> loadImageBitmap(repository.getDiaryImage(imageId)) }
             var newState: ViewDiaryUiState = ViewDiaryUiState.Success(diary, pagesMap, subPagesMap, imagesMap)
-
-            // loading images bitmap
-            imagesMap.keys.forEach { diaryImageId ->
-                newState = loadImage(diaryImageId, newState)
-            }
 
             val state = newState as ViewDiaryUiState.Success
             // add empty page if needed
@@ -147,38 +147,47 @@ class ViewDiaryViewModel @Inject constructor(
         }
     }
 
-    fun loadImage(imageId: String) {
+    fun uploadImage(imageUri: Uri, subPageId: String) {
         val state = uiState.value
         if (state !is ViewDiaryUiState.Success) return
 
-        val imagesMap = state.imagesMap.toMutableMap()
-        var image = imagesMap.getValue(imageId)
-
-        val imageLoader = ImageLoader(context)
-        val request = ImageRequest.Builder(context)
-            .data(image.url)
-            //.allowHardware(false) // Required if you want to manipulate the bitmap later
-            .build()
+        if (imageUri.path == null) return
 
         viewModelScope.launch {
-            val result = imageLoader.execute(request)
-            val bitmap = (result as SuccessResult).image.toBitmap()
-            image = image.copy(bitmap = bitmap)
-            imagesMap[imageId] = image
+            val subPage = state.subPagesMap.getValue(subPageId)
+
+            val diaryImageWithId = repository.saveDiaryImage(
+                DiaryImage(
+                    subPageId = subPageId,
+                    diaryId = subPage.diaryId,
+                ),
+                imageUri
+            )
+
+            val diaryImage = loadImageBitmap(diaryImageWithId)
+
+            val updatedImagesMap = state.imagesMap.toMutableMap()
+            updatedImagesMap[diaryImage.id] = diaryImage
+
+            val updatedSubPagesMap = state.subPagesMap.toMutableMap()
+            val updatedSubPage = updatedSubPagesMap.getValue(subPageId)
+            val updatedImagesIds = updatedSubPage.imageIds.toMutableList()
+            updatedImagesIds.add(diaryImage.id)
+
+            updatedSubPagesMap[subPageId] = updatedSubPage.copy(imageIds = updatedImagesIds)
 
             _uiState.update {
-                ViewDiaryUiState.Success(state.diary, state.pagesMap, state.subPagesMap, imagesMap)
+                ViewDiaryUiState.Success(
+                    state.diary,
+                    state.pagesMap,
+                    updatedSubPagesMap,
+                    updatedImagesMap
+                )
             }
         }
     }
 
-
-    suspend fun loadImage(imageId: String, state: ViewDiaryUiState): ViewDiaryUiState {
-        if (state !is ViewDiaryUiState.Success) return state
-
-        val imagesMap = state.imagesMap.toMutableMap()
-        var image = imagesMap.getValue(imageId)
-
+    private suspend fun loadImageBitmap(image: DiaryImage): DiaryImage {
         val imageLoader = ImageLoader(context)
         val request = ImageRequest.Builder(context)
             .data(image.url)
@@ -186,11 +195,13 @@ class ViewDiaryViewModel @Inject constructor(
             .build()
 
         val result = imageLoader.execute(request)
-        val bitmap = (result as SuccessResult).image.toBitmap()
-        image = image.copy(bitmap = bitmap)
-        imagesMap[imageId] = image
+        var bitmap = (result as SuccessResult).image.toBitmap()
 
-        return ViewDiaryUiState.Success(state.diary, state.pagesMap, state.subPagesMap, imagesMap)
+        // TODO: hack used to reduce bitmap size. Otherwise it would be too big (we use the size of the bitmap in calculations)
+        while (bitmap.width > context.resources.displayMetrics.widthPixels/2 || bitmap.height > context.resources.displayMetrics.heightPixels/2)
+            bitmap = bitmap.scale(bitmap.width / 2, bitmap.height / 2)
+
+        return image.copy(bitmap = bitmap)
     }
 
     private fun getPageSubPages(pageId: String): List<DiarySubPage> {

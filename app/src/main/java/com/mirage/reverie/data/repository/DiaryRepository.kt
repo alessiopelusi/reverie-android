@@ -1,5 +1,6 @@
 package com.mirage.reverie.data.repository
 
+import android.net.Uri
 import com.mirage.reverie.StorageService
 import com.mirage.reverie.data.model.Diary
 import com.mirage.reverie.data.model.DiaryCover
@@ -32,7 +33,7 @@ interface DiaryRepository {
 
     suspend fun getDiaryImage(diaryImageId: String): DiaryImage
     suspend fun getAllDiaryImages(diaryId: String): List<DiaryImage>
-    suspend fun saveDiaryImage(diaryImage: DiaryImage, file: File): DiaryImage
+    suspend fun saveDiaryImage(diaryImage: DiaryImage, imageUri: Uri): DiaryImage
     suspend fun updateDiaryImage(diaryImage: DiaryImage)
     suspend fun deleteDiaryImage(diaryImageId: String)
 
@@ -187,8 +188,8 @@ class DiaryRepositoryImpl @Inject constructor(
     override suspend fun getAllDiaryImages(diaryId: String): List<DiaryImage> =
         storageService.getAllDiaryImages(diaryId)
 
-    override suspend fun saveDiaryImage(diaryImage: DiaryImage, file: File): DiaryImage {
-        val publicUrl = storageService.saveImage(file)
+    override suspend fun saveDiaryImage(diaryImage: DiaryImage, imageUri: Uri): DiaryImage {
+        val publicUrl = storageService.saveImage(imageUri)
 
         val diaryImageWithUrl = diaryImage.copy(url = publicUrl)
 

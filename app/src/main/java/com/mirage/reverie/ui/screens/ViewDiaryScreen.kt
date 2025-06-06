@@ -1,9 +1,20 @@
 package com.mirage.reverie.ui.screens
 
+import android.Manifest
+import android.Manifest.permission.READ_EXTERNAL_STORAGE
+import android.Manifest.permission.READ_MEDIA_IMAGES
+import android.Manifest.permission.READ_MEDIA_VIDEO
+import android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
 import android.graphics.Bitmap
 import android.graphics.Matrix
+import android.net.Uri
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -12,8 +23,11 @@ import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -65,6 +79,7 @@ import dev.romainguy.text.combobreaker.FlowType
 import dev.romainguy.text.combobreaker.TextFlowJustification
 import dev.romainguy.text.combobreaker.material3.TextFlow
 import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.icons.outlined.Camera
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -72,8 +87,16 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.zIndex
+import coil3.compose.rememberAsyncImagePainter
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.PermissionState
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 import dev.romainguy.graphics.path.toPaths
 import kotlinx.coroutines.delay
 import java.time.format.DateTimeFormatter
@@ -81,12 +104,14 @@ import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ViewDiaryScreen(
     onNavigateToEditDiaryPage: (String) -> Unit,
     updatedPage: DiaryPage? = null,
     viewModel: ViewDiaryViewModel = hiltViewModel()
 ) {
+    // used when we send back page from editDiaryPage, we avoid another database call updating manually
     viewModel.overwritePage(updatedPage)
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -239,6 +264,24 @@ fun ViewDiaryScreen(
                     text = "${stringResource(R.string.sub_page)} ${currentPage.subPageIds.indexOf(currentSubPage.id) + 1}/${currentPage.subPageIds.size}",
                 )
 
+                // Registers a photo picker activity launcher in single-select mode.
+                val pickMedia = rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
+                    if (uri != null) {
+                        viewModel.uploadImage(uri, currentSubPage.id)
+                    }
+                }
+
+                Button(
+                    onClick = {
+                        // Launch the photo picker and let the user choose only images.
+                        pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
+                    },
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Icon(Icons.Outlined.Camera, contentDescription = "Camera")
+                }
+
+
                 Button(
                     onClick = { onNavigateToEditDiaryPage(currentPage.id) },
                     colors = ButtonColors(
@@ -363,22 +406,6 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
                 val path = currentImage.bitmap.toPath().asComposePath()
                 path.transform(matrix)
 
-                val rotationRad = Math.toRadians(image.rotation.toDouble())
-                val cosTheta = abs(cos(rotationRad)).toFloat()
-                val sinTheta = abs(sin(rotationRad)).toFloat()
-
-                val originalWidth = currentImage.bitmap.width
-                val originalHeight = currentImage.bitmap.height
-
-                val scaledWidth = originalWidth * image.scale
-                val scaledHeight = originalHeight * image.scale
-
-                val scaledRotatedWidth = scaledWidth * cosTheta + scaledHeight * sinTheta
-                val scaledRotateHeight = scaledWidth * sinTheta + scaledHeight * cosTheta
-
-                // Calculate half difference for padding similar to your scale logic
-                val halfWidthDiff = abs(originalWidth - scaledRotatedWidth) / 2
-                val halfHeightDiff = abs(originalHeight - scaledRotateHeight) / 2
 
                 Image(
                     modifier = Modifier
@@ -401,16 +428,61 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
                         }
                         .pointerInput(currentImage.bitmap) {
                             detectTransformGestures { centroid, pan, zoom, rotation ->
+                                // new scale
+                                var newScale = image.scale * zoom
+
+                                // newRotation
+                                val newRotation = image.rotation + rotation
+
                                 // Rotation in radians
-                                val rotationInRadians = Math.toRadians(image.rotation.toDouble())
+                                val rotationRad = Math.toRadians(newRotation.toDouble())
+
+                                val cosTheta = abs(cos(rotationRad)).toFloat()
+                                val sinTheta = abs(sin(rotationRad)).toFloat()
 
                                 // Adjust pan to rotation space
-                                val adjustedPanX = (pan.x * cos(rotationInRadians) - pan.y * sin(rotationInRadians)).toFloat()
-                                val adjustedPanY = (pan.x * sin(rotationInRadians) + pan.y * cos(rotationInRadians)).toFloat()
+                                val adjustedPanX = (pan.x * cos(rotationRad) - pan.y * sin(rotationRad)).toFloat()
+                                val adjustedPanY = (pan.x * sin(rotationRad) + pan.y * cos(rotationRad)).toFloat()
+
+
+                                val originalWidth = currentImage.bitmap.width
+                                val originalHeight = currentImage.bitmap.height
+
+                                var scaledWidth = originalWidth * newScale
+                                var scaledHeight = originalHeight * newScale
+
+                                var scaledRotatedWidth = scaledWidth * cosTheta + scaledHeight * sinTheta
+                                var scaledRotateHeight = scaledWidth * sinTheta + scaledHeight * cosTheta
+
+                                // Calculate half difference for padding similar to your scale logic
+                                var halfWidthDiff = abs(originalWidth - scaledRotatedWidth) / 2
+                                var halfHeightDiff = abs(originalHeight - scaledRotateHeight) / 2
+
 
                                 // Divide pan by scale to compensate for zoom level
-                                val correctedPanX = adjustedPanX * image.scale
-                                val correctedPanY = adjustedPanY * image.scale
+                                var correctedPanX = adjustedPanX * newScale
+                                var correctedPanY = adjustedPanY * newScale
+
+                                while (halfWidthDiff > (parentWidth - originalWidth - halfWidthDiff) || halfHeightDiff > (parentHeight - originalHeight - halfHeightDiff)) {
+                                    // TODO: bad hack. While scaling or rotating, if the image size is too big the app would crash. We reduce the scale until it fits.
+                                    newScale = (newScale * 0.99).toFloat()
+
+                                    // recalculate everything with old scale
+                                    scaledWidth = originalWidth * newScale
+                                    scaledHeight = originalHeight * newScale
+
+                                    scaledRotatedWidth = scaledWidth * cosTheta + scaledHeight * sinTheta
+                                    scaledRotateHeight = scaledWidth * sinTheta + scaledHeight * cosTheta
+
+                                    // Calculate half difference for padding similar to your scale logic
+                                    halfWidthDiff = abs(originalWidth - scaledRotatedWidth) / 2
+                                    halfHeightDiff = abs(originalHeight - scaledRotateHeight) / 2
+
+
+                                    // Divide pan by scale to compensate for zoom level
+                                    correctedPanX = adjustedPanX * newScale
+                                    correctedPanY = adjustedPanY * newScale
+                                }
 
                                 val newX = (image.offsetX + correctedPanX)
                                     .coerceIn(
@@ -430,8 +502,8 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
                                     diaryImageId = image.id,
                                     offsetX = newX,
                                     offsetY = newY,
-                                    scale = image.scale * zoom,
-                                    rotation = image.rotation + rotation,
+                                    scale = newScale,
+                                    rotation = newRotation,
                                     locally = true
                                 )
                                 viewModel.resetSubPageTestOverflow(subPageId)
@@ -472,3 +544,39 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
     }
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
+private fun getTextToShowGivenPermissions(
+    permissions: List<PermissionState>,
+    shouldShowRationale: Boolean
+): String {
+    val revokedPermissionsSize = permissions.size
+    if (revokedPermissionsSize == 0) return ""
+
+    val textToShow = StringBuilder().apply {
+        append("The ")
+    }
+
+    for (i in permissions.indices) {
+        textToShow.append(permissions[i].permission)
+        when {
+            revokedPermissionsSize > 1 && i == revokedPermissionsSize - 2 -> {
+                textToShow.append(", and ")
+            }
+            i == revokedPermissionsSize - 1 -> {
+                textToShow.append(" ")
+            }
+            else -> {
+                textToShow.append(", ")
+            }
+        }
+    }
+    textToShow.append(if (revokedPermissionsSize == 1) "permission is" else "permissions are")
+    textToShow.append(
+        if (shouldShowRationale) {
+            " important. Please grant all of them for the app to function properly."
+        } else {
+            " denied. The app cannot function without them."
+        }
+    )
+    return textToShow.toString()
+}
