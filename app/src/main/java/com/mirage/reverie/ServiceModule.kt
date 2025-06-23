@@ -8,6 +8,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.mirage.reverie.data.repository.DiaryRepository
 import com.mirage.reverie.data.repository.DiaryRepositoryImpl
+import com.mirage.reverie.data.repository.TimeCapsuleRepository
+import com.mirage.reverie.data.repository.TimeCapsuleRepositoryImpl
 import com.mirage.reverie.data.repository.UserRepository
 import com.mirage.reverie.data.repository.UserRepositoryImpl
 import dagger.Module
@@ -54,6 +56,15 @@ object ServiceModule {
         userRepository: Provider<UserRepository>
     ): DiaryRepository {
         return DiaryRepositoryImpl(storageService, userRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideTimeCapsuleRepository(
+        storageService: StorageService,
+        userRepository: Provider<UserRepository>
+    ): TimeCapsuleRepository {
+        return TimeCapsuleRepositoryImpl(storageService, userRepository)
     }
 
     @Provides

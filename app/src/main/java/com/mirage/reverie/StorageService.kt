@@ -8,6 +8,7 @@ import com.mirage.reverie.data.model.DiaryCover
 import com.mirage.reverie.data.model.DiaryImage
 import com.mirage.reverie.data.model.DiaryPage
 import com.mirage.reverie.data.model.DiarySubPage
+import com.mirage.reverie.data.model.TimeCapsule
 import com.mirage.reverie.data.model.User
 import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.storage.upload
@@ -56,6 +57,8 @@ interface StorageService {
 
     suspend fun getDiaryCover(diaryCoverId: String): DiaryCover?
     suspend fun getAllDiaryCovers(): List<DiaryCover>
+
+    suspend fun getTimeCapsule(timeCapsuleId: String): TimeCapsule?
 }
 
 @Singleton
@@ -72,6 +75,8 @@ class StorageServiceImpl @Inject constructor(
     val USER_ID_FIELD = "userId"
 
     val DIARY_IMAGE_BUCKET = "diary-images"
+
+    val TIME_CAPSULE_COLLECTION = "timeCapsules"
 
     /*override val diaries: Flow<List<Diary>>
         get() =
@@ -232,4 +237,8 @@ class StorageServiceImpl @Inject constructor(
     override suspend fun getAllDiaryCovers(): List<DiaryCover> =
         firestore.collection(DIARY_COVER_COLLECTION)
             .get().await().mapNotNull{ diary -> diary.toObject<DiaryCover?>()?.copy(id = diary.id) }
+
+    override suspend fun getTimeCapsule(timeCapsuleId: String): TimeCapsule? =
+        firestore.collection(TIME_CAPSULE_COLLECTION).document(timeCapsuleId).get().await().toObject<TimeCapsule?>()
+            ?.copy(id = timeCapsuleId)
 }

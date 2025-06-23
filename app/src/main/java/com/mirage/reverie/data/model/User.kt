@@ -10,7 +10,9 @@ data class User(
     val email: String = "",
     val name: String = "",
     val surname: String = "",
-    val diaryIds: List<String> = listOf()
+    val diaryIds: List<String> = listOf(),
+    val sentTimeCapsuleIds: List<String> = listOf(),
+    val receivedTimeCapsuleIds: List<String> = listOf()
 ): Parcelable {
     // shadows Parcelable stability attribute
     @Exclude

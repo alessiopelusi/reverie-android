@@ -92,6 +92,7 @@ import com.mirage.reverie.navigation.LoginRoute
 import com.mirage.reverie.navigation.ResetPasswordRoute
 import com.mirage.reverie.navigation.SignupRoute
 import com.mirage.reverie.navigation.ProfileRoute
+import com.mirage.reverie.navigation.TimeCapsuleRoute
 import com.mirage.reverie.navigation.ViewProfileRoute
 import com.mirage.reverie.ui.screens.AllDiariesScreen
 import com.mirage.reverie.ui.screens.EditDiaryPageScreen
@@ -102,6 +103,11 @@ import com.mirage.reverie.ui.screens.ViewDiaryScreen
 import com.mirage.reverie.ui.screens.ProfileScreen
 import com.mirage.reverie.ui.screens.ResetPasswordScreen
 import com.mirage.reverie.ui.screens.SignupScreen
+import com.mirage.reverie.ui.screens.TimeCapsuleScreen
+import com.mirage.reverie.ui.theme.PaperColor
+import com.mirage.reverie.viewmodel.AllDiariesUiState
+import com.mirage.reverie.viewmodel.ModalNavigationDrawerUiState
+import com.mirage.reverie.viewmodel.ModalNavigationDrawerViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -354,7 +360,6 @@ fun MainComposable(
                             )
                         }
                     }
-
                     composable<TimeCapsuleRoute> {
                         bottomBarVisibility = true
                         TimeCapsuleScreen()
