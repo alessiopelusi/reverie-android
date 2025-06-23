@@ -1,6 +1,5 @@
 package com.mirage.reverie.viewmodel
 
-import android.util.Log
 import androidx.compose.foundation.pager.PagerState
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -17,6 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.math.max
 
 fun createPagerState(size: Int, selectedDiary: Int = size/2) : PagerState =
     PagerState(
@@ -39,7 +39,8 @@ sealed class AllDiariesUiState {
         val diaryCoversMap: Map<String, DiaryCover>,
         val diaryPhotosMap: Map<String, List<DiaryImage>>,
         val pagerState: PagerState = createPagerState(allDiaries.diaryIds.size),
-        val buttonState: ButtonState = ButtonState.IMAGES
+        val buttonState: ButtonState = ButtonState.IMAGES,
+        val deleteDialogState: Boolean = false
     ) : AllDiariesUiState() {
         val diaries: List<Diary>
             get() = allDiaries.diaryIds.map { diaryId -> diariesMap.getValue(diaryId) }
@@ -96,7 +97,7 @@ class AllDiariesViewModel @Inject constructor(
                 if (!diaryIds.contains(updatedDiary.id)) {
                     diaryIds.add(updatedDiary.id)
                     diaryPhotosMap[updatedDiary.id] = listOf()
-                    pagerState = createPagerState(diaryIds.size, pagerState.currentPage % (diaryIds.size - 1))
+                    pagerState = createPagerState(diaryIds.size, diaryIds.size-1)
                 }
 
                 val allDiaries = AllDiaries(state.allDiaries.userId, diaryIds)
@@ -135,19 +136,57 @@ class AllDiariesViewModel @Inject constructor(
                 state.diaryCoversMap,
                 state.diaryPhotosMap,
                 state.pagerState,
-                newButtonState
+                newButtonState,
             )
         }
     }
 
-    fun onDeleteDiary(diaryId: String, onSuccess: () -> Unit = {}){
+    fun onUpdateDeleteDiaryDialog(newDeleteDialogState: Boolean) {
+        val state = uiState.value
+        if (state !is AllDiariesUiState.Success) return
+
+        _uiState.update {
+            AllDiariesUiState.Success(
+                state.allDiaries,
+                state.diariesMap,
+                state.diaryCoversMap,
+                state.diaryPhotosMap,
+                state.pagerState,
+                state.buttonState,
+                newDeleteDialogState
+            )
+        }
+    }
+
+    fun onDeleteDiary(diaryId: String){
+        val state = uiState.value
+        if (state !is AllDiariesUiState.Success) return
+
         viewModelScope.launch {
-            runCatching {
-                repository.deleteDiary(diaryId)
-            }.onSuccess {
-                onSuccess()
-            }.onFailure { e ->
-                Log.d("Delete diary", e.toString())
+            repository.deleteDiary(diaryId)
+
+            val diaryIds = state.allDiaries.diaryIds.toMutableList()
+            val diaryPhotosMap = state.diaryPhotosMap.toMutableMap()
+            diaryIds.remove(diaryId)
+            diaryPhotosMap.remove(diaryId)
+
+            val allDiaries = AllDiaries(state.allDiaries.userId, diaryIds)
+
+            val diariesMap = state.diariesMap.toMutableMap()
+            diariesMap.remove(diaryId)
+
+            val pagerState = createPagerState(diaryIds.size, max((state.pagerState.currentPage % (diaryIds.size + 1)) - 1, 0))
+
+            _uiState.update {
+                AllDiariesUiState.Success(
+                    allDiaries,
+                    diariesMap,
+                    state.diaryCoversMap,
+                    diaryPhotosMap,
+                    pagerState,
+                    state.buttonState,
+                    false
+                )
             }
         }
     }

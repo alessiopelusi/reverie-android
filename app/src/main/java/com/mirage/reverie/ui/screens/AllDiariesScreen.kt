@@ -54,10 +54,12 @@ import com.mirage.reverie.viewmodel.ButtonState
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
+import androidx.compose.material3.TextButton
 
 @Composable
 fun AllDiariesScreen(
@@ -83,6 +85,8 @@ fun AllDiariesScreen(
 
             val buttonElements = (uiState as AllDiariesUiState.Success).buttonElements
             val buttonState = (uiState as AllDiariesUiState.Success).buttonState
+
+            val deleteDialogState = (uiState as AllDiariesUiState.Success).deleteDialogState
 
             LazyVerticalStaggeredGrid(
                 modifier = Modifier
@@ -212,9 +216,7 @@ fun AllDiariesScreen(
                                     }
                                     IconButton(
                                         onClick = {
-                                            viewModel.onDeleteDiary(
-                                                currentDiary.id,
-                                            )
+                                            viewModel.onUpdateDeleteDiaryDialog(true)
                                         },
                                         colors = IconButtonColors(
                                             containerColor = Color.White,
@@ -308,17 +310,19 @@ fun AllDiariesScreen(
                 }
                 when(buttonState) {
                     ButtonState.IMAGES -> {
-                        val diaryImages = (uiState as AllDiariesUiState.Success).diaryPhotosMap.getValue(currentDiary.id)
+                        val diaryImages = (uiState as AllDiariesUiState.Success).diaryPhotosMap[currentDiary.id]
 
-                        items(diaryImages) { image ->
-                            AsyncImage(
-                                model = image.url,
-                                contentScale = ContentScale.Crop,
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .wrapContentHeight()
-                            )
+                        if (diaryImages != null) {
+                            items(diaryImages) { image ->
+                                AsyncImage(
+                                    model = image.url,
+                                    contentScale = ContentScale.Crop,
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .wrapContentHeight()
+                                )
+                            }
                         }
                     }
                     ButtonState.VIDEOS -> {
@@ -344,6 +348,18 @@ fun AllDiariesScreen(
                     Icon(Icons.Filled.Add, "Small floating action button.")
                 }
             }
+
+            ConfirmDeleteDiary(
+                deleteDialogState,
+                {
+                    viewModel.onUpdateDeleteDiaryDialog(false)
+                },
+                {
+                    viewModel.onDeleteDiary(
+                        currentDiary.id,
+                    )
+                }
+            )
         }
         is AllDiariesUiState.Error -> Text(text = "Error: ${(uiState as AllDiariesUiState.Error).exception.message}")
     }
@@ -360,6 +376,31 @@ fun DiaryCoverComposable(modifier: Modifier, coverUrl: String) {
         AsyncImage(
             model = coverUrl,
             contentDescription = null
+        )
+    }
+}
+
+@Composable
+fun ConfirmDeleteDiary(
+    showDialog: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text(text = "Confirm Deletion") },
+            text = { Text(text = "Are you sure you want to delete this item? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(onClick = onConfirm) {
+                    Text(text = "Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss) {
+                    Text(text = "Cancel")
+                }
+            }
         )
     }
 }

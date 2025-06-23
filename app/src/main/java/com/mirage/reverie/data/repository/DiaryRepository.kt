@@ -94,7 +94,6 @@ class DiaryRepositoryImpl @Inject constructor(
         val diaryIds = user.diaryIds.toMutableList()
         diaryIds.remove(diaryId)
 
-        Log.d("Delete diary", user.id)
         userRepository.updateUser(user.copy(diaryIds = diaryIds))
 
         storageService.deleteDiary(diaryId)

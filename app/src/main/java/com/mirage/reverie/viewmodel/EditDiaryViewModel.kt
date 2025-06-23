@@ -92,8 +92,13 @@ class EditDiaryViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                if (state.diary.id != "")
-                repository.updateDiary(state.diary)
+                if (state.diary.id != "") {
+                    repository.updateDiary(state.diary)
+                } else {
+                    _formState.update {
+                        state.copy(diary = repository.saveDiary(state.diary))
+                    }
+                }
                 _uiState.value = EditDiaryUiState.Success
             } catch (exception: Exception) {
                 _uiState.value = EditDiaryUiState.Error(exception.message.toString()) // Gestisci errori

@@ -250,7 +250,7 @@ fun MainComposable(
                     navigation<DiariesRoute>(startDestination = AllDiariesRoute) {
                         composable<AllDiariesRoute> { backStackEntry ->
                             val updatedDiary = backStackEntry.savedStateHandle.get<Diary>("diary")
-                            backStackEntry.savedStateHandle.remove<User>("profile")
+                            backStackEntry.savedStateHandle.remove<Diary>("diary")
 
                             bottomBarVisibility = true
                             AllDiariesScreen(
