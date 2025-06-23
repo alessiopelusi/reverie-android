@@ -1,6 +1,7 @@
 package com.mirage.reverie.data.repository
 
 import android.net.Uri
+import android.util.Log
 import com.mirage.reverie.StorageService
 import com.mirage.reverie.data.model.Diary
 import com.mirage.reverie.data.model.DiaryCover
@@ -87,14 +88,16 @@ class DiaryRepositoryImpl @Inject constructor(
     override suspend fun deleteDiary(diaryId: String) {
         val diary = getDiary(diaryId)
 
-        storageService.deleteDiary(diaryId)
-
         diary.pageIds.forEach { pageId -> deletePage(pageId) }
 
         val user = userRepository.getUser(diary.userId)
         val diaryIds = user.diaryIds.toMutableList()
         diaryIds.remove(diaryId)
+
+        Log.d("Delete diary", user.id)
         userRepository.updateUser(user.copy(diaryIds = diaryIds))
+
+        storageService.deleteDiary(diaryId)
     }
 
 
@@ -131,14 +134,14 @@ class DiaryRepositoryImpl @Inject constructor(
     override suspend fun deletePage(pageId: String) {
         val page = getPage(pageId)
 
-        storageService.deletePage(pageId)
-
         page.subPageIds.forEach { subPageId -> deleteSubPage(subPageId) }
 
         val diary = getDiary(page.diaryId)
         val pageIds = diary.pageIds.toMutableList()
         pageIds.remove(pageId)
         updateDiary(diary.copy(pageIds = pageIds))
+
+        storageService.deletePage(pageId)
     }
 
 
@@ -171,14 +174,14 @@ class DiaryRepositoryImpl @Inject constructor(
     override suspend fun deleteSubPage(subPageId: String) {
         val subPage = getSubPage(subPageId)
 
-        storageService.deleteSubPage(subPageId)
-
         subPage.imageIds.forEach { imageId -> deleteDiaryImage(imageId) }
 
         val page = getPage(subPage.pageId)
         val subPageIds = page.subPageIds.toMutableList()
         subPageIds.remove(subPageId)
         updatePage(page.copy(subPageIds = subPageIds))
+
+        storageService.deleteSubPage(subPageId)
     }
 
     override suspend fun getDiaryImage(diaryImageId: String): DiaryImage =

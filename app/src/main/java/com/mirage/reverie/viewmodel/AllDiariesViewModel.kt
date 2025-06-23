@@ -1,5 +1,6 @@
 package com.mirage.reverie.viewmodel
 
+import android.util.Log
 import androidx.compose.foundation.pager.PagerState
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -116,6 +117,18 @@ class AllDiariesViewModel @Inject constructor(
                 state.pagerState,
                 newButtonState
             )
+        }
+    }
+
+    fun onDeleteDiary(diaryId: String, onSuccess: () -> Unit = {}){
+        viewModelScope.launch {
+            runCatching {
+                repository.deleteDiary(diaryId)
+            }.onSuccess {
+                onSuccess()
+            }.onFailure { e ->
+                Log.d("Delete diary", e.toString())
+            }
         }
     }
 }

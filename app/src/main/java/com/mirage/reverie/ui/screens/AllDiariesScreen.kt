@@ -70,6 +70,7 @@ import kotlin.math.absoluteValue
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
@@ -77,6 +78,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Dp
+import com.mirage.reverie.navigation.EditDiaryRoute
 
 @Composable
 fun AllDiariesScreen(
@@ -204,6 +206,48 @@ fun AllDiariesScreen(
                                     textAlign = TextAlign.Center,
                                     text = currentDiary.description
                                 )
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ){
+                                    IconButton (
+                                        // replace pagerState.currentPage with the actual id of the currentPage diary
+//                                                onClick = { onNavigateToEditDiary(currentDiary.id) },
+                                        onClick = {
+                                            onNavigateToEditDiary(currentDiary.id)
+                                        },
+                                        colors = IconButtonColors(
+                                            containerColor = PaperColor,
+                                            contentColor = MaterialTheme.colorScheme.primary,
+                                            disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                            disabledContentColor = MaterialTheme.colorScheme.primary
+                                        ),
+//                                                modifier = Modifier
+//                                                    .align(Alignment.Bottom),
+                                    ) {
+                                        Icon(Icons.Outlined.Edit, contentDescription = "Edit")
+                                    }
+                                    IconButton(
+                                        onClick = {
+                                            viewModel.onDeleteDiary(
+                                                currentDiary.id,
+                                            )
+                                        },
+                                        colors = IconButtonColors(
+                                            containerColor = Color.White,
+                                            contentColor = MaterialTheme.colorScheme.primary,
+                                            disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                            disabledContentColor = MaterialTheme.colorScheme.primary
+                                        ),
+//                                                modifier = Modifier
+//                                                    .align(Alignment.Bottom),
+                                    ) {
+                                        Icon(Icons.Outlined.Delete, contentDescription = "Delete")
+                                    }
+                                }
                             }
                         }
                     }
