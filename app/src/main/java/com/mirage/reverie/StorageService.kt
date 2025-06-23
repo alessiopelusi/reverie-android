@@ -11,6 +11,9 @@ import com.mirage.reverie.data.model.DiarySubPage
 import com.mirage.reverie.data.model.User
 import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.storage.upload
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.io.File
 import java.util.UUID
@@ -158,11 +161,42 @@ class StorageServiceImpl @Inject constructor(
         firestore.collection(DIARY_IMAGE_COLLECTION).document(diaryImageId).get().await()
             .toObject<DiaryImage?>()?.copy(id = diaryImageId)
 
-    override suspend fun getAllDiaryImages(diaryId: String): List<DiaryImage> =
-        firestore.collectionGroup(DIARY_IMAGE_COLLECTION)
+    override suspend fun getAllDiaryImages(diaryId: String): List<DiaryImage> {
+        val subPages = mutableMapOf<String, DiarySubPage>()
+        val pages = mutableMapOf<String, DiaryPage>()
+        val diary = getDiary(diaryId)
+
+        val images = firestore.collectionGroup(DIARY_IMAGE_COLLECTION)
             .whereEqualTo("diaryId", diaryId)
             .get().await()
             .mapNotNull{ image -> image.toObject<DiaryImage?>()?.copy(id = image.id) }
+            .onEach { image ->
+                val subPage = getSubPage(image.subPageId)
+                if (subPage != null) {
+                    subPages[image.subPageId] = subPage
+                    val page = getPage(subPage.pageId)
+
+                    if (page != null) pages[subPage.pageId] = page
+                }
+            }
+            .sortedWith(
+                compareBy (
+                    {
+                        val pageId = subPages.getValue(it.subPageId).pageId
+                        diary?.pageIds?.indexOf(pageId)
+                    },
+                    {
+                        val pageId = subPages.getValue(it.subPageId).pageId
+                        pages.getValue(pageId).subPageIds.indexOf(it.subPageId)
+                    },
+                    {
+                        subPages.getValue(it.subPageId).imageIds.indexOf(it.id)
+                    }
+                )
+            )
+
+        return images
+    }
 
     override suspend fun saveDiaryImage(diaryImage: DiaryImage): DiaryImage {
         val diaryImageId = firestore.collection(DIARY_IMAGE_COLLECTION).add(diaryImage).await().id
