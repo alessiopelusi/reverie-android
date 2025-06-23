@@ -53,7 +53,7 @@ fun EditDiaryScreen(
             ){
                 Text(
                     modifier = Modifier.padding(8.dp),
-                    text = "You are editing your diary!",
+                    text = if (diary.id == "") "You are creating your diary!" else "You are editing your diary!",
                 )
                 EditTitleField(diary.title, onNewValue = viewModel::onUpdateTitle)
 
@@ -82,7 +82,7 @@ fun EditDiaryScreen(
                 Button(
                     onClick = viewModel::onUpdateDiary
                 ) {
-                    Text("Salva")
+                    Text(if (diary.id == "") "Crea" else "Salva")
                 }
 
                 if (uiState is EditDiaryUiState.Error) {

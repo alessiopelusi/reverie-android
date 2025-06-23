@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.google.firebase.auth.FirebaseAuth
 import com.mirage.reverie.data.model.Diary
 import com.mirage.reverie.data.model.DiaryCover
 import com.mirage.reverie.data.repository.DiaryRepository
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.ExperimentalSerializationApi
 import javax.inject.Inject
 
 data class EditDiaryFormState(
@@ -32,14 +34,13 @@ sealed class EditDiaryUiState {
     data class Error(val errorMessage: String) : EditDiaryUiState()
 }
 
-// HiltViewModel inject SavedStateHandle + other dependencies provided by AppModule
+// used both for edit and create
 @HiltViewModel
 class EditDiaryViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val repository: DiaryRepository,
+    private val auth: FirebaseAuth
 ) : ViewModel() {
-    private val diaryId = savedStateHandle.toRoute<EditDiaryRoute>().diaryId
-
     private val _uiState = MutableStateFlow<EditDiaryUiState>(EditDiaryUiState.Loading)
     val uiState = _uiState.asStateFlow()
 
@@ -51,9 +52,25 @@ class EditDiaryViewModel @Inject constructor(
     }
 
     // load diary
+    @OptIn(ExperimentalSerializationApi::class)
     private fun onStart() {
         viewModelScope.launch {
-            val diary = repository.getDiary(diaryId)
+            var diary = Diary()
+
+            try {
+                val diaryId = savedStateHandle.toRoute<EditDiaryRoute>().diaryId
+                diary = repository.getDiary(diaryId)
+            } catch (e: kotlinx.serialization.MissingFieldException) {
+                auth.uid?.let {
+                    diary = Diary(
+                        userId = it,
+                        title = "Nuovo Diario",
+                        description = "",
+                        coverId = "MVl66divWlJIIGvaBFbw",
+                    )
+                }
+            }
+
             val allCovers = repository.getAllDiaryCovers()
             val allCoversMap = allCovers.associateBy { cover -> cover.id }
 
@@ -75,6 +92,7 @@ class EditDiaryViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
+                if (state.diary.id != "")
                 repository.updateDiary(state.diary)
                 _uiState.value = EditDiaryUiState.Success
             } catch (exception: Exception) {

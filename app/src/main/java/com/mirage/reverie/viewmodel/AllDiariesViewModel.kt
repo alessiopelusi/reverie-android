@@ -18,6 +18,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+fun createPagerState(size: Int, selectedDiary: Int = size/2) : PagerState =
+    PagerState(
+        // endlessPagerMultiplier = 1000
+        // endlessPagerMultiplier/2 = 500
+        // offset = 1
+        pageCount = {if (size > 1) size*1000 else 1},
+        currentPage = if (size > 1) size*500 + selectedDiary else 0
+    )
 
 enum class ButtonState {
     TEXTS, IMAGES, VIDEOS // puoi aggiungere altre sezioni
@@ -30,13 +38,7 @@ sealed class AllDiariesUiState {
         val diariesMap: Map<String, Diary>,
         val diaryCoversMap: Map<String, DiaryCover>,
         val diaryPhotosMap: Map<String, List<DiaryImage>>,
-        val pagerState: PagerState = PagerState(
-            // endlessPagerMultiplier = 1000
-            // endlessPagerMultiplier/2 = 500
-            // offset = 1
-            pageCount = {if (allDiaries.diaryIds.size > 1) allDiaries.diaryIds.size*1000 else 1},
-            currentPage = if (allDiaries.diaryIds.size > 1) allDiaries.diaryIds.size*500 + allDiaries.diaryIds.size/2 else 0
-        ),
+        val pagerState: PagerState = createPagerState(allDiaries.diaryIds.size),
         val buttonState: ButtonState = ButtonState.IMAGES
     ) : AllDiariesUiState() {
         val diaries: List<Diary>
@@ -88,17 +90,35 @@ class AllDiariesViewModel @Inject constructor(
 
         if (updatedDiary != null) {
             viewModelScope.launch {
+                val diaryIds = state.allDiaries.diaryIds.toMutableList()
+                val diaryPhotosMap = state.diaryPhotosMap.toMutableMap()
+                var pagerState = state.pagerState
+                if (!diaryIds.contains(updatedDiary.id)) {
+                    diaryIds.add(updatedDiary.id)
+                    diaryPhotosMap[updatedDiary.id] = listOf()
+                    pagerState = createPagerState(diaryIds.size, pagerState.currentPage % (diaryIds.size - 1))
+                }
+
+                val allDiaries = AllDiaries(state.allDiaries.userId, diaryIds)
+
                 val diariesMap = state.diariesMap.toMutableMap()
                 diariesMap[updatedDiary.id] = updatedDiary
-                val diaryCoversMap = state.diaryCoversMap.toMutableMap()
 
+                val diaryCoversMap = state.diaryCoversMap.toMutableMap()
                 val diaryCoverId = updatedDiary.coverId
                 if (diaryCoverId !in diaryCoversMap) {
                     diaryCoversMap[diaryCoverId] = repository.getDiaryCover(diaryCoverId)
                 }
 
                 _uiState.update {
-                    AllDiariesUiState.Success(state.allDiaries, diariesMap, diaryCoversMap, state.diaryPhotosMap, state.pagerState, state.buttonState)
+                    AllDiariesUiState.Success(
+                        allDiaries,
+                        diariesMap,
+                        diaryCoversMap,
+                        diaryPhotosMap,
+                        pagerState,
+                        state.buttonState
+                    )
                 }
             }
         }

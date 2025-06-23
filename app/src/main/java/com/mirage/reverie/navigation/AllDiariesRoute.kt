@@ -6,6 +6,9 @@ import kotlinx.serialization.Serializable
 data class EditDiaryRoute(val diaryId: String)
 
 @Serializable
+object CreateDiaryRoute
+
+@Serializable
 object AllDiariesRoute
 
 @Serializable

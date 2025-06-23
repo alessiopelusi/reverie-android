@@ -81,6 +81,7 @@ import com.mirage.reverie.data.model.DiaryPage
 import com.mirage.reverie.data.model.User
 import com.mirage.reverie.navigation.AllDiariesRoute
 import com.mirage.reverie.navigation.AuthenticationRoute
+import com.mirage.reverie.navigation.CreateDiaryRoute
 import com.mirage.reverie.navigation.DiariesRoute
 import com.mirage.reverie.navigation.DiaryRoute
 import com.mirage.reverie.navigation.ViewDiaryRoute
@@ -101,10 +102,6 @@ import com.mirage.reverie.ui.screens.ViewDiaryScreen
 import com.mirage.reverie.ui.screens.ProfileScreen
 import com.mirage.reverie.ui.screens.ResetPasswordScreen
 import com.mirage.reverie.ui.screens.SignupScreen
-import com.mirage.reverie.ui.theme.PaperColor
-import com.mirage.reverie.viewmodel.AllDiariesUiState
-import com.mirage.reverie.viewmodel.ModalNavigationDrawerUiState
-import com.mirage.reverie.viewmodel.ModalNavigationDrawerViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -258,12 +255,26 @@ fun MainComposable(
                             bottomBarVisibility = true
                             AllDiariesScreen(
                                 updatedDiary = updatedDiary,
-                                onNavigateToEditDiary = {diaryId -> navController.navigate(EditDiaryRoute(diaryId))},
-                                onNavigateToDiary = {diaryId -> navController.navigate(DiaryRoute(diaryId))}
+                                onNavigateToEditDiary = { diaryId -> navController.navigate(EditDiaryRoute(diaryId)) },
+                                onNavigateToDiary = { diaryId -> navController.navigate(DiaryRoute(diaryId)) },
+                                onNavigateToCreateDiary = { navController.navigate(CreateDiaryRoute) }
                             )
                         }
 
                         composable<EditDiaryRoute> { backStackEntry ->
+                            bottomBarVisibility = true
+                            EditDiaryScreen(
+                                onComplete = { diary ->
+                                    navController.previousBackStackEntry
+                                        ?.savedStateHandle
+                                        ?.set("diary", diary)
+
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
+
+                        composable<CreateDiaryRoute> { backStackEntry ->
                             bottomBarVisibility = true
                             EditDiaryScreen(
                                 onComplete = { diary ->
