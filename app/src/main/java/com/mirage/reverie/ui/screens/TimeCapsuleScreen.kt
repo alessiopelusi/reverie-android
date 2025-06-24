@@ -2,27 +2,19 @@ package com.mirage.reverie.ui.screens
 
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
-import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -45,17 +37,16 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.mirage.reverie.ui.theme.PaperColor
-import com.mirage.reverie.viewmodel.AllDiariesUiState
 
 import com.mirage.reverie.viewmodel.TimeCapsuleUiState
 import com.mirage.reverie.viewmodel.TimeCapsuleViewModel
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.ui.layout.ContentScale
+import com.mirage.reverie.data.model.TimeCapsule
 import com.mirage.reverie.ui.theme.Purple80
-import com.mirage.reverie.viewmodel.ButtonState
 import com.mirage.reverie.viewmodel.TimeCapsuleButtonState
+import java.text.SimpleDateFormat
 
 
 @Composable
@@ -66,8 +57,11 @@ fun TimeCapsuleScreen(
     when (uiState) {
         is TimeCapsuleUiState.Loading -> CircularProgressIndicator()
         is TimeCapsuleUiState.Success -> {
+            val timeCapsuleScheduledMap = (uiState as TimeCapsuleUiState.Success).timeCapsuleScheduledMap
             val timeCapsuleScheduled = (uiState as TimeCapsuleUiState.Success).timeCapsuleScheduled
+            val timeCapsuleSentMap = (uiState as TimeCapsuleUiState.Success).timeCapsuleSentMap
             val timeCapsuleSent = (uiState as TimeCapsuleUiState.Success).timeCapsuleSent
+            val timeCapsuleReceivedMap = (uiState as TimeCapsuleUiState.Success).timeCapsuleReceivedMap
             val timeCapsuleReceived = (uiState as TimeCapsuleUiState.Success).timeCapsuleReceived
 
             val buttonElements = (uiState as TimeCapsuleUiState.Success).buttonElements
@@ -190,10 +184,19 @@ fun TimeCapsuleScreen(
                 }
                 when(buttonState) {
                     TimeCapsuleButtonState.SCHEDULED -> {
+                        items(timeCapsuleScheduled) { timeCapsule ->
+                            ScheduledTimeCapsule(timeCapsule)
+                        }
                     }
                     TimeCapsuleButtonState.SENT -> {
+                        items(timeCapsuleSent) { timeCapsule ->
+                            SentTimeCapsule(timeCapsule)
+                        }
                     }
                     TimeCapsuleButtonState.RECEIVED -> {
+                        items(timeCapsuleReceived) { timeCapsule ->
+                            ReceivedTimeCapsule(timeCapsule)
+                        }
                     }
                 }
             }
@@ -214,5 +217,72 @@ fun TimeCapsuleComposable(modifier: Modifier) {
             model = "https://wjecfnvsxxnvgheqdnpx.supabase.co/storage/v1/object/sign/time-capsules/letter.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xNTIwYmQ5Yy05ZTUxLTQ5MjMtODRmMy1kNzFiNTRkNTNjZjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0aW1lLWNhcHN1bGVzL2xldHRlci5wbmciLCJpYXQiOjE3NTA3NTc1MDQsImV4cCI6MTc4MjI5MzUwNH0.RTnD7Gu7q2mF6MlXhHmZXgn-xN4QJ3CVxUt4xf48s98",
             contentDescription = null
         )
+    }
+}
+
+@Composable
+fun ScheduledTimeCapsule(timeCapsule: TimeCapsule) {
+    val formatter = SimpleDateFormat("dd MMMM yyyy") // Define the desired format
+
+    Row(
+        modifier = Modifier.padding(20.dp, 5.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AsyncImage(
+            model = "https://wjecfnvsxxnvgheqdnpx.supabase.co/storage/v1/object/sign/time-capsules/letter.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xNTIwYmQ5Yy05ZTUxLTQ5MjMtODRmMy1kNzFiNTRkNTNjZjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0aW1lLWNhcHN1bGVzL2xldHRlci5wbmciLCJpYXQiOjE3NTA3NTc1MDQsImV4cCI6MTc4MjI5MzUwNH0.RTnD7Gu7q2mF6MlXhHmZXgn-xN4QJ3CVxUt4xf48s98",
+            contentDescription = null,
+            modifier = Modifier.size(80.dp)
+        )
+        Column {
+            Text(timeCapsule.title)
+            Text((timeCapsule.emails + timeCapsule.phones + timeCapsule.receivers).toString())
+            Text("Created: " + formatter.format(timeCapsule.creationDate.toDate()))
+            Text("Deadline: " + formatter.format(timeCapsule.deadline.toDate()))
+        }
+    }
+}
+
+@Composable
+fun SentTimeCapsule(timeCapsule: TimeCapsule) {
+    val formatter = SimpleDateFormat("dd MMMM yyyy") // Define the desired format
+
+    Row(
+        modifier = Modifier.padding(20.dp, 5.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AsyncImage(
+            model = "https://wjecfnvsxxnvgheqdnpx.supabase.co/storage/v1/object/sign/time-capsules/letter.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xNTIwYmQ5Yy05ZTUxLTQ5MjMtODRmMy1kNzFiNTRkNTNjZjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0aW1lLWNhcHN1bGVzL2xldHRlci5wbmciLCJpYXQiOjE3NTA3NTc1MDQsImV4cCI6MTc4MjI5MzUwNH0.RTnD7Gu7q2mF6MlXhHmZXgn-xN4QJ3CVxUt4xf48s98",
+            contentDescription = null,
+            modifier = Modifier.size(80.dp)
+        )
+        Column {
+            Text(timeCapsule.title)
+            Text((timeCapsule.emails + timeCapsule.phones + timeCapsule.receivers).toString())
+            Text("Sent: " + formatter.format(timeCapsule.deadline.toDate()))
+        }
+    }
+}
+
+@Composable
+fun ReceivedTimeCapsule(timeCapsule: TimeCapsule) {
+    val formatter = SimpleDateFormat("dd MMMM yyyy") // Define the desired format
+
+    Row(
+        modifier = Modifier.padding(20.dp, 5.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AsyncImage(
+            model = "https://wjecfnvsxxnvgheqdnpx.supabase.co/storage/v1/object/sign/time-capsules/letter.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xNTIwYmQ5Yy05ZTUxLTQ5MjMtODRmMy1kNzFiNTRkNTNjZjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0aW1lLWNhcHN1bGVzL2xldHRlci5wbmciLCJpYXQiOjE3NTA3NTc1MDQsImV4cCI6MTc4MjI5MzUwNH0.RTnD7Gu7q2mF6MlXhHmZXgn-xN4QJ3CVxUt4xf48s98",
+            contentDescription = null,
+            modifier = Modifier.size(80.dp)
+        )
+        Column {
+            Text(timeCapsule.title)
+            Text(timeCapsule.userId)
+            Text("Received: " + formatter.format(timeCapsule.deadline.toDate()))
+        }
     }
 }

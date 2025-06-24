@@ -1,11 +1,9 @@
 package com.mirage.reverie.viewmodel
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
-import com.mirage.reverie.data.model.AllDiaries
 import com.mirage.reverie.data.model.TimeCapsule
 import com.mirage.reverie.data.repository.TimeCapsuleRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,7 +11,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.Calendar
 import javax.inject.Inject
 
 
@@ -28,14 +25,23 @@ sealed class TimeCapsuleUiState {
         val receivedTimeCapsule: Map<String, TimeCapsule>, // capsule destinate all'utente (scadute e non)
         val buttonState: TimeCapsuleButtonState = TimeCapsuleButtonState.SCHEDULED,
     ) : TimeCapsuleUiState() {
-        val timeCapsuleScheduled: Map<String, TimeCapsule> // capsule create dall'utente ma non ancora inviate in quanto la scadenza ancora non arriva
+        val timeCapsuleScheduledMap: Map<String, TimeCapsule> // capsule create dall'utente ma non ancora inviate in quanto la scadenza ancora non arriva
             get() = sentTimeCapsule.filter { it.value.deadline < Timestamp.now() }
 
-        val timeCapsuleSent: Map<String, TimeCapsule>
+        val timeCapsuleScheduled: List<TimeCapsule> // capsule create dall'utente ma non ancora inviate in quanto la scadenza ancora non arriva
+            get() = timeCapsuleScheduledMap.values.toList().sortedBy { timeCapsule -> timeCapsule.deadline }
+
+        val timeCapsuleSentMap: Map<String, TimeCapsule>
             get() = sentTimeCapsule.filter { it.value.deadline >= Timestamp.now() }
 
-        val timeCapsuleReceived: Map<String, TimeCapsule> // capsule ricevute dall'utente, che deve aprire
+        val timeCapsuleSent: List<TimeCapsule>
+            get() = timeCapsuleSentMap.values.toList().sortedBy { timeCapsule -> timeCapsule.deadline }
+
+        val timeCapsuleReceivedMap: Map<String, TimeCapsule> // capsule ricevute dall'utente, che deve aprire
             get() = receivedTimeCapsule.filter { it.value.deadline >= Timestamp.now() }
+
+        val timeCapsuleReceived: List<TimeCapsule> // capsule ricevute dall'utente, che deve aprire
+            get() = timeCapsuleReceivedMap.values.toList().sortedBy { timeCapsule -> timeCapsule.deadline }
 
         val buttonElements: List<TimeCapsuleButtonState>
             get() = TimeCapsuleButtonState.entries
