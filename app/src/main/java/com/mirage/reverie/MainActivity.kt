@@ -77,6 +77,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.navigation
 import com.google.firebase.auth.FirebaseAuth
 import com.mirage.reverie.data.model.Diary
+import com.mirage.reverie.data.model.DiaryImage
 import com.mirage.reverie.data.model.DiaryPage
 import com.mirage.reverie.data.model.User
 import com.mirage.reverie.navigation.AllDiariesRoute
@@ -256,11 +257,14 @@ fun MainComposable(
                     navigation<DiariesRoute>(startDestination = AllDiariesRoute) {
                         composable<AllDiariesRoute> { backStackEntry ->
                             val updatedDiary = backStackEntry.savedStateHandle.get<Diary>("diary")
+                            val updatedImages = backStackEntry.savedStateHandle.get<List<DiaryImage>>("diaryImages")
                             backStackEntry.savedStateHandle.remove<Diary>("diary")
+                            backStackEntry.savedStateHandle.remove<List<DiaryImage>>("diaryImages")
 
                             bottomBarVisibility = true
                             AllDiariesScreen(
                                 updatedDiary = updatedDiary,
+                                updatedImages = updatedImages,
                                 onNavigateToEditDiary = { diaryId -> navController.navigate(EditDiaryRoute(diaryId)) },
                                 onNavigateToDiary = { diaryId -> navController.navigate(DiaryRoute(diaryId)) },
                                 onNavigateToCreateDiary = { navController.navigate(CreateDiaryRoute) }
@@ -303,9 +307,17 @@ fun MainComposable(
                                     updatedPage = updatedPage,
                                     onNavigateToEditDiaryPage = { page ->
                                         navController.navigate(EditDiaryPageRoute(page))
+                                    },
+                                    onComplete = { diaryImages ->
+                                        navController.previousBackStackEntry
+                                            ?.savedStateHandle
+                                            ?.set("diaryImages", diaryImages)
+
+                                        navController.popBackStack()
                                     }
                                 )
                             }
+
                             composable<EditDiaryPageRoute> { backStackEntry ->
                                 bottomBarVisibility = false
                                 EditDiaryPageScreen(

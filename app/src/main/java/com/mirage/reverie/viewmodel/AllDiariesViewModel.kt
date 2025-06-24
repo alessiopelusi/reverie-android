@@ -125,6 +125,29 @@ class AllDiariesViewModel @Inject constructor(
         }
     }
 
+    fun overwriteImages(updatedImages: List<DiaryImage>? = listOf()) {
+        val state = uiState.value
+        if (state !is AllDiariesUiState.Success) return
+
+        if (!updatedImages.isNullOrEmpty()) {
+            viewModelScope.launch {
+                val diaryPhotosMap = state.diaryPhotosMap.toMutableMap()
+                diaryPhotosMap[updatedImages.first().diaryId] = updatedImages
+
+                _uiState.update {
+                    AllDiariesUiState.Success(
+                        state.allDiaries,
+                        state.diariesMap,
+                        state.diaryCoversMap,
+                        diaryPhotosMap,
+                        state.pagerState,
+                        state.buttonState
+                    )
+                }
+            }
+        }
+    }
+
     fun onButtonStateUpdate(newButtonState: ButtonState) {
         val state = uiState.value
         if (state !is AllDiariesUiState.Success) return

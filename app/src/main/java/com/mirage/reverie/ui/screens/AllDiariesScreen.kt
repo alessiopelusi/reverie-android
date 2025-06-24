@@ -60,16 +60,19 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.TextButton
+import com.mirage.reverie.data.model.DiaryImage
 
 @Composable
 fun AllDiariesScreen(
     updatedDiary: Diary? = null,
+    updatedImages: List<DiaryImage>? = null,
     onNavigateToDiary: (String) -> Unit,
     onNavigateToEditDiary: (String) -> Unit,
     onNavigateToCreateDiary: () -> Unit,
     viewModel: AllDiariesViewModel = hiltViewModel()
 ) {
     viewModel.overwriteDiary(updatedDiary)
+    viewModel.overwriteImages(updatedImages)
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 

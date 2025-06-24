@@ -11,6 +11,7 @@ import android.net.Uri
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -97,6 +98,8 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
+import com.mirage.reverie.data.model.Diary
+import com.mirage.reverie.data.model.DiaryImage
 import dev.romainguy.graphics.path.toPaths
 import kotlinx.coroutines.delay
 import java.time.format.DateTimeFormatter
@@ -109,12 +112,21 @@ import kotlin.math.sin
 fun ViewDiaryScreen(
     onNavigateToEditDiaryPage: (String) -> Unit,
     updatedPage: DiaryPage? = null,
+    onComplete: (List<DiaryImage>) -> Unit,
     viewModel: ViewDiaryViewModel = hiltViewModel()
 ) {
     // used when we send back page from editDiaryPage, we avoid another database call updating manually
     viewModel.overwritePage(updatedPage)
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // Handle back press
+    BackHandler {
+        // Add data to SavedStateHandle before navigating back
+        onComplete((uiState as ViewDiaryUiState.Success).images)
+
+        // Perform back navigation
+    }
 
     when (uiState) {
         is ViewDiaryUiState.Loading -> CircularProgressIndicator()
