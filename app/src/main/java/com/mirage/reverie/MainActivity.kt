@@ -161,32 +161,9 @@ fun MainComposable(
                                 style = MaterialTheme.typography.titleLarge
                             )
                         }
-                        item {
-                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                        }
-                        item {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Button(
-                                    onClick = {
-                                        // navController.navigate(EditDiaryRoute(diary.id))
-                                    },
-                                    modifier = Modifier.padding(8.dp),
-                                ) {
-                                    Text(
-                                        "Crea nuovo Diario",
-                                        style = MaterialTheme.typography.titleMedium
-                                    )
-                                }
-                            }
-                        }
-                        item {
-                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                        }
+                        //item {
+                        //    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                        //}
                         item {
                             Text(
                                 "Altro",
@@ -200,6 +177,7 @@ fun MainComposable(
                             //                            badge = { Text("20") }, // Placeholder
                             //                            onClick = { /* Handle click */ }
                             //                        )
+/*
                             NavigationDrawerItem(
                                 label = { Text("Logout") },
                                 selected = false,
@@ -220,6 +198,7 @@ fun MainComposable(
                                     }
                                 }
                             )
+*/
                             NavigationDrawerItem(
                                 label = { Text("Aiuto e feedback") },
                                 selected = false,
@@ -386,6 +365,12 @@ fun MainComposable(
                             ProfileScreen(
                                 onEditProfile = { profileId ->
                                     navController.navigate(EditProfileRoute(profileId))
+                                },
+                                onLogout = {
+                                    logout()
+                                    navController.navigate(LoginRoute) {
+                                        popUpTo(0) { inclusive = true }
+                                    }
                                 },
                                 updatedProfile = updatedProfile
                             )

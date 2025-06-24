@@ -10,4 +10,9 @@
     <string name="delete">Elimina</string>
     <string name="move_up">Sposta sopra</string>
     <string name="move_down">Sposta sotto</string>
+    <string name="new_diary">Nuovo Diario</string>
+    <string name="create">Crea</string>
+    <string name="save">Salva</string>
+    <string name="create_diary_message">Stai creando il tuo diario!</string>
+    <string name="edit_diary_message">Stai modificando il tuo diario!</string>
 </resources>

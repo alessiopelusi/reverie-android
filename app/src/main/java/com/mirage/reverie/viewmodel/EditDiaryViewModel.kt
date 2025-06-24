@@ -1,10 +1,13 @@
 package com.mirage.reverie.viewmodel
 
+import android.content.Context
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.google.firebase.auth.FirebaseAuth
+import com.mirage.reverie.R
 import com.mirage.reverie.data.model.Diary
 import com.mirage.reverie.data.model.DiaryCover
 import com.mirage.reverie.data.repository.DiaryRepository
@@ -39,7 +42,8 @@ sealed class EditDiaryUiState {
 class EditDiaryViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val repository: DiaryRepository,
-    private val auth: FirebaseAuth
+    private val auth: FirebaseAuth,
+    private val context: Context
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<EditDiaryUiState>(EditDiaryUiState.Loading)
     val uiState = _uiState.asStateFlow()
@@ -64,7 +68,7 @@ class EditDiaryViewModel @Inject constructor(
                 auth.uid?.let {
                     diary = Diary(
                         userId = it,
-                        title = "Nuovo Diario",
+                        title = context.getString(R.string.new_diary),
                         description = "",
                         coverId = "MVl66divWlJIIGvaBFbw",
                     )
