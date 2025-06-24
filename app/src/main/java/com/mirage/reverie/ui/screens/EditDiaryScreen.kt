@@ -53,7 +53,7 @@ fun EditDiaryScreen(
             ){
                 Text(
                     modifier = Modifier.padding(8.dp),
-                    text = if (diary.id == "") "You are creating your diary!" else "You are editing your diary!",
+                    text = if (diary.id == "") stringResource(R.string.create_diary_message) else stringResource(R.string.edit_diary_message),
                 )
                 EditTitleField(diary.title, onNewValue = viewModel::onUpdateTitle)
 
@@ -82,7 +82,7 @@ fun EditDiaryScreen(
                 Button(
                     onClick = viewModel::onUpdateDiary
                 ) {
-                    Text(if (diary.id == "") "Crea" else "Salva")
+                    Text(if (diary.id == "") stringResource(R.string.create) else stringResource(R.string.save))
                 }
 
                 if (uiState is EditDiaryUiState.Error) {

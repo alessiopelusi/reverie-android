@@ -24,8 +24,9 @@ import com.mirage.reverie.viewmodel.ProfileViewModel
 
 @Composable
 fun ProfileScreen(
-    onEditProfile: (String) -> Unit,
     updatedProfile: User? = null,
+    onEditProfile: (String) -> Unit,
+    onLogout: (String) -> Unit,
     viewModel: ProfileViewModel = hiltViewModel()
 ){
     viewModel.overwriteProfile(updatedProfile)
@@ -67,6 +68,12 @@ fun ProfileScreen(
                     onEditProfile(profile.id)
                 }) {
                     Text("Modifica profilo")
+                }
+
+                Button( onClick = {
+                    onLogout(profile.id)
+                }) {
+                    Text("Logout")
                 }
             }
         }
