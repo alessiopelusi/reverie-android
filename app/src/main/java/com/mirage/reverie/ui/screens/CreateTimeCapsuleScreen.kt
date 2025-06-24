@@ -1,7 +1,13 @@
 package com.mirage.reverie.ui.screens
 
+import android.app.DatePickerDialog
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -20,6 +26,14 @@ import com.mirage.reverie.ui.components.ContentTextField
 import com.mirage.reverie.viewmodel.CreateTimeCapsuleUiState
 import com.mirage.reverie.viewmodel.CreateTimeCapsuleViewModel
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import com.google.firebase.Timestamp
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 
 @Composable
@@ -36,7 +50,8 @@ fun CreateTimeCapsuleScreen(
             val timeCapsule = formState.timeCapsule
 
             Column (
-                modifier = Modifier.padding(0.dp, 20.dp),
+                modifier = Modifier.padding(0.dp, 20.dp)
+                    .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ){
@@ -47,12 +62,14 @@ fun CreateTimeCapsuleScreen(
 
                 EditTitleField(timeCapsule.title, onNewValue = viewModel::onUpdateTitle)
                 ContentTextField (timeCapsule.content, onUpdateContent = viewModel::onUpdateContent)
+                DatePicker()
 
                 Button (
                     onClick = viewModel::onCreateTimeCapsule
                 ) {
                     Text(stringResource(R.string.create))
                 }
+
 
                 if (uiState is CreateTimeCapsuleUiState.Error) {
                     Text(text = (uiState as CreateTimeCapsuleUiState.Error).errorMessage, color = MaterialTheme.colorScheme.error)
@@ -62,6 +79,59 @@ fun CreateTimeCapsuleScreen(
         is CreateTimeCapsuleUiState.Success -> {
             val formState by viewModel.formState.collectAsStateWithLifecycle()
             onComplete(formState.timeCapsule)
+        }
+    }
+}
+
+@Composable
+fun DatePicker(){
+    val context = LocalContext.current
+
+    // Stato per la data selezionata
+    var selectedDate by remember { mutableStateOf("") }
+
+    // Ottieni data attuale per default
+    val calendar = Calendar.getInstance()
+    val year = calendar.get(Calendar.YEAR)
+    val month = calendar.get(Calendar.MONTH)
+    val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+    val datePickerDialog = DatePickerDialog(
+        context,
+        { _, selectedYear, selectedMonth, selectedDayOfMonth ->
+            val selectedCalendar = Calendar.getInstance().apply {
+                set(Calendar.YEAR, selectedYear)
+                set(Calendar.MONTH, selectedMonth)
+                set(Calendar.DAY_OF_MONTH, selectedDayOfMonth)
+                set(Calendar.HOUR_OF_DAY, 0) // opzionale: per normalizzare l'ora
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+
+            val date = selectedCalendar.time
+            val firebaseTimestamp = Timestamp(date)
+
+            val formatter = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
+            val formattedDate = formatter.format(date)
+
+            selectedDate = formattedDate
+        },
+        year, month, day
+    )
+
+    Row (
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Text(text = if (selectedDate.isEmpty()) "Nessuna data selezionata" else "Data: $selectedDate")
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = { datePickerDialog.show() }) {
+            Text(text = "Seleziona Data")
         }
     }
 }
