@@ -86,4 +86,26 @@ class AllTimeCapsulesViewModel @Inject constructor(
             )
         }
     }
+
+    fun addNewTimeCapsule(newTimeCapsule: TimeCapsule?) {
+        val state = uiState.value
+        if (state !is AllTimeCapsulesUiState.Success) return
+        if (newTimeCapsule == null) return
+
+        val sentTimeCapsule = state.sentTimeCapsule.toMutableMap()
+        val receivedTimeCapsule = state.receivedTimeCapsule.toMutableMap()
+
+        sentTimeCapsule[newTimeCapsule.id] = newTimeCapsule
+        if (newTimeCapsule.receivers.contains(auth.uid)) {
+            receivedTimeCapsule[newTimeCapsule.id] = newTimeCapsule
+        }
+
+        _uiState.update {
+            AllTimeCapsulesUiState.Success(
+                sentTimeCapsule,
+                receivedTimeCapsule,
+                state.buttonState
+            )
+        }
+    }
 }

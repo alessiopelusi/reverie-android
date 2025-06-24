@@ -7,6 +7,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.parcelize.Parcelize
 import java.time.Period
 
+@Parcelize
 data class TimeCapsule (
     @get:Exclude val id: String = "",
     val userId: String = "",
@@ -20,5 +21,11 @@ data class TimeCapsule (
 
     val visualizedBy: List<String> = listOf(), // utenti che hanno visualizzato la capsula del tempo
     val creationDate: Timestamp = Timestamp.now() // data di creazione della capsula
-)
+): Parcelable {
+    // shadows Parcelable stability attribute
+    @Exclude
+    fun getStability(): Int {
+        return this.getStability()
+    }
+}
 

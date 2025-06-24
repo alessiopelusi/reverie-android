@@ -1,10 +1,8 @@
 package com.mirage.reverie.viewmodel
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
-import androidx.core.net.toFile
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,7 +23,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.io.File
 import java.time.LocalDate
 import javax.inject.Inject
 import kotlin.math.min

@@ -16,16 +16,12 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-data class ViewTimeCapsuleFormState(
-    val timeCapsule: TimeCapsule = TimeCapsule()
-)
-
-
-sealed class ViewTimeCapsuleUiState {
-    data object Loading : ViewTimeCapsuleUiState()
-    data object Idle: ViewTimeCapsuleUiState()
-    data object Success : ViewTimeCapsuleUiState()
-    data class Error(val errorMessage: String) : ViewTimeCapsuleUiState()
+sealed class ViewTimeCapsuleState {
+    data object Loading : ViewTimeCapsuleState()
+    data class Success(
+        val timeCapsule: TimeCapsule
+    ) : ViewTimeCapsuleState()
+    data class Error(val exception: Throwable) : ViewTimeCapsuleState()
 }
 
 @HiltViewModel
@@ -35,11 +31,8 @@ class ViewTimeCapsuleViewModel @Inject constructor(
 ) : ViewModel() {
     private val timeCapsuleId = savedStateHandle.toRoute<ViewTimeCapsuleRoute>().timeCapsuleId
 
-    private val _uiState = MutableStateFlow<ViewTimeCapsuleUiState>(ViewTimeCapsuleUiState.Loading)
+    private val _uiState = MutableStateFlow<ViewTimeCapsuleState>(ViewTimeCapsuleState.Loading)
     val uiState = _uiState.asStateFlow()
-
-    private val _formState = MutableStateFlow(ViewTimeCapsuleFormState())
-    val formState = _formState.asStateFlow()
 
     init {
         onStart()
@@ -48,41 +41,7 @@ class ViewTimeCapsuleViewModel @Inject constructor(
     private fun onStart() {
         viewModelScope.launch {
             val timeCapsule = repository.getTimeCapsule(timeCapsuleId)
-
-            _uiState.update { ViewTimeCapsuleUiState.Idle }
-            _formState.update { ViewTimeCapsuleFormState(timeCapsule) }
+            _uiState.update { ViewTimeCapsuleState.Success(timeCapsule) }
         }
-    }
-
-
-    fun onUpdateTimeCapsule() {
-        _uiState.update { ViewTimeCapsuleUiState.Idle }
-
-        val state = formState.value
-        if (state.timeCapsule.content.isBlank()) {
-            _uiState.update { ViewTimeCapsuleUiState.Error("Il contenuto è obbligatorio") }
-        }
-
-        viewModelScope.launch {
-            try {
-                //repository.updatePage(state.page)
-                _uiState.update { ViewTimeCapsuleUiState.Success }
-            } catch (exception: Exception) {
-                _uiState.update { ViewTimeCapsuleUiState.Error(exception.message.toString()) } // Gestisci errori
-            }
-        }
-    }
-
-    // Handle business logic
-    fun onUpdateContent(newContent: String) {
-        val currentState = uiState.value
-        if (currentState is ViewTimeCapsuleUiState.Loading) return
-
-/*
-        _formState.update { state ->
-            val updatedPage = state.page.copy(content = newContent)
-            state.copy(page = updatedPage)
-        }
-*/
     }
 }

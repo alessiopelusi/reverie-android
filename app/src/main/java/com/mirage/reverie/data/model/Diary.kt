@@ -15,4 +15,10 @@ data class Diary (
     val coverId: String = "",
     val pageIds: List<String> = listOf(),
     val creationDate: Timestamp = Timestamp.now()
-) : Parcelable
+) : Parcelable {
+    // shadows Parcelable stability attribute
+    @Exclude
+    fun getStability(): Int {
+        return this.getStability()
+    }
+}

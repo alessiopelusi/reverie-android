@@ -51,8 +51,13 @@ import java.text.SimpleDateFormat
 
 @Composable
 fun AllTimeCapsulesScreen(
+    newTimeCapsule: TimeCapsule?,
+    onNavigateToCreateTimeCapsule: () -> Unit,
     viewModel: AllTimeCapsulesViewModel = hiltViewModel()
 ) {
+    // add new time capsule sent from CreateTimeCapsuleRoute
+    viewModel.addNewTimeCapsule(newTimeCapsule)
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     when (uiState) {
         is AllTimeCapsulesUiState.Loading -> CircularProgressIndicator()
@@ -106,7 +111,7 @@ fun AllTimeCapsulesScreen(
                             ) {
                                 IconButton (
                                     onClick = {
-                                        // onNavigateToCreateTimeCapsule()
+                                        onNavigateToCreateTimeCapsule()
                                     },
                                     colors = IconButtonColors(
                                         containerColor = PaperColor,

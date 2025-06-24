@@ -55,6 +55,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.mirage.reverie.data.model.Diary
 import com.mirage.reverie.data.model.DiaryImage
 import com.mirage.reverie.data.model.DiaryPage
+import com.mirage.reverie.data.model.TimeCapsule
 import com.mirage.reverie.data.model.User
 import com.mirage.reverie.navigation.AllDiariesRoute
 import com.mirage.reverie.navigation.AuthenticationRoute
@@ -71,7 +72,9 @@ import com.mirage.reverie.navigation.ResetPasswordRoute
 import com.mirage.reverie.navigation.SignupRoute
 import com.mirage.reverie.navigation.ProfileRoute
 import com.mirage.reverie.navigation.AllTimeCapsulesRoute
+import com.mirage.reverie.navigation.TimeCapsulesRoute
 import com.mirage.reverie.navigation.ViewProfileRoute
+import com.mirage.reverie.navigation.ViewTimeCapsuleRoute
 import com.mirage.reverie.ui.screens.AllDiariesScreen
 import com.mirage.reverie.ui.screens.CreateTimeCapsuleScreen
 import com.mirage.reverie.ui.screens.EditDiaryPageScreen
@@ -83,6 +86,7 @@ import com.mirage.reverie.ui.screens.ProfileScreen
 import com.mirage.reverie.ui.screens.ResetPasswordScreen
 import com.mirage.reverie.ui.screens.SignupScreen
 import com.mirage.reverie.ui.screens.AllTimeCapsulesScreen
+import com.mirage.reverie.ui.screens.ViewTimeCapsuleScreen
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -325,24 +329,37 @@ fun MainComposable(
                             )
                         }
                     }
-                    composable<AllTimeCapsulesRoute> {
-                        bottomBarVisibility = true
-                        AllTimeCapsulesScreen(
-                            // onNavigateToCreateTimeCapsule = { navController.navigate(CreateTimeCapsuleRoute) }
-                        )
-                    }
 
-                    composable<CreateTimeCapsuleRoute> { backStackEntry ->
-                        bottomBarVisibility = true
-                        CreateTimeCapsuleScreen(
-                            onComplete = { timeCapsule ->
-                                navController.previousBackStackEntry
-                                    ?.savedStateHandle
-                                    ?.set("timeCapsule", timeCapsule)
+                    navigation<TimeCapsulesRoute>(startDestination = AllTimeCapsulesRoute) {
+                        composable<AllTimeCapsulesRoute> { backStackEntry ->
+                            bottomBarVisibility = true
 
-                                navController.popBackStack()
-                            }
-                        )
+                            val newTimeCapsule = backStackEntry.savedStateHandle.get<TimeCapsule>("timeCapsule")
+                            backStackEntry.savedStateHandle.remove<TimeCapsule>("timeCapsule")
+
+                            AllTimeCapsulesScreen(
+                                newTimeCapsule = newTimeCapsule,
+                                onNavigateToCreateTimeCapsule = { navController.navigate(CreateTimeCapsuleRoute) }
+                            )
+                        }
+
+                        composable<ViewTimeCapsuleRoute> {
+                            bottomBarVisibility = true
+                            ViewTimeCapsuleScreen()
+                        }
+
+                        composable<CreateTimeCapsuleRoute> { backStackEntry ->
+                            bottomBarVisibility = true
+                            CreateTimeCapsuleScreen(
+                                onComplete = { timeCapsule ->
+                                    navController.previousBackStackEntry
+                                        ?.savedStateHandle
+                                        ?.set("timeCapsule", timeCapsule)
+
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
                     }
 
                     navigation<ProfileRoute>(startDestination = ViewProfileRoute::class) {
@@ -427,7 +444,7 @@ fun CustomBottomBar(navController: NavController) {
 
     val topLevelRoutes = listOf(
         TopLevelRoute(stringResource(R.string.all_diaries), DiariesRoute, Icons.AutoMirrored.Rounded.LibraryBooks),
-        TopLevelRoute(stringResource(R.string.time_capsule), AllTimeCapsulesRoute, Icons.Rounded.MailOutline)
+        TopLevelRoute(stringResource(R.string.time_capsule), TimeCapsulesRoute, Icons.Rounded.MailOutline)
     )
 
     NavigationBar (
