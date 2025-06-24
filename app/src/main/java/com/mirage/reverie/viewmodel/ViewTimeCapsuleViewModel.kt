@@ -19,7 +19,8 @@ import javax.inject.Inject
 sealed class ViewTimeCapsuleState {
     data object Loading : ViewTimeCapsuleState()
     data class Success(
-        val timeCapsule: TimeCapsule
+        val timeCapsule: TimeCapsule,
+        val timeCapsuleType: TimeCapsuleType
     ) : ViewTimeCapsuleState()
     data class Error(val exception: Throwable) : ViewTimeCapsuleState()
 }
@@ -30,6 +31,7 @@ class ViewTimeCapsuleViewModel @Inject constructor(
     private val repository: TimeCapsuleRepository
 ) : ViewModel() {
     private val timeCapsuleId = savedStateHandle.toRoute<ViewTimeCapsuleRoute>().timeCapsuleId
+    private val timeCapsuleType = savedStateHandle.toRoute<ViewTimeCapsuleRoute>().timeCapsuleType
 
     private val _uiState = MutableStateFlow<ViewTimeCapsuleState>(ViewTimeCapsuleState.Loading)
     val uiState = _uiState.asStateFlow()
@@ -41,7 +43,7 @@ class ViewTimeCapsuleViewModel @Inject constructor(
     private fun onStart() {
         viewModelScope.launch {
             val timeCapsule = repository.getTimeCapsule(timeCapsuleId)
-            _uiState.update { ViewTimeCapsuleState.Success(timeCapsule) }
+            _uiState.update { ViewTimeCapsuleState.Success(timeCapsule, timeCapsuleType) }
         }
     }
 }

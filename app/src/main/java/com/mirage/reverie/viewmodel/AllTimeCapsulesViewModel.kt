@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-enum class TimeCapsuleButtonState {
+enum class TimeCapsuleType {
     SCHEDULED, SENT, RECEIVED // puoi aggiungere altre sezioni
 }
 
@@ -23,28 +23,28 @@ sealed class AllTimeCapsulesUiState {
     data class Success(
         val sentTimeCapsule: Map<String, TimeCapsule>, // capsule create dall'utente, scadute(inviate) e non scadute(programmate)
         val receivedTimeCapsule: Map<String, TimeCapsule>, // capsule destinate all'utente (scadute e non)
-        val buttonState: TimeCapsuleButtonState = TimeCapsuleButtonState.SCHEDULED,
+        val buttonState: TimeCapsuleType = TimeCapsuleType.SCHEDULED,
     ) : AllTimeCapsulesUiState() {
         val timeCapsuleScheduledMap: Map<String, TimeCapsule> // capsule create dall'utente ma non ancora inviate in quanto la scadenza ancora non arriva
-            get() = sentTimeCapsule.filter { it.value.deadline < Timestamp.now() }
+            get() = sentTimeCapsule.filter { it.value.deadline >= Timestamp.now() }
 
         val timeCapsuleScheduled: List<TimeCapsule> // capsule create dall'utente ma non ancora inviate in quanto la scadenza ancora non arriva
             get() = timeCapsuleScheduledMap.values.toList().sortedBy { timeCapsule -> timeCapsule.deadline }
 
         val timeCapsuleSentMap: Map<String, TimeCapsule>
-            get() = sentTimeCapsule.filter { it.value.deadline >= Timestamp.now() }
+            get() = sentTimeCapsule.filter { it.value.deadline < Timestamp.now() }
 
         val timeCapsuleSent: List<TimeCapsule>
             get() = timeCapsuleSentMap.values.toList().sortedBy { timeCapsule -> timeCapsule.deadline }
 
         val timeCapsuleReceivedMap: Map<String, TimeCapsule> // capsule ricevute dall'utente, che deve aprire
-            get() = receivedTimeCapsule.filter { it.value.deadline >= Timestamp.now() }
+            get() = receivedTimeCapsule.filter { it.value.deadline < Timestamp.now() }
 
         val timeCapsuleReceived: List<TimeCapsule> // capsule ricevute dall'utente, che deve aprire
             get() = timeCapsuleReceivedMap.values.toList().sortedBy { timeCapsule -> timeCapsule.deadline }
 
-        val buttonElements: List<TimeCapsuleButtonState>
-            get() = TimeCapsuleButtonState.entries
+        val buttonElements: List<TimeCapsuleType>
+            get() = TimeCapsuleType.entries
     }
     data class Error(val exception: Throwable) : AllTimeCapsulesUiState()
 }
@@ -74,7 +74,7 @@ class AllTimeCapsulesViewModel @Inject constructor(
         }
     }
 
-    fun onButtonStateUpdate(newButtonState: TimeCapsuleButtonState) {
+    fun onButtonStateUpdate(newButtonState: TimeCapsuleType) {
         val state = uiState.value
         if (state !is AllTimeCapsulesUiState.Success) return
 

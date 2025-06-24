@@ -10,9 +10,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mirage.reverie.R
+import com.mirage.reverie.viewmodel.TimeCapsuleType
 import com.mirage.reverie.viewmodel.ViewTimeCapsuleState
 import com.mirage.reverie.viewmodel.ViewTimeCapsuleViewModel
 
@@ -26,6 +29,7 @@ fun ViewTimeCapsuleScreen(
         is ViewTimeCapsuleState.Loading -> CircularProgressIndicator()
         is ViewTimeCapsuleState.Success -> {
             val timeCapsule = (uiState as ViewTimeCapsuleState.Success).timeCapsule
+            val timeCapsuleType = (uiState as ViewTimeCapsuleState.Success).timeCapsuleType
 
             Column (
                 modifier = Modifier
@@ -50,24 +54,30 @@ fun ViewTimeCapsuleScreen(
                     modifier = Modifier.padding(8.dp),
                     text = timeCapsule.deadline.toString()
                 )
-                Text(
-                    modifier = Modifier.padding(8.dp),
-                    text = timeCapsule.emails.toString()
-                )
-                Text(
-                    modifier = Modifier.padding(8.dp),
-                    text = timeCapsule.phones.toString()
-                )
-                Text(
-                    modifier = Modifier.padding(8.dp),
-                    text = timeCapsule.receivers.toString()
-                )
-                Text(
-                    modifier = Modifier.padding(8.dp),
-                    text = timeCapsule.content
-                )
+
+                if (timeCapsuleType != TimeCapsuleType.RECEIVED) {
+                    Text(
+                        modifier = Modifier.padding(8.dp),
+                        text = timeCapsule.emails.toString()
+                    )
+                    Text(
+                        modifier = Modifier.padding(8.dp),
+                        text = timeCapsule.phones.toString()
+                    )
+                    Text(
+                        modifier = Modifier.padding(8.dp),
+                        text = timeCapsule.receivers.toString()
+                    )
+                }
+
+                if (timeCapsuleType != TimeCapsuleType.SCHEDULED) {
+                    Text(
+                        modifier = Modifier.padding(8.dp),
+                        text = timeCapsule.content
+                    )
+                }
             }
         }
-        is ViewTimeCapsuleState.Error -> Text(text = "Error: ${(uiState as ViewTimeCapsuleState.Error).exception.message}")
+        is ViewTimeCapsuleState.Error -> Text(text = "${stringResource(R.string.error)}: ${(uiState as ViewTimeCapsuleState.Error).exception.message}")
     }
 }

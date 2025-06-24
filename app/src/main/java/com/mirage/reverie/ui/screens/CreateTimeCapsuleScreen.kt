@@ -122,18 +122,11 @@ fun DatePicker(onUpdateDate: (Timestamp) -> Unit){
         year, month, day
     )
 
-    Row (
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Text(text = if (selectedDate.isEmpty()) "Nessuna data selezionata" else "Data: $selectedDate")
+    Spacer(modifier = Modifier.height(8.dp))
 
-        Spacer(modifier = Modifier.height(16.dp))
+    Text(text = if (selectedDate.isEmpty()) stringResource(R.string.no_date_selected) else "${stringResource(R.string.date)}: $selectedDate")
 
-        Button(onClick = { datePickerDialog.show() }) {
-            Text(text = "Seleziona Data")
-        }
+    Button(onClick = { datePickerDialog.show() }) {
+        Text(text = stringResource(R.string.select_date))
     }
 }

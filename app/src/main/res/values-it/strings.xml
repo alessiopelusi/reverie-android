@@ -38,4 +38,8 @@
     <string name="already_have_account">Hai già un account? Effettua il login</string>
     <string name="signup_successful">Registrazione avvenuta con successo. Torna al login.</string>
     <string name="signup_error">Errore di registrazione</string>
+    <string name="no_date_selected">Nessuna data selezionata</string>
+    <string name="date">Data</string>
+    <string name="select_date">Seleziona data</string>
+    <string name="error">Errore</string>
 </resources>
