@@ -3,6 +3,7 @@ package com.mirage.reverie.ui.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,6 +54,7 @@ import java.text.SimpleDateFormat
 fun AllTimeCapsulesScreen(
     newTimeCapsule: TimeCapsule?,
     onNavigateToCreateTimeCapsule: () -> Unit,
+    onNavigateToViewTimeCapsule: (String) -> Unit,
     viewModel: AllTimeCapsulesViewModel = hiltViewModel()
 ) {
     // add new time capsule sent from CreateTimeCapsuleRoute
@@ -190,17 +192,17 @@ fun AllTimeCapsulesScreen(
                 when(buttonState) {
                     TimeCapsuleButtonState.SCHEDULED -> {
                         items(timeCapsuleScheduled) { timeCapsule ->
-                            ScheduledTimeCapsule(timeCapsule)
+                            ScheduledTimeCapsule(timeCapsule, onNavigateToViewTimeCapsule)
                         }
                     }
                     TimeCapsuleButtonState.SENT -> {
                         items(timeCapsuleSent) { timeCapsule ->
-                            SentTimeCapsule(timeCapsule)
+                            SentTimeCapsule(timeCapsule, onNavigateToViewTimeCapsule)
                         }
                     }
                     TimeCapsuleButtonState.RECEIVED -> {
                         items(timeCapsuleReceived) { timeCapsule ->
-                            ReceivedTimeCapsule(timeCapsule)
+                            ReceivedTimeCapsule(timeCapsule, onNavigateToViewTimeCapsule)
                         }
                     }
                 }
@@ -226,11 +228,13 @@ fun TimeCapsuleComposable(modifier: Modifier) {
 }
 
 @Composable
-fun ScheduledTimeCapsule(timeCapsule: TimeCapsule) {
+fun ScheduledTimeCapsule(timeCapsule: TimeCapsule, onClick: (String) -> Unit) {
     val formatter = SimpleDateFormat("dd MMMM yyyy") // Define the desired format
 
     Row(
-        modifier = Modifier.padding(20.dp, 5.dp),
+        modifier = Modifier
+            .padding(20.dp, 5.dp)
+            .clickable(onClick = { onClick(timeCapsule.id) }),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -249,11 +253,13 @@ fun ScheduledTimeCapsule(timeCapsule: TimeCapsule) {
 }
 
 @Composable
-fun SentTimeCapsule(timeCapsule: TimeCapsule) {
+fun SentTimeCapsule(timeCapsule: TimeCapsule, onClick: (String) -> Unit) {
     val formatter = SimpleDateFormat("dd MMMM yyyy") // Define the desired format
 
     Row(
-        modifier = Modifier.padding(20.dp, 5.dp),
+        modifier = Modifier
+            .padding(20.dp, 5.dp)
+            .clickable(onClick = { onClick(timeCapsule.id) }),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -271,11 +277,13 @@ fun SentTimeCapsule(timeCapsule: TimeCapsule) {
 }
 
 @Composable
-fun ReceivedTimeCapsule(timeCapsule: TimeCapsule) {
+fun ReceivedTimeCapsule(timeCapsule: TimeCapsule, onClick: (String) -> Unit) {
     val formatter = SimpleDateFormat("dd MMMM yyyy") // Define the desired format
 
     Row(
-        modifier = Modifier.padding(20.dp, 5.dp),
+        modifier = Modifier
+            .padding(20.dp, 5.dp)
+            .clickable(onClick = { onClick(timeCapsule.id) }),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

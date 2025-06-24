@@ -339,7 +339,8 @@ fun MainComposable(
 
                             AllTimeCapsulesScreen(
                                 newTimeCapsule = newTimeCapsule,
-                                onNavigateToCreateTimeCapsule = { navController.navigate(CreateTimeCapsuleRoute) }
+                                onNavigateToCreateTimeCapsule = { navController.navigate(CreateTimeCapsuleRoute) },
+                                onNavigateToViewTimeCapsule = { timeCapsuleId -> navController.navigate(ViewTimeCapsuleRoute(timeCapsuleId)) }
                             )
                         }
 
