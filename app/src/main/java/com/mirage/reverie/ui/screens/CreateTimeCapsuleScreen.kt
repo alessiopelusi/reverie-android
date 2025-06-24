@@ -62,7 +62,7 @@ fun CreateTimeCapsuleScreen(
 
                 EditTitleField(timeCapsule.title, onNewValue = viewModel::onUpdateTitle)
                 ContentTextField (timeCapsule.content, onUpdateContent = viewModel::onUpdateContent)
-                DatePicker()
+                DatePicker(viewModel::onUpdateDeadline)
 
                 Button (
                     onClick = viewModel::onCreateTimeCapsule
@@ -84,7 +84,7 @@ fun CreateTimeCapsuleScreen(
 }
 
 @Composable
-fun DatePicker(){
+fun DatePicker(onUpdateDate: (Timestamp) -> Unit){
     val context = LocalContext.current
 
     // Stato per la data selezionata
@@ -111,6 +111,8 @@ fun DatePicker(){
 
             val date = selectedCalendar.time
             val firebaseTimestamp = Timestamp(date)
+
+            onUpdateDate(firebaseTimestamp)
 
             val formatter = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
             val formattedDate = formatter.format(date)

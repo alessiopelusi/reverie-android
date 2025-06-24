@@ -6,6 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.mirage.reverie.R
 import com.mirage.reverie.data.model.Diary
@@ -103,6 +104,16 @@ class CreateTimeCapsuleViewModel @Inject constructor(
 
         _formState.update { state ->
             val updatedTimeCapsule = state.timeCapsule.copy(content = newContent)
+            state.copy(timeCapsule = updatedTimeCapsule)
+        }
+    }
+
+    fun onUpdateDeadline(newDeadline: Timestamp){
+        val currentState = uiState.value
+        if (currentState is CreateTimeCapsuleUiState.Loading) return
+
+        _formState.update { state ->
+            val updatedTimeCapsule = state.timeCapsule.copy(deadline = newDeadline)
             state.copy(timeCapsule = updatedTimeCapsule)
         }
     }
