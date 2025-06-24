@@ -59,6 +59,7 @@ import com.mirage.reverie.data.model.User
 import com.mirage.reverie.navigation.AllDiariesRoute
 import com.mirage.reverie.navigation.AuthenticationRoute
 import com.mirage.reverie.navigation.CreateDiaryRoute
+import com.mirage.reverie.navigation.CreateTimeCapsuleRoute
 import com.mirage.reverie.navigation.DiariesRoute
 import com.mirage.reverie.navigation.DiaryRoute
 import com.mirage.reverie.navigation.ViewDiaryRoute
@@ -72,6 +73,7 @@ import com.mirage.reverie.navigation.ProfileRoute
 import com.mirage.reverie.navigation.AllTimeCapsulesRoute
 import com.mirage.reverie.navigation.ViewProfileRoute
 import com.mirage.reverie.ui.screens.AllDiariesScreen
+import com.mirage.reverie.ui.screens.CreateTimeCapsuleScreen
 import com.mirage.reverie.ui.screens.EditDiaryPageScreen
 import com.mirage.reverie.ui.screens.EditDiaryScreen
 import com.mirage.reverie.ui.screens.EditProfileScreen
@@ -325,7 +327,22 @@ fun MainComposable(
                     }
                     composable<AllTimeCapsulesRoute> {
                         bottomBarVisibility = true
-                        AllTimeCapsulesScreen()
+                        AllTimeCapsulesScreen(
+                            // onNavigateToCreateTimeCapsule = { navController.navigate(CreateTimeCapsuleRoute) }
+                        )
+                    }
+
+                    composable<CreateTimeCapsuleRoute> { backStackEntry ->
+                        bottomBarVisibility = true
+                        CreateTimeCapsuleScreen(
+                            onComplete = { timeCapsule ->
+                                navController.previousBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("timeCapsule", timeCapsule)
+
+                                navController.popBackStack()
+                            }
+                        )
                     }
 
                     navigation<ProfileRoute>(startDestination = ViewProfileRoute::class) {
