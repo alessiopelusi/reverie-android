@@ -1,21 +1,11 @@
 package com.mirage.reverie
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Icon
@@ -37,43 +27,29 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.mirage.reverie.ui.theme.ReverieTheme
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ExitToApp
 import androidx.compose.material.icons.automirrored.outlined.Help
 import androidx.compose.material.icons.automirrored.rounded.LibraryBooks
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.ExitToApp
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.MailOutline
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.navigation
 import com.google.firebase.auth.FirebaseAuth
 import com.mirage.reverie.data.model.Diary
@@ -93,7 +69,7 @@ import com.mirage.reverie.navigation.LoginRoute
 import com.mirage.reverie.navigation.ResetPasswordRoute
 import com.mirage.reverie.navigation.SignupRoute
 import com.mirage.reverie.navigation.ProfileRoute
-import com.mirage.reverie.navigation.TimeCapsuleRoute
+import com.mirage.reverie.navigation.AllTimeCapsulesRoute
 import com.mirage.reverie.navigation.ViewProfileRoute
 import com.mirage.reverie.ui.screens.AllDiariesScreen
 import com.mirage.reverie.ui.screens.EditDiaryPageScreen
@@ -104,11 +80,7 @@ import com.mirage.reverie.ui.screens.ViewDiaryScreen
 import com.mirage.reverie.ui.screens.ProfileScreen
 import com.mirage.reverie.ui.screens.ResetPasswordScreen
 import com.mirage.reverie.ui.screens.SignupScreen
-import com.mirage.reverie.ui.screens.TimeCapsuleScreen
-import com.mirage.reverie.ui.theme.PaperColor
-import com.mirage.reverie.viewmodel.AllDiariesUiState
-import com.mirage.reverie.viewmodel.ModalNavigationDrawerUiState
-import com.mirage.reverie.viewmodel.ModalNavigationDrawerViewModel
+import com.mirage.reverie.ui.screens.AllTimeCapsulesScreen
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -351,9 +323,9 @@ fun MainComposable(
                             )
                         }
                     }
-                    composable<TimeCapsuleRoute> {
+                    composable<AllTimeCapsulesRoute> {
                         bottomBarVisibility = true
-                        TimeCapsuleScreen()
+                        AllTimeCapsulesScreen()
                     }
 
                     navigation<ProfileRoute>(startDestination = ViewProfileRoute::class) {
@@ -438,7 +410,7 @@ fun CustomBottomBar(navController: NavController) {
 
     val topLevelRoutes = listOf(
         TopLevelRoute(stringResource(R.string.all_diaries), DiariesRoute, Icons.AutoMirrored.Rounded.LibraryBooks),
-        TopLevelRoute(stringResource(R.string.time_capsule), TimeCapsuleRoute, Icons.Rounded.MailOutline)
+        TopLevelRoute(stringResource(R.string.time_capsule), AllTimeCapsulesRoute, Icons.Rounded.MailOutline)
     )
 
     NavigationBar (

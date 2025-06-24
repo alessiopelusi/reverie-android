@@ -38,8 +38,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.mirage.reverie.ui.theme.PaperColor
 
-import com.mirage.reverie.viewmodel.TimeCapsuleUiState
-import com.mirage.reverie.viewmodel.TimeCapsuleViewModel
+import com.mirage.reverie.viewmodel.AllTimeCapsulesUiState
+import com.mirage.reverie.viewmodel.AllTimeCapsulesViewModel
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
@@ -50,22 +50,22 @@ import java.text.SimpleDateFormat
 
 
 @Composable
-fun TimeCapsuleScreen(
-    viewModel: TimeCapsuleViewModel = hiltViewModel()
+fun AllTimeCapsulesScreen(
+    viewModel: AllTimeCapsulesViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     when (uiState) {
-        is TimeCapsuleUiState.Loading -> CircularProgressIndicator()
-        is TimeCapsuleUiState.Success -> {
-            val timeCapsuleScheduledMap = (uiState as TimeCapsuleUiState.Success).timeCapsuleScheduledMap
-            val timeCapsuleScheduled = (uiState as TimeCapsuleUiState.Success).timeCapsuleScheduled
-            val timeCapsuleSentMap = (uiState as TimeCapsuleUiState.Success).timeCapsuleSentMap
-            val timeCapsuleSent = (uiState as TimeCapsuleUiState.Success).timeCapsuleSent
-            val timeCapsuleReceivedMap = (uiState as TimeCapsuleUiState.Success).timeCapsuleReceivedMap
-            val timeCapsuleReceived = (uiState as TimeCapsuleUiState.Success).timeCapsuleReceived
+        is AllTimeCapsulesUiState.Loading -> CircularProgressIndicator()
+        is AllTimeCapsulesUiState.Success -> {
+            val timeCapsuleScheduledMap = (uiState as AllTimeCapsulesUiState.Success).timeCapsuleScheduledMap
+            val timeCapsuleScheduled = (uiState as AllTimeCapsulesUiState.Success).timeCapsuleScheduled
+            val timeCapsuleSentMap = (uiState as AllTimeCapsulesUiState.Success).timeCapsuleSentMap
+            val timeCapsuleSent = (uiState as AllTimeCapsulesUiState.Success).timeCapsuleSent
+            val timeCapsuleReceivedMap = (uiState as AllTimeCapsulesUiState.Success).timeCapsuleReceivedMap
+            val timeCapsuleReceived = (uiState as AllTimeCapsulesUiState.Success).timeCapsuleReceived
 
-            val buttonElements = (uiState as TimeCapsuleUiState.Success).buttonElements
-            val buttonState = (uiState as TimeCapsuleUiState.Success).buttonState
+            val buttonElements = (uiState as AllTimeCapsulesUiState.Success).buttonElements
+            val buttonState = (uiState as AllTimeCapsulesUiState.Success).buttonState
 
             LazyColumn(
                 modifier = Modifier
@@ -201,7 +201,7 @@ fun TimeCapsuleScreen(
                 }
             }
         }
-        is TimeCapsuleUiState.Error -> Text(text = "Error: ${(uiState as TimeCapsuleUiState.Error).exception.message}")
+        is AllTimeCapsulesUiState.Error -> Text(text = "Error: ${(uiState as AllTimeCapsulesUiState.Error).exception.message}")
     }
 }
 

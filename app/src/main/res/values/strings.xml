@@ -22,4 +22,5 @@
     <string name="save">Save</string>
     <string name="create_diary_message">You are creating your diary!</string>
     <string name="edit_diary_message">You are editing your diary!</string>
+    <string name="content">Content</string>
 </resources>

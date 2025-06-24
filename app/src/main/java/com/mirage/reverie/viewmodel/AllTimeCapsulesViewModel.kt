@@ -18,13 +18,13 @@ enum class TimeCapsuleButtonState {
     SCHEDULED, SENT, RECEIVED // puoi aggiungere altre sezioni
 }
 
-sealed class TimeCapsuleUiState {
-    data object Loading : TimeCapsuleUiState()
+sealed class AllTimeCapsulesUiState {
+    data object Loading : AllTimeCapsulesUiState()
     data class Success(
         val sentTimeCapsule: Map<String, TimeCapsule>, // capsule create dall'utente, scadute(inviate) e non scadute(programmate)
         val receivedTimeCapsule: Map<String, TimeCapsule>, // capsule destinate all'utente (scadute e non)
         val buttonState: TimeCapsuleButtonState = TimeCapsuleButtonState.SCHEDULED,
-    ) : TimeCapsuleUiState() {
+    ) : AllTimeCapsulesUiState() {
         val timeCapsuleScheduledMap: Map<String, TimeCapsule> // capsule create dall'utente ma non ancora inviate in quanto la scadenza ancora non arriva
             get() = sentTimeCapsule.filter { it.value.deadline < Timestamp.now() }
 
@@ -46,15 +46,15 @@ sealed class TimeCapsuleUiState {
         val buttonElements: List<TimeCapsuleButtonState>
             get() = TimeCapsuleButtonState.entries
     }
-    data class Error(val exception: Throwable) : TimeCapsuleUiState()
+    data class Error(val exception: Throwable) : AllTimeCapsulesUiState()
 }
 
 @HiltViewModel
-class TimeCapsuleViewModel @Inject constructor(
+class AllTimeCapsulesViewModel @Inject constructor(
     private val repository: TimeCapsuleRepository,
     private val auth: FirebaseAuth
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow<TimeCapsuleUiState>(TimeCapsuleUiState.Loading)
+    private val _uiState = MutableStateFlow<AllTimeCapsulesUiState>(AllTimeCapsulesUiState.Loading)
     val uiState = _uiState.asStateFlow()
 
     init {
@@ -69,17 +69,17 @@ class TimeCapsuleViewModel @Inject constructor(
                 val receivedTimeCapsules = repository.getUserReceivedTimeCapsules(userId)
                 val sentTimeCapsulesMap = sentTimeCapsules.associateBy{sentTimeCapsule -> sentTimeCapsule.id}
                 val receivedTimeCapsulesMap = receivedTimeCapsules.associateBy{receivedTimeCapsule -> receivedTimeCapsule.id}
-                _uiState.value = TimeCapsuleUiState.Success(sentTimeCapsulesMap, receivedTimeCapsulesMap)
+                _uiState.value = AllTimeCapsulesUiState.Success(sentTimeCapsulesMap, receivedTimeCapsulesMap)
             }
         }
     }
 
     fun onButtonStateUpdate(newButtonState: TimeCapsuleButtonState) {
         val state = uiState.value
-        if (state !is TimeCapsuleUiState.Success) return
+        if (state !is AllTimeCapsulesUiState.Success) return
 
         _uiState.update {
-            TimeCapsuleUiState.Success(
+            AllTimeCapsulesUiState.Success(
                 state.sentTimeCapsule,
                 state.receivedTimeCapsule,
                 newButtonState,

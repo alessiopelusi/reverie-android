@@ -6,34 +6,32 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.mirage.reverie.R
-import com.mirage.reverie.data.model.DiaryPage
+import com.mirage.reverie.data.model.TimeCapsule
 import com.mirage.reverie.ui.components.ContentTextField
-import com.mirage.reverie.viewmodel.EditDiaryPageUiState
-import com.mirage.reverie.viewmodel.EditDiaryPageViewModel
+import com.mirage.reverie.viewmodel.CreateTimeCapsuleUiState
+import com.mirage.reverie.viewmodel.CreateTimeCapsuleViewModel
+import com.mirage.reverie.viewmodel.ViewTimeCapsuleUiState
+import com.mirage.reverie.viewmodel.ViewTimeCapsuleViewModel
 
 @Composable
-fun EditDiaryPageScreen(
-    onComplete: (DiaryPage) -> Unit,
-    viewModel: EditDiaryPageViewModel = hiltViewModel()
+fun CreateTimeCapsuleScreen(
+    onComplete: (TimeCapsule) -> Unit,
+    viewModel: CreateTimeCapsuleViewModel = hiltViewModel()
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val formState by viewModel.formState.collectAsStateWithLifecycle()
 
     when(uiState) {
-        is EditDiaryPageUiState.Loading -> CircularProgressIndicator()
-        is EditDiaryPageUiState.Idle, is EditDiaryPageUiState.Error -> {
-            val page = formState.page
-
+        is CreateTimeCapsuleUiState.Loading -> CircularProgressIndicator()
+        is CreateTimeCapsuleUiState.Idle, is CreateTimeCapsuleUiState.Error -> {
+            val timeCapsule = formState.timeCapsule
 
             Column (
                 modifier = Modifier.padding(0.dp, 20.dp),
@@ -44,17 +42,17 @@ fun EditDiaryPageScreen(
                     modifier = Modifier.padding(8.dp),
                     text = "You are editing your diary!",
                 )
-                ContentTextField (page.content, onUpdateContent = viewModel::onUpdateContent)
+                ContentTextField (timeCapsule.content, onUpdateContent = viewModel::onUpdateContent)
 
                 Button(
-                    onClick = viewModel::onUpdatePage
+                    onClick = viewModel::onUpdateTimeCapsule
                 ) {
                     Text("Modifica")
                 }
             }
         }
-        is EditDiaryPageUiState.Success -> {
-            onComplete(formState.page)
+        is CreateTimeCapsuleUiState.Success -> {
+            onComplete(formState.timeCapsule)
         }
     }
 }
