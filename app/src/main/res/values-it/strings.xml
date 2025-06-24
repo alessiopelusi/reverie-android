@@ -15,5 +15,6 @@
     <string name="save">Salva</string>
     <string name="create_diary_message">Stai creando il tuo diario!</string>
     <string name="edit_diary_message">Stai modificando il tuo diario!</string>
+    <string name="create_time_capsule_message">Stai creando la tua capsula del tempo!</string>
     <string name="content">Contenuto</string>
 </resources>

@@ -22,5 +22,6 @@
     <string name="save">Save</string>
     <string name="create_diary_message">You are creating your diary!</string>
     <string name="edit_diary_message">You are editing your diary!</string>
+    <string name="create_time_capsule_message">You are creating your time capsule!</string>
     <string name="content">Content</string>
 </resources>
