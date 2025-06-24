@@ -11,7 +11,7 @@ data class TimeCapsule (
     @get:Exclude val id: String = "",
     val userId: String = "",
     val title: String = "",
-    val description: String = "",
+    val content: String = "",
     val deadline: Timestamp = Timestamp.now(), // es. 2 anni
 
     val emails: List<String> = listOf(), // email a cui verrà spedito il link
