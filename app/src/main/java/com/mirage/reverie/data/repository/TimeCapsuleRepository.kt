@@ -38,7 +38,7 @@ class TimeCapsuleRepositoryImpl @Inject constructor(
 
     override suspend fun getTimeCapsule(timeCapsuleId: String): TimeCapsule {
         return storageService.getTimeCapsule(timeCapsuleId)
-            ?: throw NoSuchElementException("Diary with ID $timeCapsuleId does not exists")
+            ?: throw NoSuchElementException("TimeCapsule with ID $timeCapsuleId does not exists")
     }
 
 }

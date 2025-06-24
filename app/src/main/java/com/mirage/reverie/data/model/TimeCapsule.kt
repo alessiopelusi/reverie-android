@@ -1,8 +1,10 @@
 package com.mirage.reverie.data.model
 
+import android.os.Parcelable
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.Exclude
 import kotlinx.datetime.LocalDateTime
+import kotlinx.parcelize.Parcelize
 import java.time.Period
 
 data class TimeCapsule (
@@ -10,8 +12,7 @@ data class TimeCapsule (
     val userId: String = "",
     val title: String = "",
     val description: String = "",
-    val type: String = "", // es. Lettera al futuro me, Cassetta dei ricordi
-    val deadline: Timestamp, // es. 2 anni
+    val deadline: Timestamp = Timestamp.now(), // es. 2 anni
 
     val emails: List<String> = listOf(), // email a cui verrà spedito il link
     val phones: List<String> = listOf(), // numeri di telefono a cui verrà spedito il link
@@ -21,10 +22,3 @@ data class TimeCapsule (
     val creationDate: Timestamp = Timestamp.now() // data di creazione della capsula
 )
 
-enum class DeadlineOption(val years: Int) {
-    ONE_YEAR(1),
-    TWO_YEARS(2),
-    THREE_YEARS(3),
-    FIVE_YEARS(5),
-    TEN_YEARS(10);
-}

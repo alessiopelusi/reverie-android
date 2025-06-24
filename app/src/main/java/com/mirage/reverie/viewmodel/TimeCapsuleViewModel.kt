@@ -50,11 +50,10 @@ class TimeCapsuleViewModel @Inject constructor(
     private fun onStart() {
         auth.uid?.let { userId ->
             viewModelScope.launch {
-
                 val sentTimeCapsules = repository.getUserSentTimeCapsules(userId)
                 val receivedTimeCapsules = repository.getUserReceivedTimeCapsules(userId)
                 val sentTimeCapsulesMap = sentTimeCapsules.associateBy{sentTimeCapsule -> sentTimeCapsule.id}
-                val receivedTimeCapsulesMap = sentTimeCapsules.associateBy{receivedTimeCapsule -> receivedTimeCapsule.id}
+                val receivedTimeCapsulesMap = receivedTimeCapsules.associateBy{receivedTimeCapsule -> receivedTimeCapsule.id}
                 _uiState.value = TimeCapsuleUiState.Success(sentTimeCapsulesMap, receivedTimeCapsulesMap)
             }
         }
