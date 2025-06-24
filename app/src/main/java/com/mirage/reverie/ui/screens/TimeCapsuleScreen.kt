@@ -1,6 +1,7 @@
 package com.mirage.reverie.ui.screens
 
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -12,7 +13,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
@@ -45,6 +50,12 @@ import com.mirage.reverie.viewmodel.AllDiariesUiState
 import com.mirage.reverie.viewmodel.TimeCapsuleUiState
 import com.mirage.reverie.viewmodel.TimeCapsuleViewModel
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.ui.layout.ContentScale
+import com.mirage.reverie.ui.theme.Purple80
+import com.mirage.reverie.viewmodel.ButtonState
+import com.mirage.reverie.viewmodel.TimeCapsuleButtonState
 
 
 @Composable
@@ -58,6 +69,9 @@ fun TimeCapsuleScreen(
             val timeCapsuleScheduled = (uiState as TimeCapsuleUiState.Success).timeCapsuleScheduled
             val timeCapsuleSent = (uiState as TimeCapsuleUiState.Success).timeCapsuleSent
             val timeCapsuleReceived = (uiState as TimeCapsuleUiState.Success).timeCapsuleReceived
+
+            val buttonElements = (uiState as TimeCapsuleUiState.Success).buttonElements
+            val buttonState = (uiState as TimeCapsuleUiState.Success).buttonState
 
             LazyColumn(
                 modifier = Modifier
@@ -111,6 +125,75 @@ fun TimeCapsuleScreen(
                                 }
                             }
                         }
+                    }
+                }
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        val cornerRadius = 16.dp
+
+                        buttonElements.forEachIndexed { index, item ->
+                            OutlinedButton(
+                                onClick = {
+                                    viewModel.onButtonStateUpdate(item)
+                                },
+                                shape = when (index) {
+                                    0 -> RoundedCornerShape(
+                                        topStart = cornerRadius,
+                                        topEnd = 0.dp,
+                                        bottomStart = cornerRadius,
+                                        bottomEnd = 0.dp
+                                    )
+
+                                    buttonElements.size - 1 -> RoundedCornerShape(
+                                        topStart = 0.dp,
+                                        topEnd = cornerRadius,
+                                        bottomStart = 0.dp,
+                                        bottomEnd = cornerRadius
+                                    )
+
+                                    else -> RoundedCornerShape(
+                                        topStart = 0.dp,
+                                        topEnd = 0.dp,
+                                        bottomStart = 0.dp,
+                                        bottomEnd = 0.dp
+                                    )
+                                },
+                                border = BorderStroke(
+                                    1.dp, if (buttonState == item) {
+                                        Purple80
+                                    } else {
+                                        Purple80.copy(alpha = 0.75f)
+                                    }
+                                ),
+                                colors = if (buttonState == item) {
+                                    ButtonDefaults.outlinedButtonColors(
+                                        containerColor = Purple80.copy(alpha = 0.1f),
+                                        contentColor = Purple80
+                                    )
+                                } else {
+                                    ButtonDefaults.outlinedButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.background,
+                                        contentColor = Purple80
+                                    )
+                                }
+                            ) {
+                                Text(item.toString())
+                            }
+
+                        }
+                    }
+                }
+                when(buttonState) {
+                    TimeCapsuleButtonState.SCHEDULED -> {
+                    }
+                    TimeCapsuleButtonState.SENT -> {
+                    }
+                    TimeCapsuleButtonState.RECEIVED -> {
                     }
                 }
             }
