@@ -8,7 +8,9 @@
     <string name="email" translatable="false">Email</string>
     <string name="username" translatable="false">Username</string>
     <string name="password" translatable="false">Password</string>
+    <string name="confirm_password">Confirm Password</string>
     <string name="login" translatable="false">Login</string>
+    <string name="logout" translatable="false">Logout</string>
     <string name="signup" translatable="false">Signup</string>
     <string name="title">Title</string>
     <string name="page">Page</string>
@@ -24,4 +26,25 @@
     <string name="edit_diary_message">You are editing your diary!</string>
     <string name="create_time_capsule_message">You are creating your time capsule!</string>
     <string name="content">Content</string>
+    <string name="your_profile">Your profile</string>
+    <string name="name">Name</string>
+    <string name="surname">Surname</string>
+    <string name="edit_profile">Edit profile</string>
+    <string name="email_mandatory">Email is mandatory</string>
+    <string name="username_mandatory">Username is mandatory</string>
+    <string name="name_mandatory">Name is mandatory</string>
+    <string name="surname_mandatory">Surname is mandatory</string>
+    <string name="title_mandatory">Title is mandatory</string>
+    <string name="passwords_dont_match">The two passwords don\'t match</string>
+    <string name="passwords_lenght">Password needs to have at least 8 characters</string>
+    <string name="send_reset_password_email">Send reset password email</string>
+    <string name="go_back_to_login">Go back to login</string>
+    <string name="reset_password" translatable="false">Reset password</string>
+    <string name="reset_password_email_sent">Reset password email sent</string>
+    <string name="reset_password_email_error">Error sending reset password email</string>
+    <string name="go_to_signup">You don\'t have an account? Signup</string>
+    <string name="forgot_password">You forgot your password?</string>
+    <string name="already_have_account">Do you already have an account? Login</string>
+    <string name="signup_successful">Signup successful. Go back to login</string>
+    <string name="signup_error">Signup error</string>
 </resources>

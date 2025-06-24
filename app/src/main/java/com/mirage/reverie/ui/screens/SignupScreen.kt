@@ -19,9 +19,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mirage.reverie.R
-import com.mirage.reverie.ui.components.EmailField
+import com.mirage.reverie.ui.components.Field
 import com.mirage.reverie.ui.components.PasswordField
-import com.mirage.reverie.ui.components.UsernameField
 import com.mirage.reverie.viewmodel.SignupUiState
 import com.mirage.reverie.viewmodel.SignupViewModel
 
@@ -51,28 +50,40 @@ fun SignupScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                UsernameField(inputState.username, viewModel::onUsernameChange)
+                Field(inputState.username, viewModel::onUsernameChange, R.string.username)
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                EmailField(inputState.email, viewModel::onEmailChange)
+                Field(inputState.email, viewModel::onEmailChange, R.string.email)
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Field(inputState.name, viewModel::onNameChange, R.string.name)
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Field(inputState.surname, viewModel::onSurnameChange, R.string.surname)
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 PasswordField(inputState.password, viewModel::onPasswordChange)
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                PasswordField(inputState.confirmPassword, viewModel::onConfirmPasswordChange, placeholder = R.string.confirm_password)
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
                     onClick = viewModel::onSignup
                 ) {
-                    Text("Signup")
+                    Text(stringResource(R.string.signup))
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 TextButton(onClick = onNavigateToLogin) {
-                    Text("Hai già un account? Effettua il login")
+                    Text(stringResource(R.string.already_have_account))
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))

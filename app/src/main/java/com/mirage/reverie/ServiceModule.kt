@@ -6,6 +6,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import com.mirage.reverie.data.repository.AccountRepository
+import com.mirage.reverie.data.repository.AccountRepositoryImpl
 import com.mirage.reverie.data.repository.DiaryRepository
 import com.mirage.reverie.data.repository.DiaryRepositoryImpl
 import com.mirage.reverie.data.repository.TimeCapsuleRepository
@@ -44,8 +46,11 @@ object ServiceModule {
 
     @Provides
     @Singleton
-    fun provideAccountService(auth: FirebaseAuth): AccountService {
-        return AccountServiceImpl(auth)
+    fun provideAccountService(
+        storageService: StorageService,
+        auth: FirebaseAuth
+    ): AccountRepository {
+        return AccountRepositoryImpl(storageService, auth)
     }
 
     // We use Provider to break circular dependency
@@ -99,5 +104,4 @@ object ServiceModule {
     fun provideStorage(): Storage {
         return supabase.storage
     }
-
 }

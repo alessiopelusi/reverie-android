@@ -17,4 +17,25 @@
     <string name="edit_diary_message">Stai modificando il tuo diario!</string>
     <string name="create_time_capsule_message">Stai creando la tua capsula del tempo!</string>
     <string name="content">Contenuto</string>
+    <string name="your_profile">Il tuo profilo</string>
+    <string name="name">Nome</string>
+    <string name="surname">Cognome</string>
+    <string name="edit_profile">Modifica profilo</string>
+    <string name="confirm_password">Conferma Password</string>
+    <string name="email_mandatory">L\'email è obbligatoria</string>
+    <string name="username_mandatory">Lo username è obbligatorio</string>
+    <string name="name_mandatory">Il nome è obbligatorio</string>
+    <string name="surname_mandatory">Il cognome è obbligatorio</string>
+    <string name="title_mandatory">Il titolo è obbligatorio</string>
+    <string name="passwords_dont_match">Le due password non corrispondono</string>
+    <string name="passwords_lenght">La password deve avere almeno 8 caratteri</string>
+    <string name="send_reset_password_email">Invia email di reset password</string>
+    <string name="go_back_to_login">Torna al login</string>
+    <string name="reset_password_email_sent">Email per reset password inviata</string>
+    <string name="reset_password_email_error">Errore nell\'invio dell\'email</string>
+    <string name="go_to_signup">Non hai un account? Registrati</string>
+    <string name="forgot_password">Hai dimenticato la password?</string>
+    <string name="already_have_account">Hai già un account? Effettua il login</string>
+    <string name="signup_successful">Registrazione avvenuta con successo. Torna al login.</string>
+    <string name="signup_error">Errore di registrazione</string>
 </resources>

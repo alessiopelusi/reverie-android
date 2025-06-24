@@ -1,7 +1,10 @@
 package com.mirage.reverie.viewmodel
 
+import android.content.Context
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
-import com.mirage.reverie.AccountService
+import com.mirage.reverie.R
+import com.mirage.reverie.data.repository.AccountRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,7 +24,8 @@ sealed class ResetPasswordUiState {
 
 @HiltViewModel
 class ResetPasswordViewModel @Inject constructor(
-    private val accountService: AccountService
+    private val accountService: AccountRepository,
+    private val context: Context
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<ResetPasswordUiState>(ResetPasswordUiState.Idle)
     val uiState = _uiState.asStateFlow()
@@ -40,15 +44,16 @@ class ResetPasswordViewModel @Inject constructor(
 
         val state = inputState.value
         if (state.email.isBlank()) {
-            _uiState.update { ResetPasswordUiState.Error("L'Email è obbligatoria") }
+            _uiState.update { ResetPasswordUiState.Error(context.getString(R.string.email_mandatory)) }
+            return
         }
 
         accountService.sendPasswordResetEmail(state.email) { exception ->
             if (exception == null) {
-                val infoMessage = "Email per reset password inviata"
+                val infoMessage = context.getString(R.string.reset_password_email_sent)
                 _uiState.update { ResetPasswordUiState.Success(infoMessage) }
             } else {
-                val errorMessage = exception.message ?: "Errore nell'invio dell'email"
+                val errorMessage = exception.message ?: context.getString(R.string.reset_password_email_error)
                 _uiState.update { ResetPasswordUiState.Error(errorMessage) }
             }
         }

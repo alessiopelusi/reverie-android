@@ -91,7 +91,7 @@ class EditDiaryViewModel @Inject constructor(
 
         val state = formState.value
         if (state.diary.title.isBlank()) {
-            _uiState.update { EditDiaryUiState.Error("Il titolo è obbligatorio") }
+            _uiState.update { EditDiaryUiState.Error(context.getString(R.string.title_mandatory)) }
             return
         }
 

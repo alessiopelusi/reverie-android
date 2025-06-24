@@ -8,13 +8,12 @@ import androidx.compose.ui.res.stringResource
 import com.mirage.reverie.R
 
 @Composable
-fun UsernameField(value: String, onNewValue: (String) -> Unit, modifier: Modifier = Modifier) {
+fun Field(value: String, onNewValue: (String) -> Unit, placeholder: Int, modifier: Modifier = Modifier) {
     OutlinedTextField(
         singleLine = true,
         modifier = modifier,
         value = value,
         onValueChange = { onNewValue(it) },
-        placeholder = { Text(stringResource(R.string.username)) },
-        //leadingIcon = { [...] }
+        placeholder = { Text(stringResource(placeholder)) },
     )
 }

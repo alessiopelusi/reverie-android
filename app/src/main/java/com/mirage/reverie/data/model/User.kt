@@ -8,6 +8,7 @@ import kotlinx.parcelize.Parcelize
 data class User(
     @get:Exclude val id: String = "",
     val email: String = "",
+    val username: String = "",
     val name: String = "",
     val surname: String = "",
     val diaryIds: List<String> = listOf(),

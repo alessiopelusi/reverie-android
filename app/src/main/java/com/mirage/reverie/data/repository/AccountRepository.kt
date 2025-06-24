@@ -1,7 +1,8 @@
-package com.mirage.reverie
+package com.mirage.reverie.data.repository
 
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
+import com.mirage.reverie.StorageService
 import com.mirage.reverie.data.model.User
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -9,23 +10,24 @@ import kotlinx.coroutines.flow.callbackFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
-interface AccountService {
+interface AccountRepository {
     val currentUserId: String
     val hasUser: Boolean
     val currentUser: Flow<User>
 
     fun createAnonymousAccount(onResult: (Throwable?) -> Unit)
     fun authenticate(email: String, password: String, onResult: (Throwable?) -> Unit)
-    fun createAccount(email: String, password: String, onResult: (Throwable?) -> Unit)
+    suspend fun createAccount(username: String, email: String, password: String, onResult: (Throwable?) -> Unit)
     fun sendPasswordResetEmail(email: String, onResult: (Throwable?) -> Unit)
     fun linkAccount(email: String, password: String, onResult: (Throwable?) -> Unit)
 }
 
 
 @Singleton
-class AccountServiceImpl @Inject constructor(
+class AccountRepositoryImpl @Inject constructor(
+    private val storageService: StorageService,
     private val auth: FirebaseAuth
-) : AccountService {
+) : AccountRepository {
     override val currentUserId: String
         get() = auth.currentUser?.uid.orEmpty()
 
@@ -52,9 +54,16 @@ class AccountServiceImpl @Inject constructor(
             .addOnCompleteListener { onResult(it.exception) }
     }
 
-    override fun createAccount(email: String, password: String, onResult: (Throwable?) -> Unit) {
+    override suspend fun createAccount(username: String, email: String, password: String, onResult: (Throwable?) -> Unit) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { onResult(it.exception) }
+
+        storageService.saveUser(
+            User(
+                email = email,
+                username = username
+            )
+        )
     }
 
     override fun sendPasswordResetEmail(email: String, onResult: (Throwable?) -> Unit) {

@@ -19,7 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mirage.reverie.R
-import com.mirage.reverie.ui.components.EmailField
+import com.mirage.reverie.ui.components.Field
 import com.mirage.reverie.ui.components.PasswordField
 import com.mirage.reverie.viewmodel.LoginUiState
 import com.mirage.reverie.viewmodel.LoginViewModel
@@ -51,7 +51,7 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                EmailField(inputState.email, viewModel::onEmailChange)
+                Field(inputState.email, viewModel::onEmailChange, R.string.email)
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -62,19 +62,19 @@ fun LoginScreen(
                 Button(
                     onClick = viewModel::onLogin
                 ) {
-                    Text("Login")
+                    Text(stringResource(R.string.login))
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 TextButton(onClick = onNavigateToRegister) {
-                    Text("Non hai un account? Registrati")
+                    Text(stringResource(R.string.go_to_signup))
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 TextButton(onClick = onNavigateToResetPassword) {
-                    Text("Hai dimenticato la password?")
+                    Text(stringResource(R.string.forgot_password))
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))

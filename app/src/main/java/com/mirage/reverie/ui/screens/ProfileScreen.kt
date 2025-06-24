@@ -14,10 +14,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mirage.reverie.R
 import com.mirage.reverie.data.model.User
 import com.mirage.reverie.viewmodel.ProfileUiState
 import com.mirage.reverie.viewmodel.ProfileViewModel
@@ -45,7 +47,7 @@ fun ProfileScreen(
             ) {
 
                 Text(
-                    text = "Il tuo profilo",
+                    text = stringResource(R.string.your_profile),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -53,12 +55,17 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 Text(
-                    text = "Nome: ${profile.name}",
+                    text = "${stringResource(R.string.username)}: ${profile.username}",
                     style = MaterialTheme.typography.bodyLarge
                 )
 
                 Text(
-                    text = "Cognome: ${profile.surname}",
+                    text = "${stringResource(R.string.name)}: ${profile.name}",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+
+                Text(
+                    text = "${stringResource(R.string.surname)}: ${profile.surname}",
                     style = MaterialTheme.typography.bodyLarge
                 )
 
@@ -67,13 +74,13 @@ fun ProfileScreen(
                 Button( onClick = {
                     onEditProfile(profile.id)
                 }) {
-                    Text("Modifica profilo")
+                    Text(stringResource(R.string.edit_profile))
                 }
 
                 Button( onClick = {
                     onLogout(profile.id)
                 }) {
-                    Text("Logout")
+                    Text(stringResource(R.string.logout))
                 }
             }
         }

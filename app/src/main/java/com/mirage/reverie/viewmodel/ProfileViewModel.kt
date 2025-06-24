@@ -49,5 +49,4 @@ class ProfileViewModel @Inject constructor(
         if (profile != null)
             _uiState.value = ProfileUiState.Success(profile)
     }
-
 }
