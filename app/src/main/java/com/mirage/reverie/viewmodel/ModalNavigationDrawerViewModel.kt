@@ -54,7 +54,7 @@ class ModalNavigationDrawerViewModel @Inject constructor(
             viewModelScope.launch {
                 runCatching {
                     val diary = Diary(
-                        userId = userId,
+                        uid = userId,
                         title = "Nuovo Diario",
                         description = "",
                         coverId = "MVl66divWlJIIGvaBFbw",

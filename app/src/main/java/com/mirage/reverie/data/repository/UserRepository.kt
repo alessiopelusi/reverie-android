@@ -1,33 +1,95 @@
 package com.mirage.reverie.data.repository
 
+import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.auth.FirebaseAuth
 import com.mirage.reverie.StorageService
 import com.mirage.reverie.data.model.User
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Provider
 
 interface UserRepository {
+    val currentUserId: String
+    val hasUser: Boolean
+    val currentUser: Flow<User>
+
+    fun createAnonymousAccount(onResult: (Throwable?) -> Unit)
+    fun authenticate(email: String, password: String, onResult: (Throwable?) -> Unit)
+    suspend fun createAccount(user: User, password: String): User?
+    fun sendPasswordResetEmail(email: String, onResult: (Throwable?) -> Unit)
+    fun linkAccount(email: String, password: String, onResult: (Throwable?) -> Unit)
+
     suspend fun getUser(userId: String): User
-    suspend fun saveUser(user: User): User
     suspend fun updateUser(user: User)
     suspend fun deleteUser(userId: String)
+    suspend fun isUsernameTaken(username: String): Boolean
 }
 
 
 // Using Hilt we inject a dependency (apiSevice)
 class UserRepositoryImpl @Inject constructor(
     private val storageService: StorageService,
-    private val diaryRepositoryProvider: Provider<DiaryRepository>
+    private val diaryRepositoryProvider: Provider<DiaryRepository>,
+    private val auth: FirebaseAuth
 ): UserRepository {
     private val diaryRepository
         get() = diaryRepositoryProvider.get()
 
+    override val currentUserId: String
+        get() = auth.currentUser?.uid.orEmpty()
+
+    override val hasUser: Boolean
+        get() = auth.currentUser != null
+
+    override val currentUser: Flow<User>
+        get() = callbackFlow {
+            val listener =
+                FirebaseAuth.AuthStateListener { auth ->
+                    this.trySend(auth.currentUser?.let { User(it.uid) } ?: User())
+                }
+            auth.addAuthStateListener(listener)
+            awaitClose { auth.removeAuthStateListener(listener) }
+        }
+
+    override fun createAnonymousAccount(onResult: (Throwable?) -> Unit) {
+        auth.signInAnonymously()
+            .addOnCompleteListener { onResult(it.exception) }
+    }
+
+    override fun authenticate(email: String, password: String, onResult: (Throwable?) -> Unit) {
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener { onResult(it.exception) }
+    }
+
+    override suspend fun createAccount(user: User, password: String): User? {
+        val userWithId = storageService.saveUser(user) ?: return null
+
+        try {
+            auth.createUserWithEmailAndPassword(user.email, password).await()
+            return userWithId
+        } catch (e: Exception) {
+            return null
+        }
+    }
+
+    override fun sendPasswordResetEmail(email: String, onResult: (Throwable?) -> Unit) {
+        auth.sendPasswordResetEmail(email)
+            .addOnCompleteListener { onResult(it.exception) }
+    }
+
+    override fun linkAccount(email: String, password: String, onResult: (Throwable?) -> Unit) {
+        val credential = EmailAuthProvider.getCredential(email, password)
+
+        auth.currentUser!!.linkWithCredential(credential)
+            .addOnCompleteListener { onResult(it.exception) }
+    }
+
     override suspend fun getUser(userId: String): User {
         return storageService.getUser(userId)
             ?: throw NoSuchElementException("User with ID $userId does not exists")
-    }
-
-    override suspend fun saveUser(user: User): User {
-        return storageService.saveUser(user)
     }
 
     override suspend fun updateUser(user: User) {
@@ -40,4 +102,7 @@ class UserRepositoryImpl @Inject constructor(
 
         storageService.deleteUser(userId)
     }
+
+    override suspend fun isUsernameTaken(username: String): Boolean =
+        storageService.isUsernameTaken(username)
 }

@@ -67,7 +67,7 @@ class EditDiaryViewModel @Inject constructor(
             } catch (e: kotlinx.serialization.MissingFieldException) {
                 auth.uid?.let {
                     diary = Diary(
-                        userId = it,
+                        uid = it,
                         title = context.getString(R.string.new_diary),
                         description = "",
                         coverId = "MVl66divWlJIIGvaBFbw",

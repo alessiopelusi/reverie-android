@@ -5,7 +5,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mirage.reverie.R
-import com.mirage.reverie.data.repository.AccountRepository
+import com.mirage.reverie.data.model.User
+import com.mirage.reverie.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,7 +33,7 @@ sealed class SignupUiState {
 
 @HiltViewModel
 class SignupViewModel @Inject constructor(
-    private val accountService: AccountRepository,
+    private val repository: UserRepository,
     private val context: Context
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<SignupUiState>(SignupUiState.Idle)
@@ -83,51 +84,61 @@ class SignupViewModel @Inject constructor(
         val state = inputState.value
         val error = StringBuilder()
 
-        if (state.email.isBlank()) {
-            _uiState.update { SignupUiState.Error() }
-            error.appendLine(context.getString(R.string.email_mandatory))
-        }
-        if (state.username.isBlank()) {
-            _uiState.update { SignupUiState.Error() }
-            error.appendLine(context.getString(R.string.username_mandatory))
-        }
-        if (state.name.isBlank()) {
-            _uiState.update { SignupUiState.Error() }
-            error.appendLine(context.getString(R.string.name_mandatory))
-        }
-        if (state.surname.isBlank()) {
-            _uiState.update { SignupUiState.Error() }
-            error.appendLine(context.getString(R.string.surname_mandatory))
-        }
-
-        if (state.password.length < 8) {
-            _uiState.update { SignupUiState.Error() }
-            error.appendLine(context.getString(R.string.passwords_lenght))
-        } else if (state.password != state.confirmPassword) {
-            _uiState.update { SignupUiState.Error() }
-            error.appendLine(context.getString(R.string.passwords_dont_match))
-        }
-
-        // if uiState is error, we save the error string and return
-        if (uiState.value is SignupUiState.Error) {
-            _uiState.update { SignupUiState.Error(error.toString()) }
-            return
-        }
-
-        // otherwise we save the profile and go back to login
-
         viewModelScope.launch {
-            accountService.createAccount(
-                state.username,
-                state.email,
+
+            if (state.username.isBlank()) {
+                _uiState.update { SignupUiState.Error() }
+                error.appendLine(context.getString(R.string.username_mandatory))
+            } else if (repository.isUsernameTaken(state.username)) {
+                _uiState.update { SignupUiState.Error() }
+                error.appendLine(context.getString(R.string.username_already_taken))
+            }
+
+            if (state.email.isBlank()) {
+                _uiState.update { SignupUiState.Error() }
+                error.appendLine(context.getString(R.string.email_mandatory))
+            }
+
+            if (state.name.isBlank()) {
+                _uiState.update { SignupUiState.Error() }
+                error.appendLine(context.getString(R.string.name_mandatory))
+            }
+
+            if (state.surname.isBlank()) {
+                _uiState.update { SignupUiState.Error() }
+                error.appendLine(context.getString(R.string.surname_mandatory))
+            }
+
+            if (state.password.length < 8) {
+                _uiState.update { SignupUiState.Error() }
+                error.appendLine(context.getString(R.string.passwords_lenght))
+            } else if (state.password != state.confirmPassword) {
+                _uiState.update { SignupUiState.Error() }
+                error.appendLine(context.getString(R.string.passwords_dont_match))
+            }
+
+
+            // if uiState is error, we save the error string and return
+            if (uiState.value is SignupUiState.Error) {
+                _uiState.update { SignupUiState.Error(error.toString()) }
+                return@launch
+            }
+
+            // otherwise we save the profile and go back to login
+            val user = repository.createAccount(
+                User(
+                    email = state.email,
+                    username = state.username,
+                    name = state.name,
+                    surname = state.surname,
+                ),
                 state.password
-            ) { exception ->
-                if (exception == null) {
-                    _uiState.update { SignupUiState.Success(context.getString(R.string.signup_successful)) }
-                } else {
-                    val errorMessage = exception.message ?: context.getString(R.string.signup_error)
-                    _uiState.update { SignupUiState.Error(errorMessage) }
-                }
+            )
+
+            if (user == null) {
+                _uiState.update { SignupUiState.Error(context.getString(R.string.signup_error)) }
+            } else {
+                _uiState.update { SignupUiState.Success(context.getString(R.string.signup_successful)) }
             }
         }
     }

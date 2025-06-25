@@ -1,10 +1,9 @@
 package com.mirage.reverie.viewmodel
 
 import android.content.Context
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
 import com.mirage.reverie.R
-import com.mirage.reverie.data.repository.AccountRepository
+import com.mirage.reverie.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,7 +23,7 @@ sealed class ResetPasswordUiState {
 
 @HiltViewModel
 class ResetPasswordViewModel @Inject constructor(
-    private val accountService: AccountRepository,
+    private val repository: UserRepository,
     private val context: Context
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<ResetPasswordUiState>(ResetPasswordUiState.Idle)
@@ -48,7 +47,7 @@ class ResetPasswordViewModel @Inject constructor(
             return
         }
 
-        accountService.sendPasswordResetEmail(state.email) { exception ->
+        repository.sendPasswordResetEmail(state.email) { exception ->
             if (exception == null) {
                 val infoMessage = context.getString(R.string.reset_password_email_sent)
                 _uiState.update { ResetPasswordUiState.Success(infoMessage) }

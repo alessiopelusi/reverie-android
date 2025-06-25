@@ -73,7 +73,7 @@ class DiaryRepositoryImpl @Inject constructor(
         savePage(DiaryPage(diaryId = savedDiary.id))
 
         // add diary to current user
-        val user = userRepository.getUser(diary.userId)
+        val user = userRepository.getUser(diary.uid)
         val diaryIds = user.diaryIds.toMutableList()
         diaryIds.add(savedDiary.id)
         userRepository.updateUser(user.copy(diaryIds = diaryIds))
@@ -90,7 +90,7 @@ class DiaryRepositoryImpl @Inject constructor(
 
         diary.pageIds.forEach { pageId -> deletePage(pageId) }
 
-        val user = userRepository.getUser(diary.userId)
+        val user = userRepository.getUser(diary.uid)
         val diaryIds = user.diaryIds.toMutableList()
         diaryIds.remove(diaryId)
 

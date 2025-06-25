@@ -10,6 +10,7 @@ import com.mirage.reverie.data.model.DiaryPage
 import com.mirage.reverie.data.model.DiarySubPage
 import com.mirage.reverie.data.model.TimeCapsule
 import com.mirage.reverie.data.model.User
+import com.mirage.reverie.data.model.Username
 import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.storage.upload
 import kotlinx.coroutines.CoroutineScope
@@ -27,9 +28,10 @@ interface StorageService {
     //val diaries: Flow<List<Diary>>
 
     suspend fun getUser(userId: String): User?
-    suspend fun saveUser(user: User): User
+    suspend fun saveUser(user: User): User?
     suspend fun updateUser(user: User)
     suspend fun deleteUser(userId: String)
+    suspend fun isUsernameTaken(username: String): Boolean
 
     suspend fun getDiary(diaryId: String): Diary?
     suspend fun saveDiary(diary: Diary): Diary
@@ -73,7 +75,8 @@ class StorageServiceImpl @Inject constructor(
     val SUB_PAGE_COLLECTION = "subPages"
     val DIARY_IMAGE_COLLECTION = "diaryImages"
     val DIARY_COVER_COLLECTION = "diaryCovers"
-    val USER_ID_FIELD = "userId"
+    val USERNAME_COLLECTION = "usernames"
+    val USER_ID_FIELD = "uid"
 
     val DIARY_IMAGE_BUCKET = "diary-images"
 
@@ -91,7 +94,12 @@ class StorageServiceImpl @Inject constructor(
         firestore.collection(USER_COLLECTION).document(userId).get().await().toObject<User?>()
             ?.copy(id = userId)
 
-    override suspend fun saveUser(user: User): User {
+    override suspend fun saveUser(user: User): User? {
+        // add username to collection
+        if (isUsernameTaken(user.username)) return null
+
+        firestore.collection(USERNAME_COLLECTION).document(user.username).set(Username(uid = user.id))
+
         val userId = firestore.collection(USER_COLLECTION).add(user).await().id
         return user.copy(id = userId)
     }
@@ -102,6 +110,12 @@ class StorageServiceImpl @Inject constructor(
 
     override suspend fun deleteUser(userId: String) {
         firestore.collection(USER_COLLECTION).document(userId).delete().await()
+    }
+
+    override suspend fun isUsernameTaken(username: String): Boolean {
+        val uid = firestore.collection(USERNAME_COLLECTION).document(username).get().await().toObject<Username?>()
+
+        return uid != null
     }
 
 
@@ -172,6 +186,7 @@ class StorageServiceImpl @Inject constructor(
         val pages = mutableMapOf<String, DiaryPage>()
         val diary = getDiary(diaryId)
 
+        // sorting images based on position in the diary
         val images = firestore.collectionGroup(DIARY_IMAGE_COLLECTION)
             .whereEqualTo("diaryId", diaryId)
             .get().await()

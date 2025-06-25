@@ -9,7 +9,7 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class Diary (
     @get:Exclude val id: String = "",
-    val userId: String = "",
+    val uid: String = "",
     val title: String = "",
     val description: String = "",
     val coverId: String = "",

@@ -1,7 +1,7 @@
 package com.mirage.reverie.viewmodel
 
 import androidx.lifecycle.ViewModel
-import com.mirage.reverie.data.repository.AccountRepository
+import com.mirage.reverie.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,7 +22,7 @@ sealed class LoginUiState {
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val accountService: AccountRepository
+    private val repository: UserRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
     val uiState = _uiState.asStateFlow()
@@ -50,7 +50,7 @@ class LoginViewModel @Inject constructor(
             _uiState.update { LoginUiState.Error("Email e password sono obbligatori") }
         }
 
-        accountService.authenticate(state.email, state.password) { exception ->
+        repository.authenticate(state.email, state.password) { exception ->
             if (exception == null) {
                 _uiState.update { LoginUiState.Success }
             } else {
