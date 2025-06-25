@@ -9,9 +9,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -30,6 +37,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -63,6 +71,8 @@ fun CreateTimeCapsuleScreen(
                 EditTitleField(timeCapsule.title, onNewValue = viewModel::onUpdateTitle)
                 ContentTextField (timeCapsule.content, onUpdateContent = viewModel::onUpdateContent)
                 DatePicker(viewModel::onUpdateDeadline)
+                EmailForm(viewModel::onUpdateEmailList)
+                PhoneNumberForm(viewModel::onUpdatePhoneList)
 
                 Button (
                     onClick = viewModel::onCreateTimeCapsule
@@ -128,5 +138,126 @@ fun DatePicker(onUpdateDate: (Timestamp) -> Unit){
 
     Button(onClick = { datePickerDialog.show() }) {
         Text(text = stringResource(R.string.select_date))
+    }
+}
+
+@Composable
+fun EmailForm(onUpdateEmailList: (List<String>) -> Unit) {
+    var emails by remember { mutableStateOf(listOf("")) }
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text("Destinatari Email", style = MaterialTheme.typography.titleMedium)
+
+        emails.forEachIndexed { index, email ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+            ) {
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { newValue ->
+                        onUpdateEmailList(emails.toMutableList().also { it[index] = newValue })
+                    },
+                    label = { Text("Email ${index + 1}") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    isError = email.isNotBlank() && !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                if (emails.size > 1) {
+                    IconButton(onClick = {
+                        emails = emails.toMutableList().also { it.removeAt(index) }
+                    }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Rimuovi")
+                    }
+                }
+            }
+
+            // Messaggio di errore sotto il campo
+            if (email.isNotBlank() && !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                Text(
+                    "Email non valida",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+
+        Button(
+            onClick = { emails = emails + "" },
+            modifier = Modifier.padding(top = 8.dp)
+        ) {
+            Text("Aggiungi un altro destinatario")
+        }
+    }
+}
+
+@Composable
+fun PhoneNumberForm(onUpdatePhoneList: (List<String>) -> Unit) {
+    // Ogni voce è una Pair di prefisso e numero
+    var phones by remember { mutableStateOf(listOf("")) }
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text("Numeri di telefono", style = MaterialTheme.typography.titleMedium)
+
+        phones.forEachIndexed { index, number ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = number,
+                    onValueChange = { newValue ->
+                        onUpdatePhoneList(phones.toMutableList().also { it[index] to newValue })
+                    },
+                    label = { Text("Numero") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    isError = number.length < 5 || !number.startsWith("+") || !number.drop(1).all { it.isDigit() }
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                if (phones.size > 1) {
+                    IconButton (onClick = {
+                        phones = phones.toMutableList().also { it.removeAt(index) }
+                    }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Rimuovi")
+                    }
+                }
+            }
+
+            // Mostra messaggi di errore sotto i campi
+            if (!number.startsWith("+")) {
+                Text(
+                    "Numero non valido, aggiungi il prefisso (es. +39)",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            if (number.length < 5 || !number.drop(1).all { it.isDigit() }) {
+                Text(
+                    "Numero non valido",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+
+        Button(
+            onClick = { phones = phones + "" },
+            modifier = Modifier.padding(top = 8.dp)
+        ) {
+            Text("Aggiungi un altro numero")
+        }
     }
 }

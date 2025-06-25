@@ -117,4 +117,24 @@ class CreateTimeCapsuleViewModel @Inject constructor(
             state.copy(timeCapsule = updatedTimeCapsule)
         }
     }
+
+    fun onUpdateEmailList(newEmailList: List<String>){
+        val currentState = uiState.value
+        if (currentState is CreateTimeCapsuleUiState.Loading) return
+
+        _formState.update { state ->
+            val updatedTimeCapsule = state.timeCapsule.copy(emails = newEmailList)
+            state.copy(timeCapsule = updatedTimeCapsule)
+        }
+    }
+
+    fun onUpdatePhoneList(newPhoneList: List<String>){
+        val currentState = uiState.value
+        if (currentState is CreateTimeCapsuleUiState.Loading) return
+
+        _formState.update { state ->
+            val updatedTimeCapsule = state.timeCapsule.copy(phones = newPhoneList)
+            state.copy(timeCapsule = updatedTimeCapsule)
+        }
+    }
 }
