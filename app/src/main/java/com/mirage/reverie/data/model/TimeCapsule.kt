@@ -20,7 +20,8 @@ data class TimeCapsule (
     val receivers: List<String> = listOf(), // utenti che hanno cliccato il link ricevuto (inizialmente è vuota)
 
     val visualizedBy: List<String> = listOf(), // utenti che hanno visualizzato la capsula del tempo
-    val creationDate: Timestamp = Timestamp.now() // data di creazione della capsula
+    val creationDate: Timestamp = Timestamp.now(), // data di creazione della capsula
+    val isSent: Boolean = false,             // TimeCapsule sent to emails and phones
 ): Parcelable {
     // shadows Parcelable stability attribute
     @Exclude
