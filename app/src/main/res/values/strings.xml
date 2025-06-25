@@ -58,4 +58,6 @@
     <string name="email_already_taken">Email already taken</string>
     <string name="select_a_date">Select a date</string>
     <string name="email_not_valid">Email not valid</string>
+    <string name="save_changes">Save changes</string>
+    <string name="update_error">Update error</string>
 </resources>

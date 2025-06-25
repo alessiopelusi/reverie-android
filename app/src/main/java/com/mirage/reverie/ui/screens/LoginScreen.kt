@@ -52,7 +52,7 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Field(inputState.email, inputState.emailError, viewModel::onEmailChange, R.string.email)
+                Field(inputState.email, inputState.emailError, viewModel::onEmailChange, stringResource(R.string.email))
 
                 Spacer(modifier = Modifier.height(8.dp))
 

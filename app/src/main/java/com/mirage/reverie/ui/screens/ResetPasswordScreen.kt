@@ -47,7 +47,7 @@ fun ResetPasswordScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Field(inputState.email, viewModel::onEmailChange, R.string.email)
+                Field(inputState.email, viewModel::onEmailChange, stringResource(R.string.email))
 
                 Spacer(modifier = Modifier.height(16.dp))
 

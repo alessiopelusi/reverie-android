@@ -167,7 +167,28 @@ class StorageServiceImpl @Inject constructor(
         } catch (e: Exception) { Result.failure(e) }
     }
 
+    // atomic transaction to update username
     override suspend fun updateUser(user: User) {
+        firestore.runTransaction { transaction ->
+            val userRef = firestore.collection(USERS_COLLECTION).document(user.id)
+            val oldUser = transaction.get(userRef).toObject<User?>()
+
+            if (oldUser != null && user.username != oldUser.username) {
+                // Check if the username exists
+                val usernameRef = firestore.collection(USERNAMES_COLLECTION).document(user.username)
+                if (transaction.get(usernameRef).exists()) {
+                    throw IllegalStateException(context.getString(R.string.username_already_taken))
+                }
+
+                val oldUsernameRef = firestore.collection(USERNAMES_COLLECTION).document(oldUser.username)
+                transaction.delete(oldUsernameRef)
+
+                transaction.set(usernameRef, Username(uid = user.id))
+            }
+
+            // Add the user document
+            transaction.set(userRef, user)
+        }.await()
         firestore.collection(USERS_COLLECTION).document(user.id).set(user).await()
     }
 

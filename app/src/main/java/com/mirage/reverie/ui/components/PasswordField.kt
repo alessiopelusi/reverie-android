@@ -9,26 +9,26 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import com.mirage.reverie.R
 
 @Composable
-fun PasswordField(value: String, onNewValue: (String) -> Unit, modifier: Modifier = Modifier, placeholder: Int = R.string.password) {
+fun PasswordField(value: String, onNewValue: (String) -> Unit, modifier: Modifier = Modifier, label: String = stringResource(R.string.password)) {
     OutlinedTextField(
         singleLine = true,
         modifier = modifier,
         value = value,
         onValueChange = { onNewValue(it) },
-        placeholder = { Text(stringResource(placeholder)) },
+        label = { Text(label) },
         visualTransformation = PasswordVisualTransformation()
         //leadingIcon = { [...] }
     )
 }
 
 @Composable
-fun PasswordField(value: String, errorMessage: String, onNewValue: (String) -> Unit, modifier: Modifier = Modifier, placeholder: Int = R.string.password) {
+fun PasswordField(value: String, errorMessage: String, onNewValue: (String) -> Unit, modifier: Modifier = Modifier, label: String = stringResource(R.string.password)) {
     OutlinedTextField(
         singleLine = true,
         modifier = modifier,
         value = value,
         onValueChange = { onNewValue(it) },
-        placeholder = { Text(stringResource(placeholder)) },
+        label = { Text(label) },
         visualTransformation = PasswordVisualTransformation()
         //leadingIcon = { [...] }
     )

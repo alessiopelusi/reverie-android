@@ -49,4 +49,6 @@
     <string name="email_already_taken">Email già utilizzata</string>
     <string name="select_a_date">Seleziona una data</string>
     <string name="email_not_valid">Email non valida</string>
+    <string name="save_changes">Salva modifiche</string>
+    <string name="update_error">Errore di aggiornamento</string>
 </resources>
