@@ -1,7 +1,6 @@
 package com.mirage.reverie.viewmodel
 
 import android.content.Context
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mirage.reverie.R
@@ -33,7 +32,7 @@ data class SignupInputState(
 sealed class SignupUiState {
     data object Idle : SignupUiState()
     data class Success(val infoMessage: String = "") : SignupUiState()
-    data object Error : SignupUiState()
+    data class Error(val errorMessage: String) : SignupUiState()
 }
 
 
@@ -87,7 +86,7 @@ class SignupViewModel @Inject constructor(
     fun onSignup() {
         _uiState.update { SignupUiState.Idle }
 
-        val state = inputState.value
+        val inState = inputState.value
 
         viewModelScope.launch {
             _inputState.update { state ->
@@ -101,34 +100,34 @@ class SignupViewModel @Inject constructor(
                 )
             }
 
-            if (state.username.isBlank()) {
-                _uiState.update { SignupUiState.Error }
+            if (inState.username.isBlank()) {
+                _uiState.update { SignupUiState.Error("") }
                 _inputState.update { state -> state.copy(usernameError = context.getString(R.string.username_mandatory)) }
-            } else if (repository.isUsernameTaken(state.username)) {
-                _uiState.update { SignupUiState.Error }
+            } else if (repository.isUsernameTaken(inState.username)) {
+                _uiState.update { SignupUiState.Error("") }
                 _inputState.update { state -> state.copy(usernameError = context.getString(R.string.username_already_taken)) }
             }
 
-            if (state.email.isBlank()) {
-                _uiState.update { SignupUiState.Error }
+            if (inState.email.isBlank()) {
+                _uiState.update { SignupUiState.Error("") }
                 _inputState.update { state -> state.copy(emailError = context.getString(R.string.email_mandatory)) }
             }
 
-            if (state.name.isBlank()) {
-                _uiState.update { SignupUiState.Error }
+            if (inState.name.isBlank()) {
+                _uiState.update { SignupUiState.Error("") }
                 _inputState.update { state -> state.copy(nameError = context.getString(R.string.name_mandatory)) }
             }
 
-            if (state.surname.isBlank()) {
-                _uiState.update { SignupUiState.Error }
+            if (inState.surname.isBlank()) {
+                _uiState.update { SignupUiState.Error("") }
                 _inputState.update { state -> state.copy(surnameError = context.getString(R.string.surname_mandatory)) }
             }
 
-            if (state.password.length < 8) {
-                _uiState.update { SignupUiState.Error }
+            if (inState.password.length < 8) {
+                _uiState.update { SignupUiState.Error("") }
                 _inputState.update { state -> state.copy(passwordError = context.getString(R.string.passwords_lenght)) }
-            } else if (state.password != state.confirmPassword) {
-                _uiState.update { SignupUiState.Error }
+            } else if (inState.password != inState.confirmPassword) {
+                _uiState.update { SignupUiState.Error("") }
                 _inputState.update { state -> state.copy(confirmPasswordError = context.getString(R.string.passwords_dont_match)) }
             }
 
@@ -141,16 +140,16 @@ class SignupViewModel @Inject constructor(
             // otherwise we save the profile and go back to login
             val user = repository.createAccount(
                 User(
-                    email = state.email,
-                    username = state.username,
-                    name = state.name,
-                    surname = state.surname,
+                    email = inState.email,
+                    username = inState.username,
+                    name = inState.name,
+                    surname = inState.surname,
                 ),
-                state.password
+                inState.password
             )
 
             if (user != null) {
-                _uiState.update { SignupUiState.Error }
+                _uiState.update { SignupUiState.Error(context.getString(R.string.signup_error)) }
             } else {
                 _uiState.update { SignupUiState.Success(context.getString(R.string.signup_successful)) }
             }

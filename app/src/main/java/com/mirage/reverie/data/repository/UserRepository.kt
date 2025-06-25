@@ -17,7 +17,7 @@ interface UserRepository {
     val currentUser: Flow<User>
 
     fun createAnonymousAccount(onResult: (Throwable?) -> Unit)
-    fun authenticate(email: String, password: String, onResult: (Throwable?) -> Unit)
+    suspend fun authenticate(email: String, password: String): Boolean
     suspend fun createAccount(user: User, password: String): User?
     fun sendPasswordResetEmail(email: String, onResult: (Throwable?) -> Unit)
     fun linkAccount(email: String, password: String, onResult: (Throwable?) -> Unit)
@@ -59,9 +59,13 @@ class UserRepositoryImpl @Inject constructor(
             .addOnCompleteListener { onResult(it.exception) }
     }
 
-    override fun authenticate(email: String, password: String, onResult: (Throwable?) -> Unit) {
-        auth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener { onResult(it.exception) }
+    override suspend fun authenticate(email: String, password: String): Boolean {
+        try {
+            auth.signInWithEmailAndPassword(email, password).await()
+            return true
+        } catch (e: Exception) {
+            return false
+        }
     }
 
     override suspend fun createAccount(user: User, password: String): User? {

@@ -19,8 +19,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mirage.reverie.R
+import com.mirage.reverie.ui.components.ErrorField
 import com.mirage.reverie.ui.components.Field
 import com.mirage.reverie.ui.components.PasswordField
+import com.mirage.reverie.viewmodel.LoginUiState
 import com.mirage.reverie.viewmodel.SignupUiState
 import com.mirage.reverie.viewmodel.SignupViewModel
 
@@ -87,6 +89,10 @@ fun SignupScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
+
+                if (uiState is SignupUiState.Error) {
+                    ErrorField((uiState as SignupUiState.Error).errorMessage)
+                }
             }
         }
     }

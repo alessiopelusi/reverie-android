@@ -1,6 +1,5 @@
 package com.mirage.reverie.ui.components
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,7 +18,7 @@ fun Field(value: String, onNewValue: (String) -> Unit, placeholder: Int, modifie
 }
 
 @Composable
-fun Field(value: String, errorString: String, onNewValue: (String) -> Unit, placeholder: Int, modifier: Modifier = Modifier) {
+fun Field(value: String, errorMessage: String, onNewValue: (String) -> Unit, placeholder: Int, modifier: Modifier = Modifier) {
     OutlinedTextField(
         singleLine = true,
         modifier = modifier,
@@ -27,5 +26,5 @@ fun Field(value: String, errorString: String, onNewValue: (String) -> Unit, plac
         onValueChange = { onNewValue(it) },
         placeholder = { Text(stringResource(placeholder)) },
     )
-    ErrorField(errorString)
+    ErrorField(errorMessage)
 }

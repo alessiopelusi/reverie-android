@@ -5,7 +5,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import com.mirage.reverie.R
 
@@ -23,7 +22,7 @@ fun PasswordField(value: String, onNewValue: (String) -> Unit, modifier: Modifie
 }
 
 @Composable
-fun PasswordField(value: String, errorString: String, onNewValue: (String) -> Unit, modifier: Modifier = Modifier, placeholder: Int = R.string.password) {
+fun PasswordField(value: String, errorMessage: String, onNewValue: (String) -> Unit, modifier: Modifier = Modifier, placeholder: Int = R.string.password) {
     OutlinedTextField(
         singleLine = true,
         modifier = modifier,
@@ -33,5 +32,5 @@ fun PasswordField(value: String, errorString: String, onNewValue: (String) -> Un
         visualTransformation = PasswordVisualTransformation()
         //leadingIcon = { [...] }
     )
-    ErrorField(errorString)
+    ErrorField(errorMessage)
 }

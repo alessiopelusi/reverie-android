@@ -19,6 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mirage.reverie.R
+import com.mirage.reverie.ui.components.ErrorField
 import com.mirage.reverie.ui.components.Field
 import com.mirage.reverie.ui.components.PasswordField
 import com.mirage.reverie.viewmodel.LoginUiState
@@ -51,11 +52,11 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Field(inputState.email, viewModel::onEmailChange, R.string.email)
+                Field(inputState.email, inputState.emailError, viewModel::onEmailChange, R.string.email)
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                PasswordField(inputState.password, viewModel::onPasswordChange)
+                PasswordField(inputState.password, inputState.passwordError, viewModel::onPasswordChange)
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -80,7 +81,7 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 if (uiState is LoginUiState.Error) {
-                    Text(text = (uiState as LoginUiState.Error).errorMessage, color = MaterialTheme.colorScheme.error)
+                    ErrorField((uiState as LoginUiState.Error).errorMessage)
                 }
             }
         }
