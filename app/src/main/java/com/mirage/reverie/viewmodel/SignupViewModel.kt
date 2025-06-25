@@ -48,8 +48,54 @@ class SignupViewModel @Inject constructor(
     private val _inputState = MutableStateFlow(SignupInputState())
     val inputState = _inputState.asStateFlow()
 
-    init {
+    private suspend fun validateUsername(username: String): String {
+        return when {
+            username.isBlank() -> context.getString(R.string.username_mandatory)
+            repository.isUsernameTaken(username) -> context.getString(R.string.username_already_taken)
+            else -> ""
+        }
+    }
 
+    private suspend fun validateEmail(email: String): String {
+        return when {
+            email.isBlank() -> context.getString(R.string.email_mandatory)
+            !android.util.Patterns.EMAIL_ADDRESS.matcher(email)
+                .matches() -> context.getString(R.string.email_not_valid)
+            repository.isEmailTaken(email) -> context.getString(R.string.email_already_taken)
+            else -> ""
+        }
+    }
+
+    private fun validateName(name: String): String {
+        return if (name.isBlank()) {
+            context.getString(R.string.name_mandatory)
+        } else {
+            ""
+        }
+    }
+
+    private fun validateSurname(surname: String): String {
+        return if (surname.isBlank()) {
+            context.getString(R.string.surname_mandatory)
+        } else {
+            ""
+        }
+    }
+
+    private fun validatePassword(password: String): String {
+        return if (password.length < 8) {
+            context.getString(R.string.password_length)
+        } else {
+            ""
+        }
+    }
+
+    private fun validateConfirmPassword(password: String, confirmPassword: String): String {
+        return if (password.isNotBlank() && password != confirmPassword) {
+            context.getString(R.string.passwords_dont_match)
+        } else {
+            ""
+        }
     }
 
     private var usernameCheckJob: Job? = null
@@ -58,7 +104,6 @@ class SignupViewModel @Inject constructor(
         _inputState.update { state ->
             state.copy(
                 username = newUsername,
-                usernameError = ""
             )
         }
 
@@ -67,15 +112,7 @@ class SignupViewModel @Inject constructor(
 
         // Start a new coroutine for validation
         usernameCheckJob = viewModelScope.launch {
-            var error = ""
-
-            if (newUsername.isBlank()) {
-                _uiState.update { SignupUiState.Error("") }
-                error = context.getString(R.string.username_mandatory)
-            } else if (repository.isUsernameTaken(newUsername)) {
-                _uiState.update { SignupUiState.Error("") }
-                error = context.getString(R.string.username_already_taken)
-            }
+            val error = validateUsername(newUsername)
 
             _inputState.update { state ->
                 state.copy(
@@ -85,32 +122,32 @@ class SignupViewModel @Inject constructor(
         }
     }
 
+    private var emailCheckJob: Job? = null
+
     fun onEmailChange(newEmail: String) {
-        var error = ""
-
-        if (newEmail.isBlank()) {
-            _uiState.update { SignupUiState.Error("") }
-            error = context.getString(R.string.email_mandatory)
-        } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(newEmail).matches()) {
-            _uiState.update { SignupUiState.Error("") }
-            error = context.getString(R.string.email_not_valid)
-        }
-
         _inputState.update { state ->
             state.copy(
                 email = newEmail,
-                emailError = error
             )
+        }
+
+        // Cancel any ongoing username check
+        emailCheckJob?.cancel()
+
+        // Start a new coroutine for validation
+        emailCheckJob = viewModelScope.launch {
+            val error = validateEmail(newEmail)
+
+            _inputState.update { state ->
+                state.copy(
+                    emailError = error
+                )
+            }
         }
     }
 
     fun onNameChange(newName: String) {
-        var error = ""
-
-        if (newName.isBlank()) {
-            _uiState.update { SignupUiState.Error("") }
-            error = context.getString(R.string.name_mandatory)
-        }
+        val error = validateName(newName)
 
         _inputState.update { state ->
             state.copy(
@@ -121,12 +158,7 @@ class SignupViewModel @Inject constructor(
     }
 
     fun onSurnameChange(newSurname: String) {
-        var error = ""
-
-        if (newSurname.isBlank()) {
-            _uiState.update { SignupUiState.Error("") }
-            error = context.getString(R.string.surname_mandatory)
-        }
+        val error = validateSurname(newSurname)
 
         _inputState.update { state ->
             state.copy(
@@ -137,12 +169,7 @@ class SignupViewModel @Inject constructor(
     }
 
     fun onPasswordChange(newPassword: String) {
-        var error = ""
-
-        if (newPassword.length < 8) {
-            _uiState.update { SignupUiState.Error("") }
-            error = context.getString(R.string.passwords_lenght)
-        }
+        val error = validatePassword(newPassword)
 
         _inputState.update { state ->
             state.copy(
@@ -153,12 +180,7 @@ class SignupViewModel @Inject constructor(
     }
 
     fun onConfirmPasswordChange(newConfirmPassword: String) {
-        var error = ""
-
-        if (inputState.value.password.isNotBlank() && newConfirmPassword != inputState.value.password) {
-            _uiState.update { SignupUiState.Error("") }
-            error = context.getString(R.string.passwords_dont_match)
-        }
+        val error = validateConfirmPassword(inputState.value.password, newConfirmPassword)
 
         _inputState.update { state ->
             state.copy(
@@ -173,31 +195,47 @@ class SignupViewModel @Inject constructor(
 
         val inState = inputState.value
 
-        onUsernameChange(inState.username)
-        onEmailChange(inState.email)
-        onNameChange(inState.name)
-        onSurnameChange(inState.surname)
-        onPasswordChange(inState.password)
-        onConfirmPasswordChange(inState.confirmPassword)
-
-        // if uiState is error, we save the error string and return
-        if (uiState.value is SignupUiState.Error) {
-            return
-        }
-
         viewModelScope.launch {
-            // otherwise we save the profile and go back to login
+            // Validate all fields and update input state
+            val updatedState = inState.copy(
+                usernameError = validateUsername(inState.username),
+                emailError = validateEmail(inState.email),
+                nameError = validateName(inState.name),
+                surnameError = validateSurname(inState.surname),
+                passwordError = validatePassword(inState.password),
+                confirmPasswordError = validateConfirmPassword(
+                    inState.password,
+                    inState.confirmPassword
+                )
+            )
+            _inputState.update { updatedState }
+
+            // Check for any validation errors
+            if (listOf(
+                    updatedState.usernameError,
+                    updatedState.emailError,
+                    updatedState.nameError,
+                    updatedState.surnameError,
+                    updatedState.passwordError,
+                    updatedState.confirmPasswordError
+                ).any { it.isNotBlank() } // Check for non-empty errors
+            ) {
+                _uiState.update { SignupUiState.Error("") }
+                return@launch
+            }
+
+            // Proceed to account creation
             val user = repository.createAccount(
                 User(
-                    email = inState.email,
-                    username = inState.username,
-                    name = inState.name,
-                    surname = inState.surname,
+                    email = updatedState.email,
+                    username = updatedState.username,
+                    name = updatedState.name,
+                    surname = updatedState.surname,
                 ),
-                inState.password
+                updatedState.password
             )
 
-            if (user != null) {
+            if (user == null) {
                 _uiState.update { SignupUiState.Error(context.getString(R.string.signup_error)) }
             } else {
                 _uiState.update { SignupUiState.Success(context.getString(R.string.signup_successful)) }
@@ -205,4 +243,3 @@ class SignupViewModel @Inject constructor(
         }
     }
 }
-

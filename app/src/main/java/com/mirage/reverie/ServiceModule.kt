@@ -38,8 +38,8 @@ object ServiceModule {
 
     @Provides
     @Singleton
-    fun provideStorageService(firestore: FirebaseFirestore, storage: Storage): StorageService {
-        return StorageServiceImpl(firestore, storage)
+    fun provideStorageService(firestore: FirebaseFirestore, storage: Storage, context: Context): StorageService {
+        return StorageServiceImpl(firestore, storage, context)
     }
 
     // We use Provider to break circular dependency

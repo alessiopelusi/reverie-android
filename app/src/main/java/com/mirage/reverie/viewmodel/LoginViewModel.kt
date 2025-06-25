@@ -37,22 +37,25 @@ class LoginViewModel @Inject constructor(
     private val _inputState = MutableStateFlow(LoginInputState())
     val inputState = _inputState.asStateFlow()
 
-/*
-    init {
-        onEmailChange("")
-        onPasswordChange("")
+    private fun validateEmail(email: String): String {
+        return when {
+            email.isBlank() -> context.getString(R.string.email_mandatory)
+            !android.util.Patterns.EMAIL_ADDRESS.matcher(email)
+                .matches() -> context.getString(R.string.email_not_valid)
+            else -> ""
+        }
     }
-*/
+
+    private fun validatePassword(password: String): String {
+        return if (password.isBlank()) {
+            context.getString(R.string.password_mandatory)
+        } else {
+            ""
+        }
+    }
 
     fun onEmailChange(newEmail: String) {
-        var error = ""
-        if (newEmail.isBlank()) {
-            _uiState.update { LoginUiState.Error("") }
-            error = context.getString(R.string.email_mandatory)
-        } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(newEmail).matches()) {
-            _uiState.update { LoginUiState.Error("") }
-            error = context.getString(R.string.email_not_valid)
-        }
+        val error = validateEmail(newEmail)
 
         _inputState.update { state ->
             state.copy(
@@ -63,12 +66,7 @@ class LoginViewModel @Inject constructor(
     }
 
     fun onPasswordChange(newPassword: String) {
-        var error = ""
-
-        if (newPassword.isBlank()) {
-            _uiState.update { LoginUiState.Error("") }
-            error = context.getString(R.string.password_mandatory)
-        }
+        val error = validatePassword(newPassword)
 
         _inputState.update { state ->
             state.copy(
@@ -83,11 +81,15 @@ class LoginViewModel @Inject constructor(
 
         val inState = inputState.value
 
-        onEmailChange(inState.email)
-        onPasswordChange(inState.password)
+        val updatedState = inState.copy(
+            emailError = validateEmail(inState.email),
+            passwordError = validatePassword(inState.password)
+        )
+        _inputState.update { updatedState }
 
-        // if uiState is error, we save the error string and return
-        if (uiState.value is LoginUiState.Error) {
+        // if we detect an error, we return
+        if (listOf(updatedState.emailError, updatedState.passwordError).any { it.isNotBlank() }) {
+            _uiState.update { LoginUiState.Error("") }
             return
         }
 

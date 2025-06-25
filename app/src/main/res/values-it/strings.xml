@@ -30,7 +30,7 @@
     <string name="content_mandatory">Il contentuo è obbligatorio</string>
     <string name="password_mandatory">La password è obbligatoria</string>
     <string name="passwords_dont_match">Le due password non corrispondono</string>
-    <string name="passwords_lenght">La password deve avere almeno 8 caratteri</string>
+    <string name="password_length">La password deve avere almeno 8 caratteri</string>
     <string name="send_reset_password_email">Invia email di reset password</string>
     <string name="go_back_to_login">Torna al login</string>
     <string name="reset_password_email_sent">Email per reset password inviata</string>
@@ -46,6 +46,7 @@
     <string name="select_date">Seleziona data</string>
     <string name="error">Errore</string>
     <string name="username_already_taken">Username già utilizzato</string>
+    <string name="email_already_taken">Email già utilizzata</string>
     <string name="select_a_date">Seleziona una data</string>
     <string name="email_not_valid">Email non valida</string>
 </resources>

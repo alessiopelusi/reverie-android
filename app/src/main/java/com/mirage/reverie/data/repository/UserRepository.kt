@@ -26,6 +26,7 @@ interface UserRepository {
     suspend fun updateUser(user: User)
     suspend fun deleteUser(userId: String)
     suspend fun isUsernameTaken(username: String): Boolean
+    suspend fun isEmailTaken(email: String): Boolean
 }
 
 
@@ -109,4 +110,7 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun isUsernameTaken(username: String): Boolean =
         storageService.isUsernameTaken(username)
+
+    override suspend fun isEmailTaken(email: String): Boolean =
+        storageService.isEmailTaken(email)
 }
