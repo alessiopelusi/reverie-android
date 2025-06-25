@@ -96,7 +96,7 @@ class AllTimeCapsulesViewModel @Inject constructor(
         val receivedTimeCapsule = state.receivedTimeCapsule.toMutableMap()
 
         sentTimeCapsule[newTimeCapsule.id] = newTimeCapsule
-        if (newTimeCapsule.receivers.contains(auth.uid)) {
+        if (newTimeCapsule.receiversIds.contains(auth.uid)) {
             receivedTimeCapsule[newTimeCapsule.id] = newTimeCapsule
         }
 

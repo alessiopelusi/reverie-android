@@ -1,8 +1,6 @@
 package com.mirage.reverie.data.repository
 
 import com.mirage.reverie.StorageService
-import com.mirage.reverie.data.model.Diary
-import com.mirage.reverie.data.model.DiaryPage
 import com.mirage.reverie.data.model.TimeCapsule
 import javax.inject.Inject
 import javax.inject.Provider
@@ -50,7 +48,7 @@ class TimeCapsuleRepositoryImpl @Inject constructor(
         sentTimeCapsuleIds.add(savedTimeCapsule.id)
         userRepository.updateUser(user.copy(sentTimeCapsuleIds = sentTimeCapsuleIds))
 
-        if (user.id in savedTimeCapsule.receivers){
+        if (user.id in savedTimeCapsule.receiversIds){
             val receivedTimeCapsuleIds = user.sentTimeCapsuleIds.toMutableList()
             receivedTimeCapsuleIds.add(savedTimeCapsule.id)
             userRepository.updateUser(user.copy(receivedTimeCapsuleIds = receivedTimeCapsuleIds))

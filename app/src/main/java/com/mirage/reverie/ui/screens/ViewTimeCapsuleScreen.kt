@@ -1,6 +1,5 @@
 package com.mirage.reverie.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -66,7 +65,7 @@ fun ViewTimeCapsuleScreen(
                     )
                     Text(
                         modifier = Modifier.padding(8.dp),
-                        text = timeCapsule.receivers.toString()
+                        text = timeCapsule.receiversIds.toString()
                     )
                 }
 

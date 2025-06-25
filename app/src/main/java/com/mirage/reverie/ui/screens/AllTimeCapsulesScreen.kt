@@ -20,8 +20,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.MaterialTheme
 
 import androidx.compose.material3.Text
@@ -37,7 +35,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
-import com.mirage.reverie.ui.theme.PaperColor
 
 import com.mirage.reverie.viewmodel.AllTimeCapsulesUiState
 import com.mirage.reverie.viewmodel.AllTimeCapsulesViewModel
@@ -240,7 +237,7 @@ fun ScheduledTimeCapsule(timeCapsule: TimeCapsule, onClick: (String, TimeCapsule
         )
         Column {
             Text(timeCapsule.title)
-            Text((timeCapsule.emails + timeCapsule.phones + timeCapsule.receivers).toString())
+            Text((timeCapsule.emails + timeCapsule.phones + timeCapsule.receiversIds).toString())
             Text("Created: " + formatter.format(timeCapsule.creationDate.toDate()))
             Text("Deadline: " + formatter.format(timeCapsule.deadline.toDate()))
         }
@@ -265,7 +262,7 @@ fun SentTimeCapsule(timeCapsule: TimeCapsule, onClick: (String, TimeCapsuleType)
         )
         Column {
             Text(timeCapsule.title)
-            Text((timeCapsule.emails + timeCapsule.phones + timeCapsule.receivers).toString())
+            Text((timeCapsule.emails + timeCapsule.phones + timeCapsule.receiversIds).toString())
             Text("Sent: " + formatter.format(timeCapsule.deadline.toDate()))
         }
     }

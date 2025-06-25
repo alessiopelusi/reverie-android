@@ -3,9 +3,7 @@ package com.mirage.reverie.data.model
 import android.os.Parcelable
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.Exclude
-import kotlinx.datetime.LocalDateTime
 import kotlinx.parcelize.Parcelize
-import java.time.Period
 
 @Parcelize
 data class TimeCapsule (
@@ -17,7 +15,7 @@ data class TimeCapsule (
 
     val emails: List<String> = listOf(), // email a cui verrà spedito il link
     val phones: List<String> = listOf(), // numeri di telefono a cui verrà spedito il link
-    val receivers: List<String> = listOf(), // utenti che hanno cliccato il link ricevuto (inizialmente è vuota)
+    val receiversIds: List<String> = listOf(), // utenti che hanno cliccato il link ricevuto (inizialmente è vuota)
 
     val creationDate: Timestamp = Timestamp.now(), // data di creazione della capsula
     val isSent: Boolean = false,             // TimeCapsule sent to emails and phones
