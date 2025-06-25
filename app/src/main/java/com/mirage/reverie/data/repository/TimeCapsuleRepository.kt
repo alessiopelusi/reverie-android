@@ -18,8 +18,6 @@ interface TimeCapsuleRepository {
 //    suspend fun addTimeCapsuleProfileReceiver(userId: String)
 //    suspend fun addTimeCapsuleEmailReceiver(email: String)
 //    suspend fun addTimeCapsulePhoneReceiver(phone: String)
-//
-//    suspend fun addTimeCapsuleVisualizedBy(userId: String)
 }
 
 class TimeCapsuleRepositoryImpl @Inject constructor(
