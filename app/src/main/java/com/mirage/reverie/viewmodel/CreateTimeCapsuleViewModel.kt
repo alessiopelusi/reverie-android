@@ -26,6 +26,9 @@ import javax.inject.Inject
 
 data class CreateTimeCapsuleFormState(
     val timeCapsule: TimeCapsule = TimeCapsule(),
+    val titleError: String = "",
+    val contentError: String = "",
+    val dateError: String = "",
 )
 
 sealed class CreateTimeCapsuleUiState {
@@ -78,6 +81,11 @@ class CreateTimeCapsuleViewModel @Inject constructor(
 //        if (state.timeCapsule.emails.isEmpty() && state.timeCapsule.phones.isEmpty()) {
 //            _uiState.update { CreateTimeCapsuleUiState.Error("Il contenuto è obbligatorio") }
 //        }
+
+        // if uiState is error, we save the error string and return
+        if (uiState.value is CreateTimeCapsuleUiState.Error) {
+            return
+        }
 
         viewModelScope.launch {
             try {

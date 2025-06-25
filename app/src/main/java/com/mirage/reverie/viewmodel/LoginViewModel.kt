@@ -37,15 +37,44 @@ class LoginViewModel @Inject constructor(
     private val _inputState = MutableStateFlow(LoginInputState())
     val inputState = _inputState.asStateFlow()
 
+/*
+    init {
+        onEmailChange("")
+        onPasswordChange("")
+    }
+*/
+
     fun onEmailChange(newEmail: String) {
+        var error = ""
+        if (newEmail.isBlank()) {
+            _uiState.update { LoginUiState.Error("") }
+            error = context.getString(R.string.email_mandatory)
+        } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(newEmail).matches()) {
+            _uiState.update { LoginUiState.Error("") }
+            error = context.getString(R.string.email_not_valid)
+        }
+
         _inputState.update { state ->
-            state.copy(email = newEmail)
+            state.copy(
+                email = newEmail,
+                emailError = error
+            )
         }
     }
 
     fun onPasswordChange(newPassword: String) {
+        var error = ""
+
+        if (newPassword.isBlank()) {
+            _uiState.update { LoginUiState.Error("") }
+            error = context.getString(R.string.password_mandatory)
+        }
+
         _inputState.update { state ->
-            state.copy(password = newPassword)
+            state.copy(
+                password = newPassword,
+                passwordError = error
+            )
         }
     }
 
@@ -54,22 +83,8 @@ class LoginViewModel @Inject constructor(
 
         val inState = inputState.value
 
-        _inputState.update { state ->
-            state.copy(
-                emailError = "",
-                passwordError = "",
-            )
-        }
-
-        if (inState.email.isBlank()) {
-            _uiState.update { LoginUiState.Error("") }
-            _inputState.update { state -> state.copy(emailError = context.getString(R.string.email_mandatory)) }
-        }
-
-        if (inState.password.isBlank()) {
-            _uiState.update { LoginUiState.Error("") }
-            _inputState.update { state -> state.copy(passwordError = context.getString(R.string.password_mandatory)) }
-        }
+        onEmailChange(inState.email)
+        onPasswordChange(inState.password)
 
         // if uiState is error, we save the error string and return
         if (uiState.value is LoginUiState.Error) {

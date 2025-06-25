@@ -43,6 +43,7 @@ import com.mirage.reverie.viewmodel.AllTimeCapsulesUiState
 import com.mirage.reverie.viewmodel.AllTimeCapsulesViewModel
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.OutlinedButton
 import com.mirage.reverie.data.model.TimeCapsule
 import com.mirage.reverie.ui.theme.Purple80
@@ -104,27 +105,6 @@ fun AllTimeCapsulesScreen(
                                 textAlign = TextAlign.Center,
                                 text = "Questa lettera serve per mandare un messaggio nel futuro"
                             )
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                IconButton (
-                                    onClick = {
-                                        onNavigateToCreateTimeCapsule()
-                                    },
-                                    colors = IconButtonColors(
-                                        containerColor = PaperColor,
-                                        contentColor = MaterialTheme.colorScheme.primary,
-                                        disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                        disabledContentColor = MaterialTheme.colorScheme.primary
-                                    ),
-                                ) {
-                                    Icon(Icons.Filled.Add, contentDescription="Create")
-                                }
-                            }
                         }
                     }
                 }
@@ -205,6 +185,21 @@ fun AllTimeCapsulesScreen(
                             ReceivedTimeCapsule(timeCapsule, onNavigateToViewTimeCapsule)
                         }
                     }
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp), // Padding for spacing from screen edges
+                contentAlignment = Alignment.BottomEnd // Align content to bottom-right
+            ) {
+                FloatingActionButton (
+                    onClick = onNavigateToCreateTimeCapsule,
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.primary
+                ) {
+                    Icon(Icons.Filled.Add, "Small floating action button.")
                 }
             }
         }

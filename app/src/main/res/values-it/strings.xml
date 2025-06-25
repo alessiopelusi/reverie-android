@@ -47,4 +47,5 @@
     <string name="error">Errore</string>
     <string name="username_already_taken">Username già utilizzato</string>
     <string name="select_a_date">Seleziona una data</string>
+    <string name="email_not_valid">Email non valida</string>
 </resources>
