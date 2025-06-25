@@ -21,3 +21,17 @@ fun PasswordField(value: String, onNewValue: (String) -> Unit, modifier: Modifie
         //leadingIcon = { [...] }
     )
 }
+
+@Composable
+fun PasswordField(value: String, errorString: String, onNewValue: (String) -> Unit, modifier: Modifier = Modifier, placeholder: Int = R.string.password) {
+    OutlinedTextField(
+        singleLine = true,
+        modifier = modifier,
+        value = value,
+        onValueChange = { onNewValue(it) },
+        placeholder = { Text(stringResource(placeholder)) },
+        visualTransformation = PasswordVisualTransformation()
+        //leadingIcon = { [...] }
+    )
+    ErrorField(errorString)
+}

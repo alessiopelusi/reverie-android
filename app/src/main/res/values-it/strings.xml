@@ -27,6 +27,7 @@
     <string name="name_mandatory">Il nome è obbligatorio</string>
     <string name="surname_mandatory">Il cognome è obbligatorio</string>
     <string name="title_mandatory">Il titolo è obbligatorio</string>
+    <string name="content_mandatory">Il contentuo è obbligatorio</string>
     <string name="passwords_dont_match">Le due password non corrispondono</string>
     <string name="passwords_lenght">La password deve avere almeno 8 caratteri</string>
     <string name="send_reset_password_email">Invia email di reset password</string>
@@ -43,4 +44,5 @@
     <string name="select_date">Seleziona data</string>
     <string name="error">Errore</string>
     <string name="username_already_taken">Username già utilizzato</string>
+    <string name="select_a_date">Seleziona una data</string>
 </resources>

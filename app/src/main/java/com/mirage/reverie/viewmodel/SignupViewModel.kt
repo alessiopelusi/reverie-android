@@ -17,17 +17,23 @@ import javax.inject.Inject
 
 data class SignupInputState(
     val username: String = "",
+    val usernameError: String = "",
     val email: String = "",
+    val emailError: String = "",
     val name: String = "",
+    val nameError: String = "",
     val surname: String = "",
+    val surnameError: String = "",
     val password: String = "",
-    val confirmPassword: String = ""
+    val passwordError: String = "",
+    val confirmPassword: String = "",
+    val confirmPasswordError: String = "",
 )
 
 sealed class SignupUiState {
     data object Idle : SignupUiState()
     data class Success(val infoMessage: String = "") : SignupUiState()
-    data class Error(val errorMessage: String = "") : SignupUiState()
+    data object Error : SignupUiState()
 }
 
 
@@ -82,45 +88,53 @@ class SignupViewModel @Inject constructor(
         _uiState.update { SignupUiState.Idle }
 
         val state = inputState.value
-        val error = StringBuilder()
 
         viewModelScope.launch {
+            _inputState.update { state ->
+                state.copy(
+                    usernameError = "",
+                    emailError = "",
+                    nameError = "",
+                    surnameError = "",
+                    passwordError = "",
+                    confirmPasswordError = ""
+                )
+            }
 
             if (state.username.isBlank()) {
-                _uiState.update { SignupUiState.Error() }
-                error.appendLine(context.getString(R.string.username_mandatory))
+                _uiState.update { SignupUiState.Error }
+                _inputState.update { state -> state.copy(usernameError = context.getString(R.string.username_mandatory)) }
             } else if (repository.isUsernameTaken(state.username)) {
-                _uiState.update { SignupUiState.Error() }
-                error.appendLine(context.getString(R.string.username_already_taken))
+                _uiState.update { SignupUiState.Error }
+                _inputState.update { state -> state.copy(usernameError = context.getString(R.string.username_already_taken)) }
             }
 
             if (state.email.isBlank()) {
-                _uiState.update { SignupUiState.Error() }
-                error.appendLine(context.getString(R.string.email_mandatory))
+                _uiState.update { SignupUiState.Error }
+                _inputState.update { state -> state.copy(emailError = context.getString(R.string.email_mandatory)) }
             }
 
             if (state.name.isBlank()) {
-                _uiState.update { SignupUiState.Error() }
-                error.appendLine(context.getString(R.string.name_mandatory))
+                _uiState.update { SignupUiState.Error }
+                _inputState.update { state -> state.copy(nameError = context.getString(R.string.name_mandatory)) }
             }
 
             if (state.surname.isBlank()) {
-                _uiState.update { SignupUiState.Error() }
-                error.appendLine(context.getString(R.string.surname_mandatory))
+                _uiState.update { SignupUiState.Error }
+                _inputState.update { state -> state.copy(surnameError = context.getString(R.string.surname_mandatory)) }
             }
 
             if (state.password.length < 8) {
-                _uiState.update { SignupUiState.Error() }
-                error.appendLine(context.getString(R.string.passwords_lenght))
+                _uiState.update { SignupUiState.Error }
+                _inputState.update { state -> state.copy(passwordError = context.getString(R.string.passwords_lenght)) }
             } else if (state.password != state.confirmPassword) {
-                _uiState.update { SignupUiState.Error() }
-                error.appendLine(context.getString(R.string.passwords_dont_match))
+                _uiState.update { SignupUiState.Error }
+                _inputState.update { state -> state.copy(confirmPasswordError = context.getString(R.string.passwords_dont_match)) }
             }
 
 
             // if uiState is error, we save the error string and return
             if (uiState.value is SignupUiState.Error) {
-                _uiState.update { SignupUiState.Error(error.toString()) }
                 return@launch
             }
 
@@ -135,8 +149,8 @@ class SignupViewModel @Inject constructor(
                 state.password
             )
 
-            if (user == null) {
-                _uiState.update { SignupUiState.Error(context.getString(R.string.signup_error)) }
+            if (user != null) {
+                _uiState.update { SignupUiState.Error }
             } else {
                 _uiState.update { SignupUiState.Success(context.getString(R.string.signup_successful)) }
             }

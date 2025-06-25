@@ -35,6 +35,7 @@
     <string name="name_mandatory">Name is mandatory</string>
     <string name="surname_mandatory">Surname is mandatory</string>
     <string name="title_mandatory">Title is mandatory</string>
+    <string name="content_mandatory">Content is mandatory</string>
     <string name="passwords_dont_match">The two passwords don\'t match</string>
     <string name="passwords_lenght">Password needs to have at least 8 characters</string>
     <string name="send_reset_password_email">Send reset password email</string>
@@ -52,4 +53,5 @@
     <string name="select_date">Select date</string>
     <string name="error">Error</string>
     <string name="username_already_taken">Username already taken</string>
+    <string name="select_a_date">Select a date</string>
 </resources>

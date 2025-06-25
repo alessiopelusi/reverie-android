@@ -50,27 +50,27 @@ fun SignupScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Field(inputState.username, viewModel::onUsernameChange, R.string.username)
+                Field(inputState.username, inputState.usernameError, viewModel::onUsernameChange, R.string.username)
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Field(inputState.email, viewModel::onEmailChange, R.string.email)
+                Field(inputState.email, inputState.emailError, viewModel::onEmailChange, R.string.email)
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Field(inputState.name, viewModel::onNameChange, R.string.name)
+                Field(inputState.name, inputState.nameError, viewModel::onNameChange, R.string.name)
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Field(inputState.surname, viewModel::onSurnameChange, R.string.surname)
+                Field(inputState.surname, inputState.surnameError, viewModel::onSurnameChange, R.string.surname)
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                PasswordField(inputState.password, viewModel::onPasswordChange)
+                PasswordField(inputState.password, inputState.passwordError, viewModel::onPasswordChange)
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                PasswordField(inputState.confirmPassword, viewModel::onConfirmPasswordChange, placeholder = R.string.confirm_password)
+                PasswordField(inputState.confirmPassword, inputState.confirmPasswordError, viewModel::onConfirmPasswordChange, placeholder = R.string.confirm_password)
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -87,10 +87,6 @@ fun SignupScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                if (uiState is SignupUiState.Error) {
-                    Text(text = (uiState as SignupUiState.Error).errorMessage, color = MaterialTheme.colorScheme.error)
-                }
             }
         }
     }

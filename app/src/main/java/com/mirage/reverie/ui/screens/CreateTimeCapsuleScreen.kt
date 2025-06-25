@@ -1,6 +1,7 @@
 package com.mirage.reverie.ui.screens
 
 import android.app.DatePickerDialog
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,7 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
@@ -59,7 +62,8 @@ fun CreateTimeCapsuleScreen(
 
             Column (
                 modifier = Modifier.padding(0.dp, 20.dp)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ){
@@ -70,9 +74,9 @@ fun CreateTimeCapsuleScreen(
 
                 EditTitleField(timeCapsule.title, onNewValue = viewModel::onUpdateTitle)
                 ContentTextField (timeCapsule.content, onUpdateContent = viewModel::onUpdateContent)
-                DatePicker(viewModel::onUpdateDeadline)
-                EmailForm(viewModel::onUpdateEmailList)
-                PhoneNumberForm(viewModel::onUpdatePhoneList)
+                DatePicker(timeCapsule.deadline, viewModel::onUpdateDeadline)
+                EmailForm(timeCapsule.emails,  viewModel::onUpdateEmailList)
+                PhoneNumberForm(timeCapsule.phones, viewModel::onUpdatePhoneList)
 
                 Button (
                     onClick = viewModel::onCreateTimeCapsule
@@ -94,12 +98,10 @@ fun CreateTimeCapsuleScreen(
 }
 
 @Composable
-fun DatePicker(onUpdateDate: (Timestamp) -> Unit){
-    val context = LocalContext.current
-
-    // Stato per la data selezionata
-    var selectedDate by remember { mutableStateOf("") }
-
+fun DatePicker(
+    selectedDate: Timestamp,
+    onUpdateDate: (Timestamp) -> Unit
+){
     // Ottieni data attuale per default
     val calendar = Calendar.getInstance()
     val year = calendar.get(Calendar.YEAR)
@@ -107,7 +109,7 @@ fun DatePicker(onUpdateDate: (Timestamp) -> Unit){
     val day = calendar.get(Calendar.DAY_OF_MONTH)
 
     val datePickerDialog = DatePickerDialog(
-        context,
+        LocalContext.current,
         { _, selectedYear, selectedMonth, selectedDayOfMonth ->
             val selectedCalendar = Calendar.getInstance().apply {
                 set(Calendar.YEAR, selectedYear)
@@ -122,19 +124,18 @@ fun DatePicker(onUpdateDate: (Timestamp) -> Unit){
             val date = selectedCalendar.time
             val firebaseTimestamp = Timestamp(date)
 
-            onUpdateDate(firebaseTimestamp)
-
-            val formatter = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
-            val formattedDate = formatter.format(date)
-
-            selectedDate = formattedDate
+            if (firebaseTimestamp > Timestamp.now()) onUpdateDate(firebaseTimestamp)
         },
         year, month, day
     )
 
     Spacer(modifier = Modifier.height(8.dp))
 
-    Text(text = if (selectedDate.isEmpty()) stringResource(R.string.no_date_selected) else "${stringResource(R.string.date)}: $selectedDate")
+
+    val formatter = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
+    val formattedDate = formatter.format(selectedDate.toDate())
+
+    Text(text = if (selectedDate < Timestamp.now()) stringResource(R.string.no_date_selected) else "${stringResource(R.string.date)}: $formattedDate")
 
     Button(onClick = { datePickerDialog.show() }) {
         Text(text = stringResource(R.string.select_date))
@@ -142,9 +143,10 @@ fun DatePicker(onUpdateDate: (Timestamp) -> Unit){
 }
 
 @Composable
-fun EmailForm(onUpdateEmailList: (List<String>) -> Unit) {
-    var emails by remember { mutableStateOf(listOf("")) }
-
+fun EmailForm(
+    emails: List<String>,
+    onUpdateEmailList: (List<String>) -> Unit
+) {
     Column(modifier = Modifier.padding(16.dp)) {
         Text("Destinatari Email", style = MaterialTheme.typography.titleMedium)
 
@@ -171,7 +173,7 @@ fun EmailForm(onUpdateEmailList: (List<String>) -> Unit) {
 
                 if (emails.size > 1) {
                     IconButton(onClick = {
-                        emails = emails.toMutableList().also { it.removeAt(index) }
+                        onUpdateEmailList(emails.toMutableList().also { it.removeAt(index) })
                     }) {
                         Icon(Icons.Default.Delete, contentDescription = "Rimuovi")
                     }
@@ -189,7 +191,7 @@ fun EmailForm(onUpdateEmailList: (List<String>) -> Unit) {
         }
 
         Button(
-            onClick = { emails = emails + "" },
+            onClick = { onUpdateEmailList(emails + "") },
             modifier = Modifier.padding(top = 8.dp)
         ) {
             Text("Aggiungi un altro destinatario")
@@ -198,10 +200,11 @@ fun EmailForm(onUpdateEmailList: (List<String>) -> Unit) {
 }
 
 @Composable
-fun PhoneNumberForm(onUpdatePhoneList: (List<String>) -> Unit) {
+fun PhoneNumberForm(
+    phones: List<String>,
+    onUpdatePhoneList: (List<String>) -> Unit
+) {
     // Ogni voce è una Pair di prefisso e numero
-    var phones by remember { mutableStateOf(listOf("")) }
-
     Column(modifier = Modifier.padding(16.dp)) {
         Text("Numeri di telefono", style = MaterialTheme.typography.titleMedium)
 
@@ -215,7 +218,7 @@ fun PhoneNumberForm(onUpdatePhoneList: (List<String>) -> Unit) {
                 OutlinedTextField(
                     value = number,
                     onValueChange = { newValue ->
-                        onUpdatePhoneList(phones.toMutableList().also { it[index] to newValue })
+                        onUpdatePhoneList(phones.toMutableList().also { it[index] = newValue })
                     },
                     label = { Text("Numero") },
                     modifier = Modifier.weight(1f),
@@ -228,7 +231,7 @@ fun PhoneNumberForm(onUpdatePhoneList: (List<String>) -> Unit) {
 
                 if (phones.size > 1) {
                     IconButton (onClick = {
-                        phones = phones.toMutableList().also { it.removeAt(index) }
+                        onUpdatePhoneList(phones.toMutableList().also { it.removeAt(index) })
                     }) {
                         Icon(Icons.Default.Delete, contentDescription = "Rimuovi")
                     }
@@ -244,6 +247,7 @@ fun PhoneNumberForm(onUpdatePhoneList: (List<String>) -> Unit) {
                 )
             }
 
+            // .filter { !it.isWhitespace() }
             if (number.length < 5 || !number.drop(1).all { it.isDigit() }) {
                 Text(
                     "Numero non valido",
@@ -254,7 +258,7 @@ fun PhoneNumberForm(onUpdatePhoneList: (List<String>) -> Unit) {
         }
 
         Button(
-            onClick = { phones = phones + "" },
+            onClick = { onUpdatePhoneList(phones + "") },
             modifier = Modifier.padding(top = 8.dp)
         ) {
             Text("Aggiungi un altro numero")

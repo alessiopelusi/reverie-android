@@ -41,6 +41,7 @@ class CreateTimeCapsuleViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val repository: TimeCapsuleRepository,
     private val auth: FirebaseAuth,
+    private val context: Context
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<CreateTimeCapsuleUiState>(CreateTimeCapsuleUiState.Loading)
     val uiState = _uiState.asStateFlow()
@@ -66,10 +67,13 @@ class CreateTimeCapsuleViewModel @Inject constructor(
 
         val state = formState.value
         if (state.timeCapsule.title.isBlank()) {
-            _uiState.update { CreateTimeCapsuleUiState.Error("Il titolo è obbligatorio") }
+            _uiState.update { CreateTimeCapsuleUiState.Error(context.getString(R.string.title_mandatory)) }
         }
         if (state.timeCapsule.content.isBlank()) {
-            _uiState.update { CreateTimeCapsuleUiState.Error("Il contenuto è obbligatorio") }
+            _uiState.update { CreateTimeCapsuleUiState.Error(context.getString(R.string.content_mandatory)) }
+        }
+        if (state.timeCapsule.deadline < Timestamp.now()) {
+            _uiState.update { CreateTimeCapsuleUiState.Error(context.getString(R.string.select_a_date)) }
         }
 //        if (state.timeCapsule.emails.isEmpty() && state.timeCapsule.phones.isEmpty()) {
 //            _uiState.update { CreateTimeCapsuleUiState.Error("Il contenuto è obbligatorio") }
