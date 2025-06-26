@@ -80,7 +80,9 @@ fun ViewTimeCapsuleScreen(
                     )
                 } else {
                     Text(
-                        text = "Contenuto non disponibile."
+                        text = "Contenuto non disponibile.",
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
                     )
                 }
 
@@ -97,23 +99,25 @@ fun ViewTimeCapsuleScreen(
                     text = timeCapsule.userId
                 )
 
-                Spacer(modifier = Modifier.height(50.dp))
+                if (timeCapsuleType != TimeCapsuleType.RECEIVED) {
+                    Spacer(modifier = Modifier.height(50.dp))
 
-                Text(
-                    text = if ((timeCapsule.emails + timeCapsule.phones + timeCapsule.receiversIds).count() == 1) {
-                        "Destinatario"
-                    } else {
-                        "Destinatari"
-                    },
-                    style = TextStyle(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    ),
-                )
-                for (destinatario in (timeCapsule.emails + timeCapsule.phones + timeCapsule.receiversIds)){
                     Text(
-                        text = destinatario
+                        text = if ((timeCapsule.emails + timeCapsule.phones + timeCapsule.receiversIds).count() == 1) {
+                            "Destinatario:"
+                        } else {
+                            "Destinatari:"
+                        },
+                        style = TextStyle(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp
+                        ),
                     )
+                    for (destinatario in (timeCapsule.emails + timeCapsule.phones + timeCapsule.receiversIds)){
+                        Text(
+                            text = destinatario
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(50.dp))
@@ -156,25 +160,6 @@ fun ViewTimeCapsuleScreen(
                         )
                     }
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                if (timeCapsuleType != TimeCapsuleType.RECEIVED) {
-                    Text(
-                        modifier = Modifier.padding(8.dp),
-                        text = timeCapsule.emails.toString()
-                    )
-                    Text(
-                        modifier = Modifier.padding(8.dp),
-                        text = timeCapsule.phones.toString()
-                    )
-                    Text(
-                        modifier = Modifier.padding(8.dp),
-                        text = timeCapsule.receiversIds.toString()
-                    )
-                }
-
-
             }
         }
         is ViewTimeCapsuleState.Error -> Text(text = "${stringResource(R.string.error)}: ${(uiState as ViewTimeCapsuleState.Error).exception.message}")
