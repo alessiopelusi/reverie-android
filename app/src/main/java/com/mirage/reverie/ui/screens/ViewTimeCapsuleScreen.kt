@@ -3,6 +3,7 @@ package com.mirage.reverie.ui.screens
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,6 +29,7 @@ import com.mirage.reverie.R
 import com.mirage.reverie.viewmodel.TimeCapsuleType
 import com.mirage.reverie.viewmodel.ViewTimeCapsuleState
 import com.mirage.reverie.viewmodel.ViewTimeCapsuleViewModel
+import java.text.SimpleDateFormat
 
 @Composable
 fun ViewTimeCapsuleScreen(
@@ -40,67 +42,120 @@ fun ViewTimeCapsuleScreen(
         is ViewTimeCapsuleState.Success -> {
             val timeCapsule = (uiState as ViewTimeCapsuleState.Success).timeCapsule
             val timeCapsuleType = (uiState as ViewTimeCapsuleState.Success).timeCapsuleType
+            val formatter = SimpleDateFormat("dd MMMM yyyy")
             val scrollState = rememberScrollState()
+
             Column (
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(scrollState),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                //verticalArrangement = Arrangement.Center
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 25.dp, vertical = 50.dp),
             ){
+
                 Text(
                     text = timeCapsule.title,
                     style = TextStyle(
                         fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    )
+                        fontSize = 25.sp
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
                 )
+
+                Spacer(modifier = Modifier.height(50.dp))
+
                 if (timeCapsuleType != TimeCapsuleType.SCHEDULED) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth()
-                            .padding(10.dp)
-                    ) {
-                        Text(
-                            text = "Contenuto della lettera:",
-                            style = TextStyle(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp
-                            )
-                        )
-                        Text(
-                            modifier = Modifier.padding(8.dp),
-                            text = timeCapsule.content,
-                        )
-                    }
+                    Text(
+                        text = "Contenuto della lettera:",
+                        style = TextStyle(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Start
+                    )
+                    Text(
+                        text = timeCapsule.content,
+                        textAlign = TextAlign.Justify
+                    )
                 } else {
                     Text(
                         text = "Contenuto non disponibile."
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(50.dp))
 
                 Text(
                     text = "Mittente:",
                     style = TextStyle(
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
-                    )
+                    ),
                 )
                 Text(
                     text = timeCapsule.userId
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(50.dp))
 
                 Text(
-                    modifier = Modifier.padding(8.dp),
-                    text = timeCapsule.creationDate.toString()
+                    text = if ((timeCapsule.emails + timeCapsule.phones + timeCapsule.receiversIds).count() == 1) {
+                        "Destinatario"
+                    } else {
+                        "Destinatari"
+                    },
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    ),
                 )
-                Text(
-                    modifier = Modifier.padding(8.dp),
-                    text = timeCapsule.deadline.toString()
-                )
+                for (destinatario in (timeCapsule.emails + timeCapsule.phones + timeCapsule.receiversIds)){
+                    Text(
+                        text = destinatario
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(50.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Data di Creazione:",
+                            style = TextStyle(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp
+                            ),
+                        )
+                        Text(
+                            modifier = Modifier.padding(8.dp),
+                            text = formatter.format(timeCapsule.creationDate.toDate())
+                        )
+                    }
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Data di Arrivo:",
+                            style = TextStyle(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp
+                            ),
+                        )
+                        Text(
+                            modifier = Modifier.padding(8.dp),
+                            text = formatter.format(timeCapsule.deadline.toDate())
+
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
