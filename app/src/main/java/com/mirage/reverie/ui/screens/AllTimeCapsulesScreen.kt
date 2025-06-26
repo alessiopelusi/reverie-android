@@ -74,11 +74,8 @@ fun AllTimeCapsulesScreen(
     when (uiState) {
         is AllTimeCapsulesUiState.Loading -> CircularProgressIndicator()
         is AllTimeCapsulesUiState.Success -> {
-            val timeCapsuleScheduledMap = (uiState as AllTimeCapsulesUiState.Success).timeCapsuleScheduledMap
             val timeCapsuleScheduled = (uiState as AllTimeCapsulesUiState.Success).timeCapsuleScheduled
-            val timeCapsuleSentMap = (uiState as AllTimeCapsulesUiState.Success).timeCapsuleSentMap
             val timeCapsuleSent = (uiState as AllTimeCapsulesUiState.Success).timeCapsuleSent
-            val timeCapsuleReceivedMap = (uiState as AllTimeCapsulesUiState.Success).timeCapsuleReceivedMap
             val timeCapsuleReceived = (uiState as AllTimeCapsulesUiState.Success).timeCapsuleReceived
 
             val buttonElements = (uiState as AllTimeCapsulesUiState.Success).buttonElements
@@ -90,14 +87,11 @@ fun AllTimeCapsulesScreen(
             ) {
                 item{
                     Card (
-                        Modifier
-                            .padding(8.dp)
-                            .border(width = 2.dp, color = Color.Black),
+                        Modifier.padding(40.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White)
                     ) {
                         Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp), // Adds spacing between elements
+                            verticalArrangement = Arrangement.spacedBy(4.dp), // Adds spacing between elements
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
                             TimeCapsuleComposable(
@@ -107,7 +101,7 @@ fun AllTimeCapsulesScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 textAlign = TextAlign.Center,
                                 fontWeight = FontWeight.Bold,
-                                text = "Lettera"
+                                text = "Lettera per il futuro"
                             )
                             Text(
                                 modifier = Modifier.fillMaxWidth(),
@@ -183,9 +177,6 @@ fun AllTimeCapsulesScreen(
 @Composable
 fun TimeCapsuleComposable(modifier: Modifier) {
     Box(
-        modifier = modifier
-//            .border(width = 2.dp, color = Color.Blue, shape = RectangleShape)
-            .padding(16.dp),
         contentAlignment = Alignment.Center,
     ) {
         AsyncImage(
