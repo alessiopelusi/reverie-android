@@ -1,79 +1,82 @@
 package com.mirage.reverie.ui.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Divider
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.mirage.reverie.ui.theme.Purple80
 import com.mirage.reverie.viewmodel.ButtonState
 import com.mirage.reverie.viewmodel.TimeCapsuleType
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import com.mirage.reverie.ui.theme.PaperColor
 
 @Composable
 fun <T> ButtonBar(buttonState: T, buttonElements: List<T>, onButtonStateUpdate: (T) -> Unit){
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.Center
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center,
+
     ) {
-        val cornerRadius = 16.dp
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .border(
+                    BorderStroke(1.dp, Color.Black),
+                    shape = RoundedCornerShape(
+                        topStart = 8.dp,
+                        topEnd = 8.dp,
+                        bottomStart = 8.dp,
+                        bottomEnd = 8.dp
+                    )
+                )
+                .background(Color.Transparent)
+//                .padding(horizontal = 8.dp, vertical = 4.dp),
+//            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            buttonElements.forEachIndexed { index, item ->
 
-        buttonElements.forEachIndexed { index, item ->
-            OutlinedButton(
-                onClick = {
-                    onButtonStateUpdate(item)
-                },
-                shape = when (index) {
-                    0 -> RoundedCornerShape(
-                        topStart = cornerRadius,
-                        topEnd = 0.dp,
-                        bottomStart = cornerRadius,
-                        bottomEnd = 0.dp
-                    )
+                val isSelected = item == buttonState
 
-                    buttonElements.size - 1 -> RoundedCornerShape(
-                        topStart = 0.dp,
-                        topEnd = cornerRadius,
-                        bottomStart = 0.dp,
-                        bottomEnd = cornerRadius
-                    )
-
-                    else -> RoundedCornerShape(
-                        topStart = 0.dp,
-                        topEnd = 0.dp,
-                        bottomStart = 0.dp,
-                        bottomEnd = 0.dp
-                    )
-                },
-                border = BorderStroke(
-                    1.dp, if (buttonState == item) {
-                        Purple80
-                    } else {
-                        Purple80.copy(alpha = 0.75f)
-                    }
-                ),
-                colors = if (buttonState == item) {
-                    ButtonDefaults.outlinedButtonColors(
-                        containerColor = Purple80.copy(alpha = 0.1f),
-                        contentColor = Purple80
-                    )
-                } else {
-                    ButtonDefaults.outlinedButtonColors(
-                        containerColor = MaterialTheme.colorScheme.background,
-                        contentColor = Purple80
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (isSelected) MaterialTheme.colorScheme.secondary else Color.Transparent)
+                        .clickable { onButtonStateUpdate(item) }
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = item.toString(),
+                        style = TextStyle(
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                        ),
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
-            ) {
-                Text(item.toString())
             }
         }
     }
