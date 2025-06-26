@@ -1,8 +1,15 @@
 package com.mirage.reverie.ui.screens
 
+import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -10,7 +17,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mirage.reverie.R
@@ -29,22 +40,59 @@ fun ViewTimeCapsuleScreen(
         is ViewTimeCapsuleState.Success -> {
             val timeCapsule = (uiState as ViewTimeCapsuleState.Success).timeCapsule
             val timeCapsuleType = (uiState as ViewTimeCapsuleState.Success).timeCapsuleType
-
+            val scrollState = rememberScrollState()
             Column (
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(0.dp, 20.dp),
+                    .verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 //verticalArrangement = Arrangement.Center
             ){
                 Text(
-                    modifier = Modifier.padding(8.dp),
-                    text = timeCapsule.title
+                    text = timeCapsule.title,
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
+                )
+                if (timeCapsuleType != TimeCapsuleType.SCHEDULED) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(10.dp)
+                    ) {
+                        Text(
+                            text = "Contenuto della lettera:",
+                            style = TextStyle(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp
+                            )
+                        )
+                        Text(
+                            modifier = Modifier.padding(8.dp),
+                            text = timeCapsule.content,
+                        )
+                    }
+                } else {
+                    Text(
+                        text = "Contenuto non disponibile."
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Mittente:",
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
                 )
                 Text(
-                    modifier = Modifier.padding(8.dp),
                     text = timeCapsule.userId
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 Text(
                     modifier = Modifier.padding(8.dp),
                     text = timeCapsule.creationDate.toString()
@@ -53,6 +101,8 @@ fun ViewTimeCapsuleScreen(
                     modifier = Modifier.padding(8.dp),
                     text = timeCapsule.deadline.toString()
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 if (timeCapsuleType != TimeCapsuleType.RECEIVED) {
                     Text(
@@ -69,12 +119,7 @@ fun ViewTimeCapsuleScreen(
                     )
                 }
 
-                if (timeCapsuleType != TimeCapsuleType.SCHEDULED) {
-                    Text(
-                        modifier = Modifier.padding(8.dp),
-                        text = timeCapsule.content
-                    )
-                }
+
             }
         }
         is ViewTimeCapsuleState.Error -> Text(text = "${stringResource(R.string.error)}: ${(uiState as ViewTimeCapsuleState.Error).exception.message}")

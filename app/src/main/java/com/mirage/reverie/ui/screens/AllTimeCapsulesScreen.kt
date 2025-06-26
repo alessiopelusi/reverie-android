@@ -41,7 +41,11 @@ import com.mirage.reverie.viewmodel.AllTimeCapsulesViewModel
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.sp
 import com.mirage.reverie.data.model.TimeCapsule
 import com.mirage.reverie.ui.theme.Purple80
 import com.mirage.reverie.viewmodel.TimeCapsuleType
@@ -170,16 +174,25 @@ fun AllTimeCapsulesScreen(
                     TimeCapsuleType.SCHEDULED -> {
                         items(timeCapsuleScheduled) { timeCapsule ->
                             ScheduledTimeCapsule(timeCapsule, onNavigateToViewTimeCapsule)
+                            if (timeCapsule != timeCapsuleSent.last()){
+                                HorizontalDivider(thickness = 1.dp)
+                            }
                         }
                     }
                     TimeCapsuleType.SENT -> {
                         items(timeCapsuleSent) { timeCapsule ->
                             SentTimeCapsule(timeCapsule, onNavigateToViewTimeCapsule)
+                            if (timeCapsule != timeCapsuleSent.last()){
+                                HorizontalDivider(thickness = 1.dp)
+                            }
                         }
                     }
                     TimeCapsuleType.RECEIVED -> {
                         items(timeCapsuleReceived) { timeCapsule ->
                             ReceivedTimeCapsule(timeCapsule, onNavigateToViewTimeCapsule)
+                            if (timeCapsule != timeCapsuleSent.last()){
+                                HorizontalDivider(thickness = 1.dp)
+                            }
                         }
                     }
                 }
@@ -222,24 +235,49 @@ fun TimeCapsuleComposable(modifier: Modifier) {
 @Composable
 fun ScheduledTimeCapsule(timeCapsule: TimeCapsule, onClick: (String, TimeCapsuleType) -> Unit) {
     val formatter = SimpleDateFormat("dd MMMM yyyy") // Define the desired format
-
     Row(
         modifier = Modifier
-            .padding(20.dp, 5.dp)
+            .padding(vertical = 10.dp)
+            .fillMaxWidth()
             .clickable(onClick = { onClick(timeCapsule.id, TimeCapsuleType.SCHEDULED) }),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AsyncImage(
-            model = "https://wjecfnvsxxnvgheqdnpx.supabase.co/storage/v1/object/sign/time-capsules/letter.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xNTIwYmQ5Yy05ZTUxLTQ5MjMtODRmMy1kNzFiNTRkNTNjZjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0aW1lLWNhcHN1bGVzL2xldHRlci5wbmciLCJpYXQiOjE3NTA3NTc1MDQsImV4cCI6MTc4MjI5MzUwNH0.RTnD7Gu7q2mF6MlXhHmZXgn-xN4QJ3CVxUt4xf48s98",
-            contentDescription = null,
-            modifier = Modifier.size(80.dp)
-        )
-        Column {
-            Text(timeCapsule.title)
-            Text((timeCapsule.emails + timeCapsule.phones + timeCapsule.receiversIds).toString())
-            Text("Created: " + formatter.format(timeCapsule.creationDate.toDate()))
-            Text("Deadline: " + formatter.format(timeCapsule.deadline.toDate()))
+        Box(
+            modifier = Modifier
+                .weight(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            AsyncImage(
+                model = "https://wjecfnvsxxnvgheqdnpx.supabase.co/storage/v1/object/sign/time-capsules/letter.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xNTIwYmQ5Yy05ZTUxLTQ5MjMtODRmMy1kNzFiNTRkNTNjZjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0aW1lLWNhcHN1bGVzL2xldHRlci5wbmciLCJpYXQiOjE3NTA3NTc1MDQsImV4cCI6MTc4MjI5MzUwNH0.RTnD7Gu7q2mF6MlXhHmZXgn-xN4QJ3CVxUt4xf48s98",
+                contentDescription = null,
+                modifier = Modifier.size(80.dp)
+            )
+        }
+        Column(
+            modifier = Modifier.weight(2f)
+        ){
+            Text(
+                text = timeCapsule.title,
+                style = TextStyle(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                ),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Column {
+                Text(
+                    text = (timeCapsule.emails + timeCapsule.phones + timeCapsule.receiversIds).count().toString() +
+                        if((timeCapsule.emails + timeCapsule.phones + timeCapsule.receiversIds).count() == 1){
+                            " destinatario"
+                        } else {
+                            " destinatari"
+                        }
+                )
+                Text(
+                    text = "Creata il " + formatter.format(timeCapsule.creationDate.toDate())
+                )
+                Text(text = "In arrivo il " + formatter.format(timeCapsule.deadline.toDate()))
+            }
         }
     }
 }
@@ -250,23 +288,76 @@ fun SentTimeCapsule(timeCapsule: TimeCapsule, onClick: (String, TimeCapsuleType)
 
     Row(
         modifier = Modifier
-            .padding(20.dp, 5.dp)
+            .padding(vertical = 10.dp)
+            .fillMaxWidth()
             .clickable(onClick = { onClick(timeCapsule.id, TimeCapsuleType.SENT) }),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AsyncImage(
-            model = "https://wjecfnvsxxnvgheqdnpx.supabase.co/storage/v1/object/sign/time-capsules/letter.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xNTIwYmQ5Yy05ZTUxLTQ5MjMtODRmMy1kNzFiNTRkNTNjZjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0aW1lLWNhcHN1bGVzL2xldHRlci5wbmciLCJpYXQiOjE3NTA3NTc1MDQsImV4cCI6MTc4MjI5MzUwNH0.RTnD7Gu7q2mF6MlXhHmZXgn-xN4QJ3CVxUt4xf48s98",
-            contentDescription = null,
-            modifier = Modifier.size(80.dp)
-        )
-        Column {
-            Text(timeCapsule.title)
-            Text((timeCapsule.emails + timeCapsule.phones + timeCapsule.receiversIds).toString())
-            Text("Sent: " + formatter.format(timeCapsule.deadline.toDate()))
+        Box(
+            modifier = Modifier
+                .weight(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            AsyncImage(
+                model = "https://wjecfnvsxxnvgheqdnpx.supabase.co/storage/v1/object/sign/time-capsules/letter.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xNTIwYmQ5Yy05ZTUxLTQ5MjMtODRmMy1kNzFiNTRkNTNjZjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0aW1lLWNhcHN1bGVzL2xldHRlci5wbmciLCJpYXQiOjE3NTA3NTc1MDQsImV4cCI6MTc4MjI5MzUwNH0.RTnD7Gu7q2mF6MlXhHmZXgn-xN4QJ3CVxUt4xf48s98",
+                contentDescription = null,
+                modifier = Modifier.size(80.dp)
+            )
+        }
+        Column(
+            modifier = Modifier.weight(2f)
+        ) {
+            Text(
+                text = timeCapsule.title,
+                style = TextStyle(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                ),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Column {
+                Text(
+                    text = (timeCapsule.emails + timeCapsule.phones + timeCapsule.receiversIds).count()
+                        .toString() +
+                            if ((timeCapsule.emails + timeCapsule.phones + timeCapsule.receiversIds).count() == 1) {
+                                " destinatario"
+                            } else {
+                                " destinatari"
+                            }
+                )
+                Text(
+                    text = "Creata il " + formatter.format(timeCapsule.creationDate.toDate())
+                )
+                Text(text = "Arrivata il " + formatter.format(timeCapsule.deadline.toDate()))
+            }
         }
     }
 }
+//    Row(
+//        modifier = Modifier
+//            .padding(20.dp, 5.dp)
+//            .clickable(onClick = { onClick(timeCapsule.id, TimeCapsuleType.SENT) }),
+//        horizontalArrangement = Arrangement.spacedBy(10.dp),
+//        verticalAlignment = Alignment.CenterVertically
+//    ) {
+//        AsyncImage(
+//            model = "https://wjecfnvsxxnvgheqdnpx.supabase.co/storage/v1/object/sign/time-capsules/letter.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xNTIwYmQ5Yy05ZTUxLTQ5MjMtODRmMy1kNzFiNTRkNTNjZjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0aW1lLWNhcHN1bGVzL2xldHRlci5wbmciLCJpYXQiOjE3NTA3NTc1MDQsImV4cCI6MTc4MjI5MzUwNH0.RTnD7Gu7q2mF6MlXhHmZXgn-xN4QJ3CVxUt4xf48s98",
+//            contentDescription = null,
+//            modifier = Modifier.size(80.dp)
+//        )
+//        Column {
+//            Text(
+//                text = timeCapsule.title,
+//                style = TextStyle(
+//                    fontWeight = FontWeight.Bold,
+//                    fontSize = 18.sp
+//                )
+//            )
+//            Text((timeCapsule.emails + timeCapsule.phones + timeCapsule.receiversIds).toString())
+//            Text("Sent: " + formatter.format(timeCapsule.deadline.toDate()))
+//        }
+//    }
+//}
 
 @Composable
 fun ReceivedTimeCapsule(timeCapsule: TimeCapsule, onClick: (String, TimeCapsuleType) -> Unit) {
@@ -274,20 +365,73 @@ fun ReceivedTimeCapsule(timeCapsule: TimeCapsule, onClick: (String, TimeCapsuleT
 
     Row(
         modifier = Modifier
-            .padding(20.dp, 5.dp)
+            .padding(vertical = 10.dp)
+            .fillMaxWidth()
             .clickable(onClick = { onClick(timeCapsule.id, TimeCapsuleType.RECEIVED) }),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AsyncImage(
-            model = "https://wjecfnvsxxnvgheqdnpx.supabase.co/storage/v1/object/sign/time-capsules/letter.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xNTIwYmQ5Yy05ZTUxLTQ5MjMtODRmMy1kNzFiNTRkNTNjZjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0aW1lLWNhcHN1bGVzL2xldHRlci5wbmciLCJpYXQiOjE3NTA3NTc1MDQsImV4cCI6MTc4MjI5MzUwNH0.RTnD7Gu7q2mF6MlXhHmZXgn-xN4QJ3CVxUt4xf48s98",
-            contentDescription = null,
-            modifier = Modifier.size(80.dp)
-        )
-        Column {
-            Text(timeCapsule.title)
-            Text(timeCapsule.userId)
-            Text("Received: " + formatter.format(timeCapsule.deadline.toDate()))
+        Box(
+            modifier = Modifier
+                .weight(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            AsyncImage(
+                model = "https://wjecfnvsxxnvgheqdnpx.supabase.co/storage/v1/object/sign/time-capsules/letter.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xNTIwYmQ5Yy05ZTUxLTQ5MjMtODRmMy1kNzFiNTRkNTNjZjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0aW1lLWNhcHN1bGVzL2xldHRlci5wbmciLCJpYXQiOjE3NTA3NTc1MDQsImV4cCI6MTc4MjI5MzUwNH0.RTnD7Gu7q2mF6MlXhHmZXgn-xN4QJ3CVxUt4xf48s98",
+                contentDescription = null,
+                modifier = Modifier.size(80.dp)
+            )
+        }
+        Column(
+            modifier = Modifier.weight(2f)
+        ) {
+            Text(
+                text = timeCapsule.title,
+                style = TextStyle(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                ),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Column {
+                Text(
+                    text = (timeCapsule.emails + timeCapsule.phones + timeCapsule.receiversIds).count()
+                        .toString() +
+                            if ((timeCapsule.emails + timeCapsule.phones + timeCapsule.receiversIds).count() == 1) {
+                                " destinatario"
+                            } else {
+                                " destinatari"
+                            }
+                )
+                Text(
+                    text = "Creata il " + formatter.format(timeCapsule.creationDate.toDate())
+                )
+                Text(text = "Ricevuta il " + formatter.format(timeCapsule.deadline.toDate()))
+            }
         }
     }
 }
+//    Row(
+//        modifier = Modifier
+//            .padding(20.dp, 5.dp)
+//            .clickable(onClick = { onClick(timeCapsule.id, TimeCapsuleType.RECEIVED) }),
+//        horizontalArrangement = Arrangement.spacedBy(10.dp),
+//        verticalAlignment = Alignment.CenterVertically
+//    ) {
+//        AsyncImage(
+//            model = "https://wjecfnvsxxnvgheqdnpx.supabase.co/storage/v1/object/sign/time-capsules/letter.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xNTIwYmQ5Yy05ZTUxLTQ5MjMtODRmMy1kNzFiNTRkNTNjZjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0aW1lLWNhcHN1bGVzL2xldHRlci5wbmciLCJpYXQiOjE3NTA3NTc1MDQsImV4cCI6MTc4MjI5MzUwNH0.RTnD7Gu7q2mF6MlXhHmZXgn-xN4QJ3CVxUt4xf48s98",
+//            contentDescription = null,
+//            modifier = Modifier.size(80.dp)
+//        )
+//        Column {
+//            Text(
+//                text = timeCapsule.title,
+//                style = TextStyle(
+//                    fontWeight = FontWeight.Bold,
+//                    fontSize = 18.sp
+//                )
+//            )
+//            Text(timeCapsule.userId)
+//            Text("Received: " + formatter.format(timeCapsule.deadline.toDate()))
+//        }
+//    }
+//}
