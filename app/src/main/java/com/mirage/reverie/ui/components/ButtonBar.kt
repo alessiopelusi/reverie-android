@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Divider
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -22,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -34,17 +37,18 @@ import com.mirage.reverie.ui.theme.PaperColor
 
 @Composable
 fun <T> ButtonBar(buttonState: T, buttonElements: List<T>, onButtonStateUpdate: (T) -> Unit){
-    Box(
-        modifier = Modifier.fillMaxWidth(),
-        contentAlignment = Alignment.Center,
-
+    Card (
+        modifier = Modifier.fillMaxWidth()
+            .padding(16.dp),
+        elevation = CardDefaults.cardElevation(8.dp),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .border(
-                    BorderStroke(1.dp, Color.Black),
+                    BorderStroke(0.dp, Color.Black),
                     shape = RoundedCornerShape(
                         topStart = 8.dp,
                         topEnd = 8.dp,
@@ -53,6 +57,11 @@ fun <T> ButtonBar(buttonState: T, buttonElements: List<T>, onButtonStateUpdate: 
                     )
                 )
                 .background(Color.Transparent)
+//                .shadow(
+//                    elevation = 8.dp,
+//                    shape = RoundedCornerShape(12.dp),
+//                    clip = true // clip = true se vuoi tagliare tutto al bordo
+//                )
 //                .padding(horizontal = 8.dp, vertical = 4.dp),
 //            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
