@@ -53,6 +53,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
 import com.mirage.reverie.R
 import com.mirage.reverie.data.model.TimeCapsule
+import com.mirage.reverie.ui.components.ButtonBar
 import com.mirage.reverie.ui.components.ConfirmDelete
 import com.mirage.reverie.ui.theme.Purple80
 import com.mirage.reverie.viewmodel.TimeCapsuleType
@@ -117,65 +118,7 @@ fun AllTimeCapsulesScreen(
                     }
                 }
                 item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        val cornerRadius = 16.dp
-
-                        buttonElements.forEachIndexed { index, item ->
-                            OutlinedButton(
-                                onClick = {
-                                    viewModel.onButtonStateUpdate(item)
-                                },
-                                shape = when (index) {
-                                    0 -> RoundedCornerShape(
-                                        topStart = cornerRadius,
-                                        topEnd = 0.dp,
-                                        bottomStart = cornerRadius,
-                                        bottomEnd = 0.dp
-                                    )
-
-                                    buttonElements.size - 1 -> RoundedCornerShape(
-                                        topStart = 0.dp,
-                                        topEnd = cornerRadius,
-                                        bottomStart = 0.dp,
-                                        bottomEnd = cornerRadius
-                                    )
-
-                                    else -> RoundedCornerShape(
-                                        topStart = 0.dp,
-                                        topEnd = 0.dp,
-                                        bottomStart = 0.dp,
-                                        bottomEnd = 0.dp
-                                    )
-                                },
-                                border = BorderStroke(
-                                    1.dp, if (buttonState == item) {
-                                        Purple80
-                                    } else {
-                                        Purple80.copy(alpha = 0.75f)
-                                    }
-                                ),
-                                colors = if (buttonState == item) {
-                                    ButtonDefaults.outlinedButtonColors(
-                                        containerColor = Purple80.copy(alpha = 0.1f),
-                                        contentColor = Purple80
-                                    )
-                                } else {
-                                    ButtonDefaults.outlinedButtonColors(
-                                        containerColor = MaterialTheme.colorScheme.background,
-                                        contentColor = Purple80
-                                    )
-                                }
-                            ) {
-                                Text(item.toString())
-                            }
-
-                        }
-                    }
+                    ButtonBar(buttonState, buttonElements, viewModel::onButtonStateUpdate)
                 }
                 when(buttonState) {
                     TimeCapsuleType.SCHEDULED -> {
@@ -366,31 +309,6 @@ fun SentTimeCapsule(timeCapsule: TimeCapsule, onClick: (String, TimeCapsuleType)
         }
     }
 }
-//    Row(
-//        modifier = Modifier
-//            .padding(20.dp, 5.dp)
-//            .clickable(onClick = { onClick(timeCapsule.id, TimeCapsuleType.SENT) }),
-//        horizontalArrangement = Arrangement.spacedBy(10.dp),
-//        verticalAlignment = Alignment.CenterVertically
-//    ) {
-//        AsyncImage(
-//            model = "https://wjecfnvsxxnvgheqdnpx.supabase.co/storage/v1/object/sign/time-capsules/letter.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xNTIwYmQ5Yy05ZTUxLTQ5MjMtODRmMy1kNzFiNTRkNTNjZjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0aW1lLWNhcHN1bGVzL2xldHRlci5wbmciLCJpYXQiOjE3NTA3NTc1MDQsImV4cCI6MTc4MjI5MzUwNH0.RTnD7Gu7q2mF6MlXhHmZXgn-xN4QJ3CVxUt4xf48s98",
-//            contentDescription = null,
-//            modifier = Modifier.size(80.dp)
-//        )
-//        Column {
-//            Text(
-//                text = timeCapsule.title,
-//                style = TextStyle(
-//                    fontWeight = FontWeight.Bold,
-//                    fontSize = 18.sp
-//                )
-//            )
-//            Text((timeCapsule.emails + timeCapsule.phones + timeCapsule.receiversIds).toString())
-//            Text("Sent: " + formatter.format(timeCapsule.deadline.toDate()))
-//        }
-//    }
-//}
 
 @Composable
 fun ReceivedTimeCapsule(timeCapsule: TimeCapsule, onClick: (String, TimeCapsuleType) -> Unit) {
@@ -443,28 +361,3 @@ fun ReceivedTimeCapsule(timeCapsule: TimeCapsule, onClick: (String, TimeCapsuleT
         }
     }
 }
-//    Row(
-//        modifier = Modifier
-//            .padding(20.dp, 5.dp)
-//            .clickable(onClick = { onClick(timeCapsule.id, TimeCapsuleType.RECEIVED) }),
-//        horizontalArrangement = Arrangement.spacedBy(10.dp),
-//        verticalAlignment = Alignment.CenterVertically
-//    ) {
-//        AsyncImage(
-//            model = "https://wjecfnvsxxnvgheqdnpx.supabase.co/storage/v1/object/sign/time-capsules/letter.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xNTIwYmQ5Yy05ZTUxLTQ5MjMtODRmMy1kNzFiNTRkNTNjZjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0aW1lLWNhcHN1bGVzL2xldHRlci5wbmciLCJpYXQiOjE3NTA3NTc1MDQsImV4cCI6MTc4MjI5MzUwNH0.RTnD7Gu7q2mF6MlXhHmZXgn-xN4QJ3CVxUt4xf48s98",
-//            contentDescription = null,
-//            modifier = Modifier.size(80.dp)
-//        )
-//        Column {
-//            Text(
-//                text = timeCapsule.title,
-//                style = TextStyle(
-//                    fontWeight = FontWeight.Bold,
-//                    fontSize = 18.sp
-//                )
-//            )
-//            Text(timeCapsule.userId)
-//            Text("Received: " + formatter.format(timeCapsule.deadline.toDate()))
-//        }
-//    }
-//}

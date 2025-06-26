@@ -63,6 +63,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.ui.res.stringResource
 import com.mirage.reverie.R
 import com.mirage.reverie.data.model.DiaryImage
+import com.mirage.reverie.ui.components.ButtonBar
 import com.mirage.reverie.ui.components.ConfirmDelete
 
 @Composable
@@ -241,76 +242,7 @@ fun AllDiariesScreen(
                 item(
                     span = StaggeredGridItemSpan.FullLine
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        val cornerRadius = 16.dp
-
-                        buttonElements.forEachIndexed { index, item ->
-                            OutlinedButton(
-                                onClick = {
-                                    viewModel.onButtonStateUpdate(item)
-                                },
-//                                modifier = when (index) {
-//                                    0 ->
-//                                        Modifier
-//                                            .offset(0.dp, 0.dp)
-//                                            .zIndex(if (buttonState == item) 1f else 0f)
-//
-//                                    else ->
-//                                        Modifier
-//                                            .offset((-1 * index).dp, 0.dp)
-//                                            .zIndex(if (buttonState == item) 1f else 0f)
-//                                },
-                                shape = when (index) {
-                                    0 -> RoundedCornerShape(
-                                        topStart = cornerRadius,
-                                        topEnd = 0.dp,
-                                        bottomStart = cornerRadius,
-                                        bottomEnd = 0.dp
-                                    )
-
-                                    buttonElements.size - 1 -> RoundedCornerShape(
-                                        topStart = 0.dp,
-                                        topEnd = cornerRadius,
-                                        bottomStart = 0.dp,
-                                        bottomEnd = cornerRadius
-                                    )
-
-                                    else -> RoundedCornerShape(
-                                        topStart = 0.dp,
-                                        topEnd = 0.dp,
-                                        bottomStart = 0.dp,
-                                        bottomEnd = 0.dp
-                                    )
-                                },
-                                border = BorderStroke(
-                                    1.dp, if (buttonState == item) {
-                                        Purple80
-                                    } else {
-                                        Purple80.copy(alpha = 0.75f)
-                                    }
-                                ),
-                                colors = if (buttonState == item) {
-                                    ButtonDefaults.outlinedButtonColors(
-                                        containerColor = Purple80.copy(alpha = 0.1f),
-                                        contentColor = Purple80
-                                    )
-                                } else {
-                                    ButtonDefaults.outlinedButtonColors(
-                                        containerColor = MaterialTheme.colorScheme.background,
-                                        contentColor = Purple80
-                                    )
-                                }
-                            ) {
-                                Text(item.toString())
-                            }
-
-                        }
-                    }
+                    ButtonBar(buttonState, buttonElements, viewModel::onButtonStateUpdate)
                 }
                 when(buttonState) {
                     ButtonState.IMAGES -> {
