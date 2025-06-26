@@ -52,30 +52,35 @@ fun ProfileScreen(
                     fontWeight = FontWeight.Bold
                 )
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(40.dp))
 
                 Text(
                     text = "${stringResource(R.string.username)}: ${profile.username}",
                     style = MaterialTheme.typography.bodyLarge
                 )
 
+                Spacer(modifier = Modifier.height(40.dp))
                 Text(
                     text = "${stringResource(R.string.name)}: ${profile.name}",
                     style = MaterialTheme.typography.bodyLarge
                 )
+
+                Spacer(modifier = Modifier.height(40.dp))
 
                 Text(
                     text = "${stringResource(R.string.surname)}: ${profile.surname}",
                     style = MaterialTheme.typography.bodyLarge
                 )
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(40.dp))
 
                 Button( onClick = {
                     onEditProfile(profile.id)
                 }) {
                     Text(stringResource(R.string.edit_profile))
                 }
+
+                Spacer(modifier = Modifier.height(24.dp))
 
                 Button( onClick = {
                     onLogout(profile.id)

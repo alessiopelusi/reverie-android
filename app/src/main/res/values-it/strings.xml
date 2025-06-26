@@ -8,6 +8,7 @@
     <string name="sub_page">Sotto Pagina</string>
     <string name="day">Giorno</string>
     <string name="delete">Elimina</string>
+    <string name="cancel">Cancella</string>
     <string name="move_up">Sposta sopra</string>
     <string name="move_down">Sposta sotto</string>
     <string name="new_diary">Nuovo Diario</string>
@@ -51,4 +52,8 @@
     <string name="email_not_valid">Email non valida</string>
     <string name="save_changes">Salva modifiche</string>
     <string name="update_error">Errore di aggiornamento</string>
+    <string name="confirm_diary_deletion">Conferma eliminazione diario</string>
+    <string name="delete_diary">Sei sicuro di voler cancellare questo diario? Questa opzione non può essere annullata.</string>
+    <string name="move_prev_subpage">Muovi alla precedente sotto pagina</string>
+    <string name="move_next_subpage">Muovi alla prossima sotto pagina</string>
 </resources>

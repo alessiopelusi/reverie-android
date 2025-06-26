@@ -12,6 +12,7 @@ import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
@@ -66,6 +67,7 @@ import dev.romainguy.text.combobreaker.TextFlowJustification
 import dev.romainguy.text.combobreaker.material3.TextFlow
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.icons.outlined.Camera
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -75,6 +77,7 @@ import androidx.compose.ui.res.stringResource
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.mirage.reverie.data.model.DiaryImage
+import com.mirage.reverie.ui.components.ConfirmDelete
 import kotlinx.coroutines.delay
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
@@ -109,6 +112,7 @@ fun ViewDiaryScreen(
             val pages = (uiState as ViewDiaryUiState.Success).pages
             val pagesMap = (uiState as ViewDiaryUiState.Success).pagesMap
             val subPages = (uiState as ViewDiaryUiState.Success).subPages
+            val deleteDialogState = (uiState as ViewDiaryUiState.Success).deleteDialogState
 
             Column(
                 modifier = Modifier
@@ -122,7 +126,7 @@ fun ViewDiaryScreen(
                     text = diary.title
                 )
 
-                val diaryPageListState = rememberLazyListState(initialFirstVisibleItemIndex = subPages.lastIndex)
+                val diaryPageListState = (uiState as ViewDiaryUiState.Success).diaryPageListState
                 val currentSubPageIndex by remember {
                     derivedStateOf {
                         val layoutInfo = diaryPageListState.layoutInfo
@@ -134,7 +138,7 @@ fun ViewDiaryScreen(
                         // Find the item whose center is closest to the viewport center
                         visibleItems.minByOrNull { item ->
                             val itemCenter = item.offset + item.size / 2
-                            kotlin.math.abs(itemCenter - viewportCenter)
+                            abs(itemCenter - viewportCenter)
                         }?.index ?: 0
                     }
                 }
@@ -257,29 +261,51 @@ fun ViewDiaryScreen(
                     }
                 }
 
-                Button(
-                    onClick = {
-                        // Launch the photo picker and let the user choose only images.
-                        pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
-                    },
-                    modifier = Modifier.align(Alignment.End)
-                ) {
-                    Icon(Icons.Outlined.Camera, contentDescription = "Camera")
-                }
+                Row {
+                    if (currentPage != pages.last()) {
+                        Button(
+                            onClick = viewModel::onOpenDeleteDiaryDialog,
+                        ) {
+                            Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.delete))
+                        }
+                    }
 
 
-                Button(
-                    onClick = { onNavigateToEditDiaryPage(currentPage.id) },
-                    colors = ButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.primary,
-                        disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        disabledContentColor = MaterialTheme.colorScheme.primary
-                    ),
-                    modifier = Modifier.align(Alignment.End)
-                ) {
-                    Icon(Icons.Outlined.Edit, contentDescription = "Edit")
+                    Button(
+                        onClick = {
+                            // Launch the photo picker and let the user choose only images.
+                            pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
+                        },
+                    ) {
+                        Icon(Icons.Outlined.Camera, contentDescription = "Camera")
+                    }
+
+
+                    Button(
+                        onClick = { onNavigateToEditDiaryPage(currentPage.id) },
+                        colors = ButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.primary,
+                            disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            disabledContentColor = MaterialTheme.colorScheme.primary
+                        ),
+                    ) {
+                        Icon(Icons.Outlined.Edit, contentDescription = "Edit")
+                    }
                 }
+
+                if (deleteDialogState) {
+                    ConfirmDelete (
+                        stringResource(R.string.confirm_page_deletion),
+                        stringResource(R.string.delete_page),
+                        viewModel::onCloseDeletePageDialog
+                    ) {
+                        viewModel.onDeletePage(
+                            currentPage.id,
+                        )
+                    }
+                }
+
             }
         }
         is ViewDiaryUiState.Error -> Text(text = "Error: ${(uiState as ViewDiaryUiState.Error).exception.message}")
@@ -325,6 +351,8 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
             DropDownItem(stringResource(R.string.delete), viewModel::deleteImage),
             if (!viewModel.isLastSubPageImage(contextMenuImageId)) DropDownItem(stringResource(R.string.move_up), viewModel::moveImageUp) else null,
             if (!viewModel.isFirstSubPageImage(contextMenuImageId)) DropDownItem(stringResource(R.string.move_down), viewModel::moveImageDown) else null,
+            if (!viewModel.isImageInFirstSubPage(contextMenuImageId)) DropDownItem(stringResource(R.string.move_prev_subpage), viewModel::moveImagePrevSubPage) else null,
+            if (!viewModel.isImageInLastSubPage(contextMenuImageId)) DropDownItem(stringResource(R.string.move_next_subpage), viewModel::moveImageNextSubPage) else null,
         )
 
         val parentWidth = constraints.maxWidth.toFloat()

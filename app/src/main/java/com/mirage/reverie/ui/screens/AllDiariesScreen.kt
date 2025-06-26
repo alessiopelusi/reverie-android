@@ -60,7 +60,10 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.TextButton
+import androidx.compose.ui.res.stringResource
+import com.mirage.reverie.R
 import com.mirage.reverie.data.model.DiaryImage
+import com.mirage.reverie.ui.components.ConfirmDelete
 
 @Composable
 fun AllDiariesScreen(
@@ -218,9 +221,7 @@ fun AllDiariesScreen(
                                         Icon(Icons.Outlined.Edit, contentDescription = "Edit")
                                     }
                                     IconButton(
-                                        onClick = {
-                                            viewModel.onUpdateDeleteDiaryDialog(true)
-                                        },
+                                        onClick = viewModel::onOpenDeleteDiaryDialog,
                                         colors = IconButtonColors(
                                             containerColor = Color.White,
                                             contentColor = MaterialTheme.colorScheme.primary,
@@ -332,7 +333,9 @@ fun AllDiariesScreen(
 
                     }
                     ButtonState.TEXTS -> {
-
+                        item{
+                            Text("pages: ${currentDiary.pageIds.size}")
+                        }
                     }
                 }
             }
@@ -352,17 +355,17 @@ fun AllDiariesScreen(
                 }
             }
 
-            ConfirmDeleteDiary(
-                deleteDialogState,
-                {
-                    viewModel.onUpdateDeleteDiaryDialog(false)
-                },
-                {
+            if (deleteDialogState) {
+                ConfirmDelete (
+                    stringResource(R.string.confirm_diary_deletion),
+                    stringResource(R.string.delete_diary),
+                    viewModel::onCloseDeleteDiaryDialog
+                ) {
                     viewModel.onDeleteDiary(
                         currentDiary.id,
                     )
                 }
-            )
+            }
         }
         is AllDiariesUiState.Error -> Text(text = "Error: ${(uiState as AllDiariesUiState.Error).exception.message}")
     }
@@ -383,30 +386,6 @@ fun DiaryCoverComposable(modifier: Modifier, coverUrl: String) {
     }
 }
 
-@Composable
-fun ConfirmDeleteDiary(
-    showDialog: Boolean,
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit
-) {
-    if (showDialog) {
-        AlertDialog(
-            onDismissRequest = onDismiss,
-            title = { Text(text = "Confirm Deletion") },
-            text = { Text(text = "Are you sure you want to delete this item? This action cannot be undone.") },
-            confirmButton = {
-                TextButton(onClick = onConfirm) {
-                    Text(text = "Delete", color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismiss) {
-                    Text(text = "Cancel")
-                }
-            }
-        )
-    }
-}
 
 /*@Composable
 fun DiaryContentBar(

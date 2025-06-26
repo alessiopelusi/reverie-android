@@ -49,7 +49,7 @@ fun EditProfileScreen(
             ) {
 
                 Text(
-                    text = stringResource(R.string.your_profile),
+                    text = stringResource(R.string.edit_profile),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )

@@ -39,7 +39,7 @@ sealed class AllDiariesUiState {
         val diaryCoversMap: Map<String, DiaryCover>,
         val diaryPhotosMap: Map<String, List<DiaryImage>>,
         val pagerState: PagerState = createPagerState(allDiaries.diaryIds.size),
-        val buttonState: ButtonState = ButtonState.IMAGES,
+        val buttonState: ButtonState = ButtonState.TEXTS,
         val deleteDialogState: Boolean = false
     ) : AllDiariesUiState() {
         val diaries: List<Diary>
@@ -164,7 +164,7 @@ class AllDiariesViewModel @Inject constructor(
         }
     }
 
-    fun onUpdateDeleteDiaryDialog(newDeleteDialogState: Boolean) {
+    private fun onUpdateDeleteDiaryDialog(newDeleteDialogState: Boolean) {
         val state = uiState.value
         if (state !is AllDiariesUiState.Success) return
 
@@ -179,6 +179,14 @@ class AllDiariesViewModel @Inject constructor(
                 newDeleteDialogState
             )
         }
+    }
+
+    fun onCloseDeleteDiaryDialog() {
+        onUpdateDeleteDiaryDialog(false)
+    }
+
+    fun onOpenDeleteDiaryDialog() {
+        onUpdateDeleteDiaryDialog(true)
     }
 
     fun onDeleteDiary(diaryId: String){

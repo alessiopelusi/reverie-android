@@ -4,6 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.NavigationBar
@@ -36,6 +39,7 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
@@ -48,6 +52,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.compose.navigation
@@ -448,40 +453,47 @@ fun CustomBottomBar(navController: NavController) {
         TopLevelRoute(stringResource(R.string.time_capsule), TimeCapsulesRoute, Icons.Rounded.MailOutline)
     )
 
-    NavigationBar (
-        containerColor = MaterialTheme.colorScheme.primaryContainer,
-    ) {
-        val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentDestination = navBackStackEntry?.destination
-        topLevelRoutes.forEach { topLevelRoute ->
-            NavigationBarItem(
-                icon = { Icon(
-                    topLevelRoute.icon,
-                    contentDescription = topLevelRoute.name
-                ) },
-                label = { Text(topLevelRoute.name) },
-                //alwaysShowLabel = false, // don't reserve space for label
-                selected = currentDestination?.hierarchy?.any { it.hasRoute(topLevelRoute.route::class) } == true,
-                onClick = {
-                    navController.navigate(topLevelRoute.route) {
-                        // Pop up to the start destination of the graph to
-                        // avoid building up a large stack of destinations
-                        // on the back stack as users select items
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
+    Column {
+        // "top border"
+        HorizontalDivider(thickness = 1.dp)
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        NavigationBar (
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+        ) {
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentDestination = navBackStackEntry?.destination
+            topLevelRoutes.forEach { topLevelRoute ->
+                NavigationBarItem(
+                    icon = { Icon(
+                        topLevelRoute.icon,
+                        contentDescription = topLevelRoute.name
+                    ) },
+                    label = { Text(topLevelRoute.name) },
+                    //alwaysShowLabel = false, // don't reserve space for label
+                    selected = currentDestination?.hierarchy?.any { it.hasRoute(topLevelRoute.route::class) } == true,
+                    onClick = {
+                        navController.navigate(topLevelRoute.route) {
+                            // Pop up to the start destination of the graph to
+                            // avoid building up a large stack of destinations
+                            // on the back stack as users select items
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            // Avoid multiple copies of the same destination when
+                            // reselecting the same item
+                            launchSingleTop = true
+                            // Restore state when reselecting a previously selected item
+                            restoreState = true
                         }
-                        // Avoid multiple copies of the same destination when
-                        // reselecting the same item
-                        launchSingleTop = true
-                        // Restore state when reselecting a previously selected item
-                        restoreState = true
-                    }
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    //selectedIconColor = MaterialTheme.colorScheme.primary,
-                    indicatorColor = MaterialTheme.colorScheme.surface
-                ),
-            )
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        //selectedIconColor = MaterialTheme.colorScheme.primary,
+                        indicatorColor = MaterialTheme.colorScheme.surface
+                    ),
+                )
+            }
         }
     }
 }
