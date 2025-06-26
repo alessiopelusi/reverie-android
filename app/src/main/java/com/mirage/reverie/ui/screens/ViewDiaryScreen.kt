@@ -116,8 +116,7 @@ fun ViewDiaryScreen(
 
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .border(width = 2.dp, color = Color.Magenta, shape = RectangleShape),
+                    .fillMaxSize(),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -151,7 +150,6 @@ fun ViewDiaryScreen(
 
                 BoxWithConstraints (
                     modifier = Modifier
-                        .border(width = 2.dp, color = Color.Red, shape = RectangleShape)
                         .weight(1f, false),
                 ) {
                     val boxWithConstraintsScope = this

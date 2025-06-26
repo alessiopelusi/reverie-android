@@ -65,6 +65,7 @@ interface StorageService {
 
     suspend fun getTimeCapsule(timeCapsuleId: String): TimeCapsule?
     suspend fun saveTimeCapsule(timeCapsule: TimeCapsule): TimeCapsule
+    suspend fun deleteTimeCapsule(timeCapsuleId: String)
 }
 
 @Singleton
@@ -345,5 +346,9 @@ class StorageServiceImpl @Inject constructor(
     override suspend fun saveTimeCapsule(timeCapsule: TimeCapsule): TimeCapsule {
         val timeCapsuleId = firestore.collection(TIME_CAPSULE_COLLECTION).add(timeCapsule).await().id
         return timeCapsule.copy(id = timeCapsuleId)
+    }
+
+    override suspend fun deleteTimeCapsule(timeCapsuleId: String) {
+        firestore.collection(TIME_CAPSULE_COLLECTION).document(timeCapsuleId).delete().await()
     }
 }

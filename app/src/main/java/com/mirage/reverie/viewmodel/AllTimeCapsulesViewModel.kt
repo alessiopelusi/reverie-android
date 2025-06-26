@@ -24,6 +24,7 @@ sealed class AllTimeCapsulesUiState {
         val sentTimeCapsule: Map<String, TimeCapsule>, // capsule create dall'utente, scadute(inviate) e non scadute(programmate)
         val receivedTimeCapsule: Map<String, TimeCapsule>, // capsule destinate all'utente (scadute e non)
         val buttonState: TimeCapsuleType = TimeCapsuleType.SCHEDULED,
+        val deleteDialogCapsuleId: String = ""
     ) : AllTimeCapsulesUiState() {
         val timeCapsuleScheduledMap: Map<String, TimeCapsule> // capsule create dall'utente ma non ancora inviate in quanto la scadenza ancora non arriva
             get() = sentTimeCapsule.filter { it.value.deadline >= Timestamp.now() }
@@ -106,6 +107,47 @@ class AllTimeCapsulesViewModel @Inject constructor(
                 receivedTimeCapsule,
                 state.buttonState
             )
+        }
+    }
+
+    private fun onUpdateDeleteTimeCapsuleDialog(newTimeCapsuleId: String) {
+        val currState = uiState.value
+        if (currState !is AllTimeCapsulesUiState.Success) return
+
+        _uiState.update { state ->
+            state as AllTimeCapsulesUiState.Success
+            state.copy(
+                deleteDialogCapsuleId = newTimeCapsuleId
+            )
+        }
+    }
+
+    fun onCloseDeleteTimeCapsuleDialog() {
+        onUpdateDeleteTimeCapsuleDialog("")
+    }
+
+    fun onOpenDeleteTimeCapsuleDialog(timeCapsuleId: String) {
+        onUpdateDeleteTimeCapsuleDialog(timeCapsuleId)
+    }
+
+    fun onDeleteTimeCapsule() {
+        val state = uiState.value
+        if (state !is AllTimeCapsulesUiState.Success) return
+
+        viewModelScope.launch {
+            repository.deleteTimeCapsule(state.deleteDialogCapsuleId)
+
+            val updatedSentTimeCapsule = state.sentTimeCapsule.toMutableMap()
+            updatedSentTimeCapsule.remove(state.deleteDialogCapsuleId)
+
+            _uiState.update { state ->
+                state as AllTimeCapsulesUiState.Success
+
+                state.copy(
+                    sentTimeCapsule = updatedSentTimeCapsule,
+                    deleteDialogCapsuleId = ""
+                )
+            }
         }
     }
 }

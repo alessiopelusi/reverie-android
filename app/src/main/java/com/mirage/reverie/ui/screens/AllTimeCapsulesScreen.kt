@@ -39,14 +39,21 @@ import coil3.compose.AsyncImage
 import com.mirage.reverie.viewmodel.AllTimeCapsulesUiState
 import com.mirage.reverie.viewmodel.AllTimeCapsulesViewModel
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
+import com.mirage.reverie.R
 import com.mirage.reverie.data.model.TimeCapsule
+import com.mirage.reverie.ui.components.ConfirmDelete
 import com.mirage.reverie.ui.theme.Purple80
 import com.mirage.reverie.viewmodel.TimeCapsuleType
 import java.text.SimpleDateFormat
@@ -173,7 +180,9 @@ fun AllTimeCapsulesScreen(
                 when(buttonState) {
                     TimeCapsuleType.SCHEDULED -> {
                         items(timeCapsuleScheduled) { timeCapsule ->
-                            ScheduledTimeCapsule(timeCapsule, onNavigateToViewTimeCapsule)
+                            ScheduledTimeCapsule(timeCapsule, onNavigateToViewTimeCapsule) {
+                                viewModel.onOpenDeleteTimeCapsuleDialog(timeCapsule.id)
+                            }
                             if (timeCapsule != timeCapsuleSent.last()){
                                 HorizontalDivider(thickness = 1.dp)
                             }
@@ -212,6 +221,17 @@ fun AllTimeCapsulesScreen(
                     Icon(Icons.Filled.Add, "Small floating action button.")
                 }
             }
+
+            val deleteDialogCapsuleId = (uiState as AllTimeCapsulesUiState.Success).deleteDialogCapsuleId
+
+            if (deleteDialogCapsuleId.isNotEmpty()) {
+                ConfirmDelete (
+                    stringResource(R.string.confirm_diary_deletion),
+                    stringResource(R.string.delete_diary),
+                    viewModel::onCloseDeleteTimeCapsuleDialog,
+                    viewModel::onDeleteTimeCapsule
+                )
+            }
         }
         is AllTimeCapsulesUiState.Error -> Text(text = "Error: ${(uiState as AllTimeCapsulesUiState.Error).exception.message}")
     }
@@ -233,7 +253,7 @@ fun TimeCapsuleComposable(modifier: Modifier) {
 }
 
 @Composable
-fun ScheduledTimeCapsule(timeCapsule: TimeCapsule, onClick: (String, TimeCapsuleType) -> Unit) {
+fun ScheduledTimeCapsule(timeCapsule: TimeCapsule, onClick: (String, TimeCapsuleType) -> Unit, onOpenDeleteTimeCapsuleDialog: () -> Unit) {
     val formatter = SimpleDateFormat("dd MMMM yyyy") // Define the desired format
     Row(
         modifier = Modifier
@@ -278,6 +298,19 @@ fun ScheduledTimeCapsule(timeCapsule: TimeCapsule, onClick: (String, TimeCapsule
                 )
                 Text(text = "In arrivo il " + formatter.format(timeCapsule.deadline.toDate()))
             }
+        }
+        IconButton (
+            onClick = onOpenDeleteTimeCapsuleDialog,
+            colors = IconButtonColors(
+                containerColor = Color.White,
+                contentColor = MaterialTheme.colorScheme.primary,
+                disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                disabledContentColor = MaterialTheme.colorScheme.primary
+            ),
+//                                                modifier = Modifier
+//                                                    .align(Alignment.Bottom),
+        ) {
+            Icon(Icons.Outlined.Delete, contentDescription = "Delete")
         }
     }
 }
