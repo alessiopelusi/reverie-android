@@ -38,9 +38,6 @@ import com.mirage.reverie.ui.components.ContentTextField
 import com.mirage.reverie.viewmodel.CreateTimeCapsuleUiState
 import com.mirage.reverie.viewmodel.CreateTimeCapsuleViewModel
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.google.firebase.Timestamp
@@ -49,10 +46,8 @@ import com.mirage.reverie.formatDate
 import com.mirage.reverie.ui.components.SingleLineField
 import com.mirage.reverie.ui.components.PhoneNumber
 import com.mirage.reverie.ui.components.formatPhoneNumber
-import java.text.SimpleDateFormat
 import java.time.ZoneId
 import java.util.Calendar
-import java.util.Locale
 
 
 @Composable
@@ -200,7 +195,7 @@ fun PhonesList(
 //                                                modifier = Modifier
 //                                                    .align(Alignment.Bottom),
                 ) {
-                    Icon(Icons.Outlined.Delete, contentDescription = "Delete")
+                    Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.delete))
                 }
             }
         }
@@ -227,7 +222,7 @@ fun EmailsList(
 //                                                modifier = Modifier
 //                                                    .align(Alignment.Bottom),
                 ) {
-                    Icon(Icons.Outlined.Delete, contentDescription = "Delete")
+                    Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.delete))
                 }
             }
         }
@@ -254,7 +249,7 @@ fun ReceiversList(
 //                                                modifier = Modifier
 //                                                    .align(Alignment.Bottom),
                 ) {
-                    Icon(Icons.Outlined.Delete, contentDescription = "Delete")
+                    Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.delete))
                 }
             }
         }

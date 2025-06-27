@@ -24,6 +24,8 @@
     <string name="create">Create</string>
     <string name="save">Save</string>
     <string name="create_diary_message">You are creating your diary!</string>
+    <string name="edit_diary_page_message">You are editing your diary!</string>
+    <string name="create_diary">Create diary</string>
     <string name="edit_diary_message">You are editing your diary!</string>
     <string name="create_time_capsule_message">You are creating your time capsule!</string>
     <string name="content">Content</string>
@@ -85,4 +87,12 @@
     <string name="content_not_available">Content not available</string>
     <string name="letter_content">Letter content</string>
     <string name="profile">Profile</string>
+    <string name="page_number">Page number</string>
+    <string name="create_time_capsule">Create time capsule</string>
+    <string name="letter_for_the_future">Letter for the future</string>
+    <string name="letter_for_the_future_description">This letter is to send a message into the future</string>
+    <string name="created_on">Created on</string>
+    <string name="arriving_on">Arriving on</string>
+    <string name="arrived_on">Arrived on</string>
+    <string name="edit_diary_page">Edit diary page</string>
 </resources>

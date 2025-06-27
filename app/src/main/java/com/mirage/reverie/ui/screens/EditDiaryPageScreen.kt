@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -42,14 +41,14 @@ fun EditDiaryPageScreen(
             ){
                 Text(
                     modifier = Modifier.padding(8.dp),
-                    text = "You are editing your diary!",
+                    text = stringResource(R.string.edit_diary_page_message),
                 )
                 ContentTextField(page.content, viewModel::onUpdateContent, stringResource(R.string.content))
 
                 Button(
                     onClick = viewModel::onUpdatePage
                 ) {
-                    Text("Modifica")
+                    Text(stringResource(R.string.edit_diary_page_message))
                 }
             }
         }

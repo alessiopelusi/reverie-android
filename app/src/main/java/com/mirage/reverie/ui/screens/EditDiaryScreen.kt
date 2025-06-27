@@ -61,7 +61,6 @@ fun EditDiaryScreen(
                     columns = GridCells.Fixed(3), // 3 columns grid
                     modifier = Modifier
                         .padding(8.dp)
-                    //modifier = Modifier.fillMaxSize()
                 ) {
                     items(allCoversMap.keys.toList()) { item ->
                         DiaryCoverPreview(
@@ -118,6 +117,5 @@ fun EditTitleField(value: String, onNewValue: (String) -> Unit, modifier: Modifi
         value = value,
         onValueChange = { onNewValue(it) },
         placeholder = { Text(stringResource(R.string.title)) },
-        //leadingIcon = { [...] }
     )
 }

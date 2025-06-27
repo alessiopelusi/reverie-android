@@ -15,6 +15,8 @@
     <string name="create">Crea</string>
     <string name="save">Salva</string>
     <string name="create_diary_message">Stai creando il tuo diario!</string>
+    <string name="edit_diary_page_message">Stai modificando il tuo diario!</string>
+    <string name="create_diary">Crea diario</string>
     <string name="edit_diary_message">Stai modificando il tuo diario!</string>
     <string name="create_time_capsule_message">Stai creando la tua capsula del tempo!</string>
     <string name="content">Contenuto</string>
@@ -76,4 +78,12 @@
     <string name="content_not_available">Contenuto non disponibile</string>
     <string name="letter_content">Contenuto della lettera</string>
     <string name="profile">Profilo</string>
+    <string name="page_number">Numero di pagine</string>
+    <string name="create_time_capsule">Crea capsula del tempo</string>
+    <string name="letter_for_the_future">Lettera per il futuro</string>
+    <string name="letter_for_the_future_description">Questa lettera serve per mandare un messaggio nel futuro</string>
+    <string name="created_on">Creata il</string>
+    <string name="arriving_on">In arrivo il</string>
+    <string name="arrived_on">Arrivata il</string>
+    <string name="edit_diary_page">Modifica pagina di diario</string>
 </resources>

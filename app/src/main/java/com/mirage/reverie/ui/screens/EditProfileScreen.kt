@@ -25,7 +25,6 @@ import com.mirage.reverie.ui.components.ErrorField
 import com.mirage.reverie.ui.components.SingleLineField
 import com.mirage.reverie.viewmodel.EditProfileUiState
 import com.mirage.reverie.viewmodel.EditProfileViewModel
-import com.mirage.reverie.viewmodel.SignupUiState
 
 
 @Composable

@@ -4,9 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -23,7 +21,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Button
@@ -43,7 +40,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
@@ -66,8 +62,7 @@ import dev.romainguy.graphics.path.toPath
 import dev.romainguy.text.combobreaker.FlowType
 import dev.romainguy.text.combobreaker.TextFlowJustification
 import dev.romainguy.text.combobreaker.material3.TextFlow
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material.icons.outlined.Camera
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.IconButton
@@ -81,19 +76,14 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.PermissionState
 import com.mirage.reverie.data.model.DiaryImage
 import com.mirage.reverie.formatDate
 import com.mirage.reverie.ui.components.ConfirmDelete
 import kotlinx.coroutines.delay
-import java.text.SimpleDateFormat
-import java.time.format.DateTimeFormatter
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 
-@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ViewDiaryScreen(
     onNavigateToEditDiaryPage: (String) -> Unit,
@@ -167,7 +157,6 @@ fun ViewDiaryScreen(
                     modifier = Modifier
                         .weight(1f, false)
                         .padding(vertical = 10.dp)
-                        .border(BorderStroke(1.dp, Color.Blue)),
                 ) {
                     val boxWithConstraintsScope = this
 
@@ -272,8 +261,8 @@ fun ViewDiaryScreen(
                             enabled = !isLastPage,
                             colors = IconButtonColors(
                                 containerColor = Color.Transparent,
-                                contentColor = if (isLastPage) Color.Transparent else MaterialTheme.colorScheme.primary,
-                                disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = if (isLastPage) Color.Transparent else colorScheme.primary,
+                                disabledContainerColor = colorScheme.primaryContainer,
                                 disabledContentColor = Color.Transparent
                             )
                         ) {
@@ -303,10 +292,10 @@ fun ViewDiaryScreen(
                         Button(
                             onClick = { onNavigateToEditDiaryPage(currentPage.id) },
                             colors = ButtonColors(
-                                containerColor = MaterialTheme.colorScheme.secondary,
-                                contentColor = MaterialTheme.colorScheme.primary,
-                                disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                disabledContentColor = MaterialTheme.colorScheme.primary
+                                containerColor = colorScheme.secondary,
+                                contentColor = colorScheme.primary,
+                                disabledContainerColor = colorScheme.primaryContainer,
+                                disabledContentColor = colorScheme.primary
                             ),
                             modifier = Modifier.weight(1f)
                         ) {
@@ -333,10 +322,10 @@ fun ViewDiaryScreen(
                                 pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
                             },
                             colors = ButtonColors(
-                                containerColor = MaterialTheme.colorScheme.secondary,
-                                contentColor = MaterialTheme.colorScheme.primary,
-                                disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                disabledContentColor = MaterialTheme.colorScheme.primary
+                                containerColor = colorScheme.secondary,
+                                contentColor = colorScheme.primary,
+                                disabledContainerColor = colorScheme.primaryContainer,
+                                disabledContentColor = colorScheme.primary
                             ),
                             modifier = Modifier.weight(1f)
                         ) {
@@ -489,7 +478,7 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
                             )
                         }
                         .pointerInput(currentImage.bitmap) {
-                            detectTransformGestures { centroid, pan, zoom, rotation ->
+                            detectTransformGestures { _, pan, zoom, rotation ->
                                 // new scale
                                 var newScale = image.scale * zoom
 
@@ -590,17 +579,20 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
                 isContextMenuVisible = false
             },
             offset = pressOffset
-                /*.copy(
-                y = pressOffset.y - itemHeight
-            )*/
         ) {
             dropdownItems.forEach { item ->
-                DropdownMenuItem(onClick = {
-                    item.onClick(contextMenuImageId)
-                    isContextMenuVisible = false
-                }) {
-                    Text(text = item.text)
-                }
+                DropdownMenuItem(
+                    onClick = {
+                        item.onClick(contextMenuImageId)
+                        isContextMenuVisible = false
+                    },
+                    text = {
+                        Text(
+                            item.text,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                )
             }
         }
     }
