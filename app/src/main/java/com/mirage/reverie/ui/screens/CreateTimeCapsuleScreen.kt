@@ -1,27 +1,29 @@
 package com.mirage.reverie.ui.screens
 
 import android.app.DatePickerDialog
-import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -39,10 +41,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.KeyboardType
 import com.google.firebase.Timestamp
+import com.mirage.reverie.data.model.User
+import com.mirage.reverie.ui.components.SingleLineField
+import com.mirage.reverie.ui.components.PhoneNumber
+import com.mirage.reverie.ui.components.formatPhoneNumber
 import java.text.SimpleDateFormat
+import java.time.ZoneId
 import java.util.Calendar
 import java.util.Locale
 
@@ -59,6 +66,9 @@ fun CreateTimeCapsuleScreen(
         is CreateTimeCapsuleUiState.Idle, is CreateTimeCapsuleUiState.Error -> {
             val formState by viewModel.formState.collectAsStateWithLifecycle()
             val timeCapsule = formState.timeCapsule
+            val matchingUsers = formState.matchingUsers
+            val partialUsername = formState.partialUsername
+            val receivers = formState.userReceivers
 
             Column (
                 modifier = Modifier.padding(0.dp, 20.dp)
@@ -72,11 +82,43 @@ fun CreateTimeCapsuleScreen(
                     text = stringResource(R.string.create_time_capsule_message),
                 )
 
-                EditTitleField(timeCapsule.title, onNewValue = viewModel::onUpdateTitle)
-                ContentTextField (timeCapsule.content, onUpdateContent = viewModel::onUpdateContent)
+                SingleLineField(timeCapsule.title, formState.titleError, onNewValue = viewModel::onUpdateTitle, stringResource(R.string.title))
+
+                ContentTextField (timeCapsule.content, formState.contentError, viewModel::onUpdateContent, stringResource(R.string.content))
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                val formatter = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
+                val formattedDate = formatter.format(timeCapsule.deadline.toDate())
+
+                Text(text = if (timeCapsule.deadline < Timestamp.now()) stringResource(R.string.no_date_selected) else "${stringResource(R.string.date)}: $formattedDate")
+
                 DatePicker(timeCapsule.deadline, viewModel::onUpdateDeadline)
-                EmailForm(timeCapsule.emails,  viewModel::onUpdateEmailList)
-                PhoneNumberForm(timeCapsule.phones, viewModel::onUpdatePhoneList)
+
+                PhonesList(timeCapsule.phones, viewModel::onRemovePhoneNumber)
+                EmailsList(timeCapsule.emails, viewModel::onRemoveEmail)
+                ReceiversList(receivers, viewModel::onRemoveUser)
+
+                Row{
+                    PhoneNumber(formState.phoneNumber, formState.phoneNumberError, viewModel::onUpdatePhoneNumber)
+                    Button (
+                        onClick = viewModel::onAddPhoneNumber
+                    ) {
+                        Text(stringResource(R.string.create))
+                    }
+                }
+
+                Row {
+                    SingleLineField(formState.email, formState.emailError, viewModel::onUpdateEmail, stringResource(R.string.email))
+                    Button (
+                        onClick = viewModel::onAddEmail
+                    ) {
+                        Text(stringResource(R.string.create))
+                    }
+                }
+
+                SingleLineField(partialUsername, viewModel::onUpdatePartialUsername, stringResource(R.string.username))
+                SelectUserDropDownMenu(matchingUsers, onSelectedUser = viewModel::onAddUser)
 
                 Button (
                     onClick = viewModel::onCreateTimeCapsule
@@ -102,11 +144,9 @@ fun DatePicker(
     selectedDate: Timestamp,
     onUpdateDate: (Timestamp) -> Unit
 ){
-    // Ottieni data attuale per default
-    val calendar = Calendar.getInstance()
-    val year = calendar.get(Calendar.YEAR)
-    val month = calendar.get(Calendar.MONTH)
-    val day = calendar.get(Calendar.DAY_OF_MONTH)
+    val lastYear = selectedDate.toInstant().atZone(ZoneId.systemDefault()).year
+    val lastMonth = selectedDate.toInstant().atZone(ZoneId.systemDefault()).monthValue-1 // 1-index month
+    val lastDay = selectedDate.toInstant().atZone(ZoneId.systemDefault()).dayOfMonth
 
     val datePickerDialog = DatePickerDialog(
         LocalContext.current,
@@ -124,18 +164,16 @@ fun DatePicker(
             val date = selectedCalendar.time
             val firebaseTimestamp = Timestamp(date)
 
-            if (firebaseTimestamp > Timestamp.now()) onUpdateDate(firebaseTimestamp)
+            onUpdateDate(firebaseTimestamp)
         },
-        year, month, day
+        lastYear, lastMonth, lastDay
     )
 
-    Spacer(modifier = Modifier.height(8.dp))
-
-
-    val formatter = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
-    val formattedDate = formatter.format(selectedDate.toDate())
-
-    Text(text = if (selectedDate < Timestamp.now()) stringResource(R.string.no_date_selected) else "${stringResource(R.string.date)}: $formattedDate")
+    // Disable dates before or equal to today
+    val tomorrow = Calendar.getInstance().apply {
+        add(Calendar.DAY_OF_YEAR, 1) // Move to the next day
+    }
+    datePickerDialog.datePicker.minDate = tomorrow.timeInMillis
 
     Button(onClick = { datePickerDialog.show() }) {
         Text(text = stringResource(R.string.select_date))
@@ -143,125 +181,110 @@ fun DatePicker(
 }
 
 @Composable
-fun EmailForm(
-    emails: List<String>,
-    onUpdateEmailList: (List<String>) -> Unit
+fun PhonesList(
+    phones: List<String>,
+    onRemovePhone: (String) -> Unit
 ) {
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text("Destinatari Email", style = MaterialTheme.typography.titleMedium)
-
-        emails.forEachIndexed { index, email ->
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp)
-            ) {
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { newValue ->
-                        onUpdateEmailList(emails.toMutableList().also { it[index] = newValue })
-                    },
-                    label = { Text("Email ${index + 1}") },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    isError = email.isNotBlank() && !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                if (emails.size > 1) {
-                    IconButton(onClick = {
-                        onUpdateEmailList(emails.toMutableList().also { it.removeAt(index) })
-                    }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Rimuovi")
-                    }
+    Column {
+        phones.forEach { phone ->
+            Row {
+                Text(formatPhoneNumber(phone))
+                IconButton (
+                    onClick = { onRemovePhone(phone) },
+                    colors = IconButtonColors(
+                        containerColor = Color.White,
+                        contentColor = MaterialTheme.colorScheme.primary,
+                        disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        disabledContentColor = MaterialTheme.colorScheme.primary
+                    ),
+//                                                modifier = Modifier
+//                                                    .align(Alignment.Bottom),
+                ) {
+                    Icon(Icons.Outlined.Delete, contentDescription = "Delete")
                 }
             }
-
-            // Messaggio di errore sotto il campo
-            if (email.isNotBlank() && !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                Text(
-                    "Email non valida",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-        }
-
-        Button(
-            onClick = { onUpdateEmailList(emails + "") },
-            modifier = Modifier.padding(top = 8.dp)
-        ) {
-            Text("Aggiungi un altro destinatario")
         }
     }
 }
 
 @Composable
-fun PhoneNumberForm(
-    phones: List<String>,
-    onUpdatePhoneList: (List<String>) -> Unit
+fun EmailsList(
+    emails: List<String>,
+    onRemoveEmail: (String) -> Unit
 ) {
-    // Ogni voce è una Pair di prefisso e numero
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text("Numeri di telefono", style = MaterialTheme.typography.titleMedium)
-
-        phones.forEachIndexed { index, number ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = number,
-                    onValueChange = { newValue ->
-                        onUpdatePhoneList(phones.toMutableList().also { it[index] = newValue })
-                    },
-                    label = { Text("Numero") },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                    isError = number.length < 5 || !number.startsWith("+") || !number.drop(1).all { it.isDigit() }
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                if (phones.size > 1) {
-                    IconButton (onClick = {
-                        onUpdatePhoneList(phones.toMutableList().also { it.removeAt(index) })
-                    }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Rimuovi")
-                    }
+    Column {
+        emails.forEach { email ->
+            Row {
+                Text(email)
+                IconButton (
+                    onClick = { onRemoveEmail(email) },
+                    colors = IconButtonColors(
+                        containerColor = Color.White,
+                        contentColor = MaterialTheme.colorScheme.primary,
+                        disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        disabledContentColor = MaterialTheme.colorScheme.primary
+                    ),
+//                                                modifier = Modifier
+//                                                    .align(Alignment.Bottom),
+                ) {
+                    Icon(Icons.Outlined.Delete, contentDescription = "Delete")
                 }
             }
+        }
+    }
+}
 
-            // Mostra messaggi di errore sotto i campi
-            if (!number.startsWith("+")) {
-                Text(
-                    "Numero non valido, aggiungi il prefisso (es. +39)",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-
-            // .filter { !it.isWhitespace() }
-            if (number.length < 5 || !number.drop(1).all { it.isDigit() }) {
-                Text(
-                    "Numero non valido",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
+@Composable
+fun ReceiversList(
+    receivers: List<User>,
+    onRemoveReceiver: (User) -> Unit
+) {
+    Column {
+        receivers.forEach { user ->
+            Row {
+                Text(user.username)
+                IconButton (
+                    onClick = { onRemoveReceiver(user) },
+                    colors = IconButtonColors(
+                        containerColor = Color.White,
+                        contentColor = MaterialTheme.colorScheme.primary,
+                        disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        disabledContentColor = MaterialTheme.colorScheme.primary
+                    ),
+//                                                modifier = Modifier
+//                                                    .align(Alignment.Bottom),
+                ) {
+                    Icon(Icons.Outlined.Delete, contentDescription = "Delete")
+                }
             }
         }
+    }
+}
 
-        Button(
-            onClick = { onUpdatePhoneList(phones + "") },
-            modifier = Modifier.padding(top = 8.dp)
-        ) {
-            Text("Aggiungi un altro numero")
+@Composable
+fun SelectUserDropDownMenu(
+    users: List<User>,
+    onSelectedUser: (User) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+// Scrollable Results
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(max = 200.dp) // Limit the height of the results
+            .border(1.dp, Color.Gray)
+    ) {
+        LazyColumn {
+            items(users) { user ->
+                Text(
+                    text = user.username,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onSelectedUser(user) }
+                        .padding(vertical = 8.dp, horizontal = 16.dp)
+                )
+            }
         }
     }
 }

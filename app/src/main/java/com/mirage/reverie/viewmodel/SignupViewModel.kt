@@ -51,6 +51,7 @@ class SignupViewModel @Inject constructor(
     private suspend fun validateUsername(username: String): String {
         return when {
             username.isBlank() -> context.getString(R.string.username_mandatory)
+            username.length < 3 -> context.getString(R.string.username_length)
             repository.isUsernameTaken(username) -> context.getString(R.string.username_already_taken)
             else -> ""
         }

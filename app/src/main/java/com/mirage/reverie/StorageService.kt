@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.toObject
+import com.google.firebase.firestore.toObjects
 import com.mirage.reverie.data.model.Diary
 import com.mirage.reverie.data.model.DiaryCover
 import com.mirage.reverie.data.model.DiaryImage
@@ -35,6 +36,7 @@ interface StorageService {
     suspend fun deleteUser(userId: String)
     suspend fun isUsernameTaken(username: String): Boolean
     suspend fun isEmailTaken(email: String): Boolean
+    suspend fun getUsersMatchingPartialUsername(partialUsername: String): List<User>
 
     suspend fun getDiary(diaryId: String): Diary?
     suspend fun saveDiary(diary: Diary): Diary
@@ -350,5 +352,17 @@ class StorageServiceImpl @Inject constructor(
 
     override suspend fun deleteTimeCapsule(timeCapsuleId: String) {
         firestore.collection(TIME_CAPSULE_COLLECTION).document(timeCapsuleId).delete().await()
+    }
+
+    override suspend fun getUsersMatchingPartialUsername(partialUsername: String): List<User> {
+        val end = partialUsername + "\uf8ff" // Unicode per limitare i risultati
+
+        return firestore.collection(USERS_COLLECTION)
+            .whereGreaterThanOrEqualTo("username", partialUsername)
+            .whereLessThan("username", end).get().await()
+            .documents.mapNotNull { document ->
+                val user = document.toObject<User>() // Convert document to User object
+                user?.copy(id = document.id) // Copy the id from the document
+            } // Filter out nulls in case of any issues during conversion
     }
 }

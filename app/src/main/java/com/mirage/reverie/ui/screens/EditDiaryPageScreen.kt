@@ -44,7 +44,7 @@ fun EditDiaryPageScreen(
                     modifier = Modifier.padding(8.dp),
                     text = "You are editing your diary!",
                 )
-                ContentTextField (page.content, onUpdateContent = viewModel::onUpdateContent)
+                ContentTextField(page.content, viewModel::onUpdateContent, stringResource(R.string.content))
 
                 Button(
                     onClick = viewModel::onUpdatePage

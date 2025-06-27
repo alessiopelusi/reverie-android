@@ -124,4 +124,7 @@ dependencies {
 
     // google accompanist permissions
     implementation(libs.accompanist.permissions)
+
+    // libphoneutil
+    implementation(libs.libphonenumber)
 }

@@ -19,7 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mirage.reverie.R
-import com.mirage.reverie.ui.components.Field
+import com.mirage.reverie.ui.components.SingleLineField
 import com.mirage.reverie.viewmodel.ResetPasswordUiState
 import com.mirage.reverie.viewmodel.ResetPasswordViewModel
 
@@ -47,7 +47,7 @@ fun ResetPasswordScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Field(inputState.email, viewModel::onEmailChange, stringResource(R.string.email))
+                SingleLineField(inputState.email, viewModel::onEmailChange, stringResource(R.string.email))
 
                 Spacer(modifier = Modifier.height(16.dp))
 

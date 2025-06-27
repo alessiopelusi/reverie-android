@@ -22,7 +22,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mirage.reverie.R
 import com.mirage.reverie.data.model.User
 import com.mirage.reverie.ui.components.ErrorField
-import com.mirage.reverie.ui.components.Field
+import com.mirage.reverie.ui.components.SingleLineField
 import com.mirage.reverie.viewmodel.EditProfileUiState
 import com.mirage.reverie.viewmodel.EditProfileViewModel
 import com.mirage.reverie.viewmodel.SignupUiState
@@ -56,15 +56,15 @@ fun EditProfileScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                Field(inputState.username, inputState.usernameError, viewModel::onUsernameChange, stringResource(R.string.username))
+                SingleLineField(inputState.username, inputState.usernameError, viewModel::onUsernameChange, stringResource(R.string.username))
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Field(inputState.name, inputState.nameError, viewModel::onNameChange, stringResource(R.string.name))
+                SingleLineField(inputState.name, inputState.nameError, viewModel::onNameChange, stringResource(R.string.name))
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Field(inputState.surname, inputState.surnameError, viewModel::onSurnameChange, stringResource(R.string.surname))
+                SingleLineField(inputState.surname, inputState.surnameError, viewModel::onSurnameChange, stringResource(R.string.surname))
 
                 Spacer(modifier = Modifier.height(32.dp))
 

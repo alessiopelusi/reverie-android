@@ -27,6 +27,8 @@ interface UserRepository {
     suspend fun deleteUser(userId: String)
     suspend fun isUsernameTaken(username: String): Boolean
     suspend fun isEmailTaken(email: String): Boolean
+
+    suspend fun getUsersMatchingPartialUsername(partialUsername: String): List<User>
 }
 
 
@@ -113,4 +115,8 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun isEmailTaken(email: String): Boolean =
         storageService.isEmailTaken(email)
+
+    override suspend fun getUsersMatchingPartialUsername(partialUsername: String): List<User> {
+        return storageService.getUsersMatchingPartialUsername(partialUsername)
+    }
 }

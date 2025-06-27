@@ -32,6 +32,7 @@
     <string name="password_mandatory">La password è obbligatoria</string>
     <string name="passwords_dont_match">Le due password non corrispondono</string>
     <string name="password_length">La password deve avere almeno 8 caratteri</string>
+    <string name="username_length">Username needs to have at least 3 characters</string>
     <string name="send_reset_password_email">Invia email di reset password</string>
     <string name="go_back_to_login">Torna al login</string>
     <string name="reset_password_email_sent">Email per reset password inviata</string>
@@ -54,6 +55,15 @@
     <string name="update_error">Errore di aggiornamento</string>
     <string name="confirm_diary_deletion">Conferma eliminazione diario</string>
     <string name="delete_diary">Sei sicuro di voler cancellare questo diario? Questa opzione non può essere annullata.</string>
+    <string name="confirm_page_deletion">Conferma eliminazione pagina</string>
+    <string name="delete_page">Sei sicuro di voler cancallare questa pagina? Questa opzione non può essere annullata.</string>
     <string name="move_prev_subpage">Muovi alla precedente sotto pagina</string>
     <string name="move_next_subpage">Muovi alla prossima sotto pagina</string>
+    <string name="receiver_mandatory">Almeno un destinatario è necessario</string>
+    <string name="deadline_mandatory">La data di scadenza è necessaria</string>
+    <string name="missing_phone_prefix">Numero non valido, aggiungi il prefisso (es. +39)</string>
+    <string name="phone_number_not_valid">Numero non valido</string>
+    <string name="phone_number">Numero di telefono</string>
+    <string name="phone_number_already_selected">Numero di telefono già selezionato</string>
+    <string name="email_already_selected">Email già selezionata</string>
 </resources>

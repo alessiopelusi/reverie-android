@@ -20,7 +20,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mirage.reverie.R
 import com.mirage.reverie.ui.components.ErrorField
-import com.mirage.reverie.ui.components.Field
+import com.mirage.reverie.ui.components.SingleLineField
 import com.mirage.reverie.ui.components.PasswordField
 import com.mirage.reverie.viewmodel.SignupUiState
 import com.mirage.reverie.viewmodel.SignupViewModel
@@ -51,19 +51,19 @@ fun SignupScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Field(inputState.username, inputState.usernameError, viewModel::onUsernameChange, stringResource(R.string.username))
+                SingleLineField(inputState.username, inputState.usernameError, viewModel::onUsernameChange, stringResource(R.string.username))
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Field(inputState.email, inputState.emailError, viewModel::onEmailChange, stringResource(R.string.email))
+                SingleLineField(inputState.email, inputState.emailError, viewModel::onEmailChange, stringResource(R.string.email))
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Field(inputState.name, inputState.nameError, viewModel::onNameChange, stringResource(R.string.name))
+                SingleLineField(inputState.name, inputState.nameError, viewModel::onNameChange, stringResource(R.string.name))
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Field(inputState.surname, inputState.surnameError, viewModel::onSurnameChange, stringResource(R.string.surname))
+                SingleLineField(inputState.surname, inputState.surnameError, viewModel::onSurnameChange, stringResource(R.string.surname))
 
                 Spacer(modifier = Modifier.height(8.dp))
 

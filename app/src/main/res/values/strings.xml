@@ -40,6 +40,7 @@
     <string name="password_mandatory">Password is mandatory</string>
     <string name="passwords_dont_match">The two passwords don\'t match</string>
     <string name="password_length">Password needs to have at least 8 characters</string>
+    <string name="username_length">Username needs to have at least 3 characters</string>
     <string name="send_reset_password_email">Send reset password email</string>
     <string name="go_back_to_login">Go back to login</string>
     <string name="reset_password" translatable="false">Reset password</string>
@@ -63,8 +64,15 @@
     <string name="update_error">Update error</string>
     <string name="confirm_diary_deletion">Confirm diary deletion</string>
     <string name="delete_diary">Are you sure you want to delete this diary? This action cannot be undone.</string>
-    <string name="confirm_page_deletion">Confirm page deletion</string>
-    <string name="delete_page">Are you sure you want to delete this page? This action cannot be undone.</string>
+    <string name="confirm_page_deletion">confirm page deletion</string>
+    <string name="delete_page">are you sure you want to delete this page? this action cannot be undone.</string>
     <string name="move_prev_subpage">Move to prev subpage</string>
     <string name="move_next_subpage">Move to next subpage</string>
+    <string name="receiver_mandatory">At least one receiver is needed</string>
+    <string name="deadline_mandatory">Deadline is mandatory</string>
+    <string name="missing_phone_prefix">Number not valid, add the prefix (e.g. +39)</string>
+    <string name="phone_number_not_valid">Number not valid</string>
+    <string name="phone_number">Phone number</string>
+    <string name="phone_number_already_selected">Phone number already selected</string>
+    <string name="email_already_selected">Email already selected</string>
 </resources>

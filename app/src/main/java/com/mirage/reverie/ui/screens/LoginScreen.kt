@@ -20,7 +20,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mirage.reverie.R
 import com.mirage.reverie.ui.components.ErrorField
-import com.mirage.reverie.ui.components.Field
+import com.mirage.reverie.ui.components.SingleLineField
 import com.mirage.reverie.ui.components.PasswordField
 import com.mirage.reverie.viewmodel.LoginUiState
 import com.mirage.reverie.viewmodel.LoginViewModel
@@ -52,7 +52,7 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Field(inputState.email, inputState.emailError, viewModel::onEmailChange, stringResource(R.string.email))
+                SingleLineField(inputState.email, inputState.emailError, viewModel::onEmailChange, stringResource(R.string.email))
 
                 Spacer(modifier = Modifier.height(8.dp))
 
