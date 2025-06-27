@@ -4,7 +4,11 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -65,6 +69,8 @@ import dev.romainguy.text.combobreaker.material3.TextFlow
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material.icons.outlined.Camera
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.runtime.LaunchedEffect
@@ -79,6 +85,7 @@ import androidx.compose.ui.text.style.TextAlign
 import com.mirage.reverie.data.model.DiaryImage
 import com.mirage.reverie.formatDate
 import com.mirage.reverie.ui.components.ConfirmDelete
+import com.mirage.reverie.ui.theme.PaperColor
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 import kotlin.math.cos
@@ -210,13 +217,21 @@ fun ViewDiaryScreen(
                                 content = {
                                     // Here's the content of each list item.
                                     val widthFraction = 0.90f
-                                    DiaryPage(
-                                        modifier = Modifier
-                                            .widthIn(max = LocalWindowInfo.current.containerSize.width.dp * widthFraction)
-                                            .aspectRatio(9f / 16f),
-                                        subPage.id,
-                                        viewModel
-                                    )
+                                    val diaryPaperWhite = Color(0xFFFFFBF0)
+                                    Card (
+//                                        Modifier.padding(horizontal = 40.dp, vertical = 8.dp),
+                                        colors = CardDefaults.cardColors(containerColor = diaryPaperWhite),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                                    ){
+                                        DiaryPage(
+                                            modifier = Modifier
+                                                .widthIn(max = LocalWindowInfo.current.containerSize.width.dp * widthFraction)
+                                                .padding(horizontal = 5.dp, vertical = 10.dp)
+                                                .aspectRatio(9f / 16f),
+                                            subPage.id,
+                                            viewModel
+                                        )
+                                    }
                                 },
                                 measurePolicy = { measurables, constraints ->
                                     // I'm assuming you'll declaring just one root
