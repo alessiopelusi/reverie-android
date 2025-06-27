@@ -264,7 +264,7 @@ fun ViewDiaryScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "${currentPage.date.format(DateTimeFormatter.ofPattern("dd MMMM YYYY"))}",
+                            text = formatDate(currentPage.date),
                         )
                         val isLastPage = currentPage == pages.last()
                         IconButton(
