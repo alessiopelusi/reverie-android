@@ -4,8 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
-import com.mirage.reverie.data.model.Diary
-import com.mirage.reverie.data.model.DiaryCover
 import com.mirage.reverie.data.model.DiaryImage
 import com.mirage.reverie.data.model.DiaryPage
 import com.mirage.reverie.data.model.DiarySubPage
@@ -24,10 +22,7 @@ data class EditDiaryPageFormState(
     val page: DiaryPage = DiaryPage(),
     val subPagesMap: Map<String, DiarySubPage> = mapOf(),
     val imagesMap: Map<String, DiaryImage> = mapOf()// Lazy loading of images
-) {
-    val subPages: List<DiarySubPage>
-        get() = page.subPageIds.map { subPageId -> subPagesMap.getValue(subPageId) }
-}
+)
 
 
 sealed class EditDiaryPageUiState {

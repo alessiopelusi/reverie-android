@@ -33,10 +33,7 @@ data class CreateTimeCapsuleFormState(
     val partialUsername: String = "",
     val matchingUsers: List<User> = listOf(),
     val userReceivers: List<User> = listOf()
-) {
-    val allReceivers: List<String>
-        get() = timeCapsule.phones + timeCapsule.emails + timeCapsule.receiversIds
-}
+)
 
 sealed class CreateTimeCapsuleUiState {
     data object Loading : CreateTimeCapsuleUiState()
@@ -192,36 +189,6 @@ class CreateTimeCapsuleViewModel @Inject constructor(
                 email = newEmail,
                 emailError = error
             )
-        }
-    }
-
-    fun onUpdateEmailList(newEmailList: List<String>) {
-        val currentState = uiState.value
-        if (currentState is CreateTimeCapsuleUiState.Loading) return
-
-        _formState.update { state ->
-            val updatedTimeCapsule = state.timeCapsule.copy(emails = newEmailList)
-            state.copy(timeCapsule = updatedTimeCapsule)
-        }
-    }
-
-    fun onUpdatePhoneList(newPhoneList: List<String>) {
-        val currentState = uiState.value
-        if (currentState is CreateTimeCapsuleUiState.Loading) return
-
-        _formState.update { state ->
-            val updatedTimeCapsule = state.timeCapsule.copy(phones = newPhoneList)
-            state.copy(timeCapsule = updatedTimeCapsule)
-        }
-    }
-
-    fun onUpdateReceiverIds(newReceiverIds: List<String>) {
-        val currentState = uiState.value
-        if (currentState is CreateTimeCapsuleUiState.Loading) return
-
-        _formState.update { state ->
-            val updatedTimeCapsule = state.timeCapsule.copy(receiversIds = newReceiverIds)
-            state.copy(timeCapsule = updatedTimeCapsule)
         }
     }
 

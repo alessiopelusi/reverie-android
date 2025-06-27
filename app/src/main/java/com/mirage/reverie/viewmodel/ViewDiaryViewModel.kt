@@ -28,6 +28,7 @@ import java.time.LocalDate
 import javax.inject.Inject
 import kotlin.math.min
 import androidx.core.graphics.scale
+import com.mirage.reverie.toLocalDate
 
 sealed class ViewDiaryUiState {
     data object Loading : ViewDiaryUiState()
@@ -99,7 +100,7 @@ class ViewDiaryViewModel @Inject constructor(
     private suspend fun addEmptyPage(state: ViewDiaryUiState): ViewDiaryUiState {
         if (state !is ViewDiaryUiState.Success) return state
         // if no necessity to add empty page return
-        if (state.pages.isNotEmpty() && state.pages.last().date == LocalDate.now()) return state
+        if (state.pages.isNotEmpty() && state.pages.last().date.toLocalDate() == LocalDate.now()) return state
 
         // if last page has no content and no images we can simply change the date
         if (state.pages.isNotEmpty() && state.pages.last().content.isEmpty() && state.subPages.last().imageIds.isEmpty()) {

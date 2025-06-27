@@ -1,7 +1,6 @@
 package com.mirage.reverie.viewmodel
 
 import android.content.Context
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,12 +22,8 @@ import javax.inject.Inject
 data class EditDiaryFormState(
     val diary: Diary = Diary(),
     val allCoversMap: Map<String, DiaryCover> = mapOf(),
-    //val allCovers: List<DiaryCover> = listOf(),
     val selectedCover: String = diary.coverId
-) {
-    //val allCovers: List<DiaryCover>
-    //    get() = allCoversMap.keys.map { coverId -> allCoversMap.getValue(coverId) }
-}
+)
 
 sealed class EditDiaryUiState {
     data object Loading : EditDiaryUiState()
