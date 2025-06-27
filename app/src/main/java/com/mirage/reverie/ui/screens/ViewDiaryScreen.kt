@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -39,7 +41,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
@@ -66,19 +67,26 @@ import dev.romainguy.text.combobreaker.FlowType
 import dev.romainguy.text.combobreaker.TextFlowJustification
 import dev.romainguy.text.combobreaker.material3.TextFlow
 import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.Camera
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonColors
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.mirage.reverie.data.model.DiaryImage
 import com.mirage.reverie.ui.components.ConfirmDelete
 import kotlinx.coroutines.delay
+import java.text.SimpleDateFormat
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
 import kotlin.math.cos
@@ -116,13 +124,19 @@ fun ViewDiaryScreen(
 
             Column(
                 modifier = Modifier
-                    .fillMaxSize(),
+                    .fillMaxSize()
+                    .padding(vertical = 20.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    modifier = Modifier.padding(8.dp),
-                    text = diary.title
+                    text = diary.title,
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 25.sp
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
                 )
 
                 val diaryPageListState = (uiState as ViewDiaryUiState.Success).diaryPageListState
@@ -150,7 +164,9 @@ fun ViewDiaryScreen(
 
                 BoxWithConstraints (
                     modifier = Modifier
-                        .weight(1f, false),
+                        .weight(1f, false)
+                        .padding(vertical = 10.dp)
+                        .border(BorderStroke(1.dp, Color.Blue)),
                 ) {
                     val boxWithConstraintsScope = this
 
@@ -238,72 +254,186 @@ fun ViewDiaryScreen(
                         }
                     }
                 }
-
-                Text(
-                    modifier = Modifier.padding(8.dp),
-                    text = "${stringResource(R.string.day)} ${currentPage.date.format(DateTimeFormatter.ofPattern("dd MM YYYY"))}",
-                )
-                Text(
-                    modifier = Modifier.padding(8.dp),
-                    text = "${stringResource(R.string.page)} ${pages.indexOf(currentPage) + 1}/${pages.size}",
-                )
-                Text(
-                    modifier = Modifier.padding(8.dp),
-                    text = "${stringResource(R.string.sub_page)} ${currentPage.subPageIds.indexOf(currentSubPage.id) + 1}/${currentPage.subPageIds.size}",
-                )
-
-                // Registers a photo picker activity launcher in single-select mode.
-                val pickMedia = rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
-                    if (uri != null) {
-                        viewModel.uploadImage(uri, currentSubPage.id)
-                    }
-                }
-
-                Row {
-                    if (currentPage != pages.last()) {
-                        Button(
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                ){
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "${currentPage.date.format(DateTimeFormatter.ofPattern("dd MMMM YYYY"))}",
+                        )
+                        val isLastPage = currentPage == pages.last()
+                        IconButton(
                             onClick = viewModel::onOpenDeleteDiaryDialog,
+                            enabled = !isLastPage,
+                            colors = IconButtonColors(
+                                containerColor = Color.Transparent,
+                                contentColor = if (isLastPage) Color.Transparent else MaterialTheme.colorScheme.primary,
+                                disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                disabledContentColor = Color.Transparent
+                            )
                         ) {
-                            Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.delete))
+                            Icon(
+                                imageVector = Icons.Outlined.Delete,
+                                contentDescription = stringResource(R.string.delete),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        if (deleteDialogState) {
+                            ConfirmDelete(
+                                stringResource(R.string.confirm_page_deletion),
+                                stringResource(R.string.delete_page),
+                                viewModel::onCloseDeletePageDialog
+                            ) {
+                                viewModel.onDeletePage(
+                                    currentPage.id,
+                                )
+                            }
                         }
                     }
-
-
-                    Button(
-                        onClick = {
-                            // Launch the photo picker and let the user choose only images.
-                            pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
-                        },
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Outlined.Camera, contentDescription = "Camera")
-                    }
+                        Button(
+                            onClick = { onNavigateToEditDiaryPage(currentPage.id) },
+                            colors = ButtonColors(
+                                containerColor = MaterialTheme.colorScheme.secondary,
+                                contentColor = MaterialTheme.colorScheme.primary,
+                                disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                disabledContentColor = MaterialTheme.colorScheme.primary
+                            ),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Row(
+//                            modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Scrivi"
+                                )
+                                Icon(Icons.Outlined.Edit, contentDescription = "Edit", modifier = Modifier.size(20.dp))
+                            }
 
-
-                    Button(
-                        onClick = { onNavigateToEditDiaryPage(currentPage.id) },
-                        colors = ButtonColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.primary,
-                            disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                            disabledContentColor = MaterialTheme.colorScheme.primary
-                        ),
-                    ) {
-                        Icon(Icons.Outlined.Edit, contentDescription = "Edit")
+                        }
+                        val pickMedia = rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
+                            if (uri != null) {
+                                viewModel.uploadImage(uri, currentSubPage.id)
+                            }
+                        }
+                        Button(
+                            onClick = {
+                                // Launch the photo picker and let the user choose only images.
+                                pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
+                            },
+                            colors = ButtonColors(
+                                containerColor = MaterialTheme.colorScheme.secondary,
+                                contentColor = MaterialTheme.colorScheme.primary,
+                                disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                disabledContentColor = MaterialTheme.colorScheme.primary
+                            ),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Row(
+//                            modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Inserisci foto"
+                                )
+                                Icon(Icons.Outlined.Camera, contentDescription = "Camera", modifier = Modifier.size(20.dp))
+                            }
+                        }
                     }
                 }
+//                Row(
+//                    modifier = Modifier.fillMaxWidth()
+//                ){
+//                    Column(
+//                        modifier = Modifier.weight(1f),
+//                        horizontalAlignment = Alignment.CenterHorizontally
+//                    ) {
+//                        Text(
+//                            text = stringResource(R.string.page),
+//                            style = TextStyle(
+//                                fontWeight = FontWeight.Bold,
+//                                fontSize = 18.sp
+//                            ),
+//                        )
+//                        Text(
+//                            text = "${pages.indexOf(currentPage) + 1}/${pages.size}",
+//                        )
+//                    }
+//                    Column(
+//                        modifier = Modifier.weight(1f),
+//                        horizontalAlignment = Alignment.CenterHorizontally
+//                    ) {
+//                        Text(
+//                            text = stringResource(R.string.sub_page),
+//                            style = TextStyle(
+//                                fontWeight = FontWeight.Bold,
+//                                fontSize = 18.sp
+//                            ),
+//                        )
+//                        Text(
+//                            text = "${currentPage.subPageIds.indexOf(currentSubPage.id) + 1}/${currentPage.subPageIds.size}",
+//                        )
+//                    }
+//                }
 
-                if (deleteDialogState) {
-                    ConfirmDelete (
-                        stringResource(R.string.confirm_page_deletion),
-                        stringResource(R.string.delete_page),
-                        viewModel::onCloseDeletePageDialog
-                    ) {
-                        viewModel.onDeletePage(
-                            currentPage.id,
-                        )
-                    }
-                }
 
+                // Registers a photo picker activity launcher in single-select mode.
+
+//                Row {
+//                    if (currentPage != pages.last()) {
+//                        Button(
+//                            onClick = viewModel::onOpenDeleteDiaryDialog,
+//                        ) {
+//                            Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.delete))
+//                        }
+//                    }
+//
+//
+//                    Button(
+//                        onClick = {
+//                            // Launch the photo picker and let the user choose only images.
+//                            pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
+//                        },
+//                    ) {
+//                        Icon(Icons.Outlined.Camera, contentDescription = "Camera")
+//                    }
+//
+//
+//                    Button(
+//                        onClick = { onNavigateToEditDiaryPage(currentPage.id) },
+//                        colors = ButtonColors(
+//                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+//                            contentColor = MaterialTheme.colorScheme.primary,
+//                            disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+//                            disabledContentColor = MaterialTheme.colorScheme.primary
+//                        ),
+//                    ) {
+//                        Icon(Icons.Outlined.Edit, contentDescription = "Edit")
+//                    }
+//                }
+//
+//                if (deleteDialogState) {
+//                    ConfirmDelete (
+//                        stringResource(R.string.confirm_page_deletion),
+//                        stringResource(R.string.delete_page),
+//                        viewModel::onCloseDeletePageDialog
+//                    ) {
+//                        viewModel.onDeletePage(
+//                            currentPage.id,
+//                        )
+//                    }
+//                }
             }
         }
         is ViewDiaryUiState.Error -> Text(text = "Error: ${(uiState as ViewDiaryUiState.Error).exception.message}")
@@ -327,6 +457,7 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
 
     BoxWithConstraints(
         modifier = modifier.fillMaxSize()
+            .border(BorderStroke(1.dp, Color.Red))
     ) {
         var isContextMenuVisible by rememberSaveable {
             mutableStateOf(false)
