@@ -102,9 +102,12 @@ class SignupViewModel @Inject constructor(
     private var usernameCheckJob: Job? = null
 
     fun onUsernameChange(newUsername: String) {
+        val strippedUsername = newUsername.trim()
+        if (strippedUsername == inputState.value.username) return
+
         _inputState.update { state ->
             state.copy(
-                username = newUsername,
+                username = strippedUsername,
             )
         }
 
@@ -113,7 +116,7 @@ class SignupViewModel @Inject constructor(
 
         // Start a new coroutine for validation
         usernameCheckJob = viewModelScope.launch {
-            val error = validateUsername(newUsername)
+            val error = validateUsername(strippedUsername)
 
             _inputState.update { state ->
                 state.copy(
@@ -126,9 +129,12 @@ class SignupViewModel @Inject constructor(
     private var emailCheckJob: Job? = null
 
     fun onEmailChange(newEmail: String) {
+        val strippedEmail = newEmail.trim()
+        if (strippedEmail == inputState.value.email) return
+
         _inputState.update { state ->
             state.copy(
-                email = newEmail,
+                email = strippedEmail,
             )
         }
 
@@ -137,7 +143,7 @@ class SignupViewModel @Inject constructor(
 
         // Start a new coroutine for validation
         emailCheckJob = viewModelScope.launch {
-            val error = validateEmail(newEmail)
+            val error = validateEmail(strippedEmail)
 
             _inputState.update { state ->
                 state.copy(
@@ -148,22 +154,28 @@ class SignupViewModel @Inject constructor(
     }
 
     fun onNameChange(newName: String) {
-        val error = validateName(newName)
+        val strippedName = newName.trim()
+        if (strippedName == inputState.value.name) return
+
+        val error = validateName(strippedName)
 
         _inputState.update { state ->
             state.copy(
-                name = newName,
+                name = strippedName,
                 nameError = error
             )
         }
     }
 
     fun onSurnameChange(newSurname: String) {
-        val error = validateSurname(newSurname)
+        val strippedSurname = newSurname.trim()
+        if (strippedSurname == inputState.value.surname) return
+
+        val error = validateSurname(strippedSurname)
 
         _inputState.update { state ->
             state.copy(
-                surname = newSurname,
+                surname = strippedSurname,
                 surnameError = error
             )
         }

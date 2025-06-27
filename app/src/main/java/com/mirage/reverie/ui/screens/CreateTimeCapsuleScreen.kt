@@ -1,28 +1,33 @@
 package com.mirage.reverie.ui.screens
 
 import android.app.DatePickerDialog
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,8 +43,12 @@ import com.mirage.reverie.ui.components.ContentTextField
 import com.mirage.reverie.viewmodel.CreateTimeCapsuleUiState
 import com.mirage.reverie.viewmodel.CreateTimeCapsuleViewModel
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import com.google.firebase.Timestamp
 import com.mirage.reverie.data.model.User
 import com.mirage.reverie.formatDate
@@ -80,40 +89,64 @@ fun CreateTimeCapsuleScreen(
 
                 SingleLineField(timeCapsule.title, formState.titleError, onNewValue = viewModel::onUpdateTitle, stringResource(R.string.title))
 
-                ContentTextField (timeCapsule.content, formState.contentError, viewModel::onUpdateContent, stringResource(R.string.content))
+                ContentTextField(timeCapsule.content, formState.contentError, viewModel::onUpdateContent, stringResource(R.string.content))
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                val formattedDate = formatDate(timeCapsule.deadline.toDate())
-
-                Text(text = if (timeCapsule.deadline < Timestamp.now()) stringResource(R.string.no_date_selected) else "${stringResource(R.string.date)}: $formattedDate")
-
-                DatePicker(timeCapsule.deadline, viewModel::onUpdateDeadline)
-
-                PhonesList(timeCapsule.phones, viewModel::onRemovePhoneNumber)
-                EmailsList(timeCapsule.emails, viewModel::onRemoveEmail)
-                ReceiversList(receivers, viewModel::onRemoveUser)
-
-                Row{
-                    PhoneNumber(formState.phoneNumber, formState.phoneNumberError, viewModel::onUpdatePhoneNumber)
-                    Button (
-                        onClick = viewModel::onAddPhoneNumber
-                    ) {
-                        Text(stringResource(R.string.create))
-                    }
-                }
-
-                Row {
-                    SingleLineField(formState.email, formState.emailError, viewModel::onUpdateEmail, stringResource(R.string.email))
-                    Button (
-                        onClick = viewModel::onAddEmail
-                    ) {
-                        Text(stringResource(R.string.create))
-                    }
+                Row (
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(20.dp)
+                ){
+                    DatePicker(timeCapsule.deadline, viewModel::onUpdateDeadline)
+                    Text(
+                        text =
+                            if (timeCapsule.deadline < Timestamp.now()) stringResource(R.string.no_date_selected)
+                            else "${stringResource(R.string.date)}: ${formatDate(timeCapsule.deadline.toDate())}"
+                    )
                 }
 
                 SingleLineField(partialUsername, viewModel::onUpdatePartialUsername, stringResource(R.string.username))
-                SelectUserDropDownMenu(matchingUsers, onSelectedUser = viewModel::onAddUser)
+                if (matchingUsers.isNotEmpty()) SelectUserDropDownMenu(matchingUsers, onSelectedUser = viewModel::onAddUser)
+
+                PhoneNumber(
+                    phoneNumber =  formState.phoneNumber,
+                    errorMessage = formState.phoneNumberError,
+                    onUpdatePhoneNumber = viewModel::onUpdatePhoneNumber,
+                    trailingIcon = { AddIconButton(viewModel::onAddPhoneNumber) })
+
+                SingleLineField(
+                    value = formState.email,
+                    errorMessage = formState.emailError,
+                    onNewValue = viewModel::onUpdateEmail,
+                    label = stringResource(R.string.email),
+                    trailingIcon = { AddIconButton(viewModel::onAddEmail) }
+                )
+
+
+                Text(
+                    text = stringResource(R.string.receivers) + ":",
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    ),
+                    modifier = Modifier.width(280.dp)
+                )
+
+                LazyColumn(
+                    modifier = Modifier
+                        .width(280.dp)
+                        .heightIn(min = 80.dp, max = 193.dp)
+                        .border(1.dp, Color.Gray, shape = RoundedCornerShape(5.dp)),
+                    contentPadding = PaddingValues(vertical = 2.dp),
+                ) {
+                    items(timeCapsule.phones) { phone ->
+                        ReceiverElement(formatPhoneNumber(phone)) { viewModel.onRemovePhoneNumber(phone) }
+                    }
+                    items(timeCapsule.emails) { email ->
+                        ReceiverElement(email) { viewModel.onRemoveEmail(email) }
+                    }
+                    items(receivers) { receiver ->
+                        ReceiverElement(receiver.username) { viewModel.onRemoveUser(receiver) }
+                    }
+                }
 
                 Button (
                     onClick = viewModel::onCreateTimeCapsule
@@ -176,83 +209,34 @@ fun DatePicker(
 }
 
 @Composable
-fun PhonesList(
-    phones: List<String>,
-    onRemovePhone: (String) -> Unit
+fun ReceiverElement(
+    text: String,
+    onDelete: () -> Unit
 ) {
-    Column {
-        phones.forEach { phone ->
-            Row {
-                Text(formatPhoneNumber(phone))
-                IconButton (
-                    onClick = { onRemovePhone(phone) },
-                    colors = IconButtonColors(
-                        containerColor = Color.White,
-                        contentColor = MaterialTheme.colorScheme.primary,
-                        disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        disabledContentColor = MaterialTheme.colorScheme.primary
-                    ),
-//                                                modifier = Modifier
-//                                                    .align(Alignment.Bottom),
-                ) {
-                    Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.delete))
-                }
-            }
+    Row (
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier
+            .padding(vertical = 2.dp, horizontal = 4.dp)
+            .border(1.dp, Color.Gray, shape = RoundedCornerShape(10.dp))
+            .padding(vertical = 4.dp, horizontal = 8.dp)
+            .offset(x = (-4).dp)
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(30.dp)
+                .clip(CircleShape)
+                .clickable(onClick = onDelete)
+        ) {
+            Icon(
+                Icons.Outlined.Delete,
+                contentDescription = stringResource(R.string.delete),
+            )
         }
-    }
-}
-
-@Composable
-fun EmailsList(
-    emails: List<String>,
-    onRemoveEmail: (String) -> Unit
-) {
-    Column {
-        emails.forEach { email ->
-            Row {
-                Text(email)
-                IconButton (
-                    onClick = { onRemoveEmail(email) },
-                    colors = IconButtonColors(
-                        containerColor = Color.White,
-                        contentColor = MaterialTheme.colorScheme.primary,
-                        disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        disabledContentColor = MaterialTheme.colorScheme.primary
-                    ),
-//                                                modifier = Modifier
-//                                                    .align(Alignment.Bottom),
-                ) {
-                    Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.delete))
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun ReceiversList(
-    receivers: List<User>,
-    onRemoveReceiver: (User) -> Unit
-) {
-    Column {
-        receivers.forEach { user ->
-            Row {
-                Text(user.username)
-                IconButton (
-                    onClick = { onRemoveReceiver(user) },
-                    colors = IconButtonColors(
-                        containerColor = Color.White,
-                        contentColor = MaterialTheme.colorScheme.primary,
-                        disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        disabledContentColor = MaterialTheme.colorScheme.primary
-                    ),
-//                                                modifier = Modifier
-//                                                    .align(Alignment.Bottom),
-                ) {
-                    Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.delete))
-                }
-            }
-        }
+        Text(
+            text = text,
+        )
     }
 }
 
@@ -263,20 +247,47 @@ fun SelectUserDropDownMenu(
 ) {
     Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(max = 200.dp) // Limit the height of the results
-            .border(1.dp, Color.Gray)
+            .width(280.dp)
+            .heightIn(max = 140.dp) // Limit the height of the results (3.5 elements)
+            .offset(0.dp, (-20).dp)
+            .border(1.dp, Color.Gray, shape = RoundedCornerShape(5.dp))
     ) {
-        LazyColumn {
+        LazyColumn (
+            contentPadding = PaddingValues(vertical = 2.dp),
+        ){
             items(users) { user ->
                 Text(
                     text = user.username,
                     modifier = Modifier
+                        .height(40.dp)
                         .fillMaxWidth()
                         .clickable { onSelectedUser(user) }
-                        .padding(vertical = 8.dp, horizontal = 16.dp)
+                        .padding(vertical = 2.dp, horizontal = 4.dp)
+                        .border(1.dp, Color.Gray, shape = RoundedCornerShape(10.dp))
+                        .padding(vertical = 4.dp, horizontal = 8.dp)
                 )
             }
         }
+    }
+}
+
+@Composable
+fun AddIconButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .size(30.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primary)
+            .clickable(onClick = onClick)
+    ) {
+        Icon(
+            Icons.Outlined.Add,
+            contentDescription = stringResource(R.string.add),
+            tint = MaterialTheme.colorScheme.primaryContainer
+        )
     }
 }

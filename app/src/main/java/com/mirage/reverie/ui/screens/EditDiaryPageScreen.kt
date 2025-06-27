@@ -59,7 +59,7 @@ fun EditDiaryPageScreen(
                 Button(
                     onClick = viewModel::onUpdatePage
                 ) {
-                    Text(stringResource(R.string.edit_diary_page_message))
+                    Text(stringResource(R.string.edit_diary))
                 }
             }
         }

@@ -3,6 +3,7 @@ package com.mirage.reverie.ui.components
 import android.telephony.PhoneNumberUtils
 import android.text.Selection
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -25,20 +26,22 @@ import kotlin.math.max
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
 import com.google.i18n.phonenumbers.NumberParseException
 
 @Composable
 fun PhoneNumber(
     phoneNumber: String,
     onUpdatePhoneNumber: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    trailingIcon: @Composable (() -> Unit)? = null
 ) {
     var textFieldValue by remember {
         mutableStateOf(TextFieldValue(text = phoneNumber, selection = TextRange(phoneNumber.length)))
     }
 
     OutlinedTextField(
-        modifier = modifier,
+        modifier = modifier.width(280.dp),
         value = textFieldValue,
         singleLine = true,
         leadingIcon = null,
@@ -51,7 +54,8 @@ fun PhoneNumber(
         },
         label = { Text(stringResource(R.string.phone_number)) },
         visualTransformation = PhoneNumberVisualTransformation(),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+        trailingIcon = trailingIcon
     )
 }
 
@@ -60,12 +64,13 @@ fun PhoneNumber(
     phoneNumber: String,
     errorMessage: String,
     onUpdatePhoneNumber: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    trailingIcon: @Composable (() -> Unit)? = null
 ) {
     Column (
         horizontalAlignment = Alignment.CenterHorizontally
     ){
-        PhoneNumber(phoneNumber, onUpdatePhoneNumber, modifier)
+        PhoneNumber(phoneNumber, onUpdatePhoneNumber, modifier, trailingIcon)
         ErrorField(errorMessage)
     }
 }
@@ -151,11 +156,11 @@ class PhoneNumberVisualTransformation(
     )
 }
 
-fun formatPhoneNumber(phoneNumber: String, countryCode: String = "US"): String {
+fun formatPhoneNumber(phoneNumber: String): String {
     val phoneNumberUtil = PhoneNumberUtil.getInstance()
     return try {
         // Parse the phone number with the given country code
-        val parsedNumber = phoneNumberUtil.parse(phoneNumber, countryCode)
+        val parsedNumber = phoneNumberUtil.parse(phoneNumber, null)
         // Format the phone number in an international format
         phoneNumberUtil.format(parsedNumber, PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL)
     } catch (e: NumberParseException) {

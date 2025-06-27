@@ -138,12 +138,13 @@ fun AllTimeCapsulesScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp), // Padding for spacing from screen edges
-                contentAlignment = Alignment.BottomEnd // Align content to bottom-right
             ) {
                 FloatingActionButton (
                     onClick = onNavigateToCreateTimeCapsule,
                     containerColor = MaterialTheme.colorScheme.secondary,
-                    contentColor = MaterialTheme.colorScheme.primary
+                    contentColor = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd) // Align FAB to the top-right
                 ) {
                     Icon(Icons.Filled.Add, stringResource(R.string.create_time_capsule))
                 }
@@ -234,7 +235,11 @@ fun TimeCapsule(timeCapsule: TimeCapsule, timeCapsuleType: TimeCapsuleType, onCl
                     disabledContentColor = MaterialTheme.colorScheme.primary
                 ),
             ) {
-                Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.delete))
+                Icon(
+                    Icons.Outlined.Delete,
+                    contentDescription = stringResource(R.string.delete),
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
     }

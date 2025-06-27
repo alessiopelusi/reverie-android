@@ -86,4 +86,7 @@
     <string name="arriving_on">In arrivo il</string>
     <string name="arrived_on">Arrivata il</string>
     <string name="edit_diary_page">Modifica pagina di diario</string>
+    <string name="add">Aggiungi</string>
+    <string name="enter_phone_number">Inserisci un numero di telefono</string>
+    <string name="enter_email">Inserisci un\'email</string>
 </resources>

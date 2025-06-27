@@ -116,10 +116,13 @@ class CreateTimeCapsuleViewModel @Inject constructor(
         val currentState = uiState.value
         if (currentState is CreateTimeCapsuleUiState.Loading) return
 
-        val error = validateTitle(newTitle)
+        val strippedTitle = newTitle.trim()
+        if (strippedTitle == formState.value.timeCapsule.title) return
+
+        val error = validateTitle(strippedTitle)
 
         _formState.update { state ->
-            val updatedTimeCapsule = state.timeCapsule.copy(title = newTitle)
+            val updatedTimeCapsule = state.timeCapsule.copy(title = strippedTitle)
             state.copy(
                 timeCapsule = updatedTimeCapsule,
                 titleError = error
@@ -131,10 +134,13 @@ class CreateTimeCapsuleViewModel @Inject constructor(
         val currentState = uiState.value
         if (currentState is CreateTimeCapsuleUiState.Loading) return
 
-        val error = validateContent(newContent)
+        val strippedContent = newContent.trim()
+        if (strippedContent == formState.value.timeCapsule.content) return
+
+        val error = validateContent(strippedContent)
 
         _formState.update { state ->
-            val updatedTimeCapsule = state.timeCapsule.copy(content = newContent)
+            val updatedTimeCapsule = state.timeCapsule.copy(content = strippedContent)
             state.copy(
                 timeCapsule = updatedTimeCapsule,
                 contentError = error
@@ -168,6 +174,9 @@ class CreateTimeCapsuleViewModel @Inject constructor(
         val regex = Regex("""(?<=^)[^+\d]|(?!^)[^0-9]""")
         val strippedPhoneNumber = regex.replace(newPhoneNumber.trim(), "")
 
+        // if character are inserted don't update
+        if (strippedPhoneNumber == formState.value.phoneNumber) return
+
         val error = validatePhoneNumber(strippedPhoneNumber)
 
         _formState.update { state ->
@@ -182,11 +191,14 @@ class CreateTimeCapsuleViewModel @Inject constructor(
         val currentState = uiState.value
         if (currentState is CreateTimeCapsuleUiState.Loading) return
 
-        val error = validateEmail(newEmail)
+        val strippedEmail = newEmail.trim()
+        if (strippedEmail == formState.value.email) return
+
+        val error = validateEmail(strippedEmail)
 
         _formState.update { state ->
             state.copy(
-                email = newEmail,
+                email = strippedEmail,
                 emailError = error
             )
         }
@@ -242,20 +254,28 @@ class CreateTimeCapsuleViewModel @Inject constructor(
         _formState.update { state ->
             val phoneNumber = state.phoneNumber
 
-            // number not valid
-            if (validatePhoneNumber(phoneNumber).isNotEmpty()) return
+            val error = validatePhoneNumber(phoneNumber)
 
-            // already in
-            if (phoneNumber in state.timeCapsule.phones) return
+            if (error.isNotEmpty()) {
+                state.copy(
+                    phoneNumberError = error
+                )
+            }
+            else if (phoneNumber.isEmpty()) {
+                // show black error only on submit (add)
+                state.copy(
+                    phoneNumberError = context.getString(R.string.enter_phone_number)
+                )
+            } else {
+                val updatedPhones = state.timeCapsule.phones.toMutableList()
+                updatedPhones.add(phoneNumber)
 
-            val updatedPhones = state.timeCapsule.phones.toMutableList()
-            updatedPhones.add(phoneNumber)
+                val updatedTimeCapsule = state.timeCapsule.copy(phones = updatedPhones)
 
-            val updatedTimeCapsule = state.timeCapsule.copy(phones = updatedPhones)
-
-            state.copy(
-                timeCapsule = updatedTimeCapsule,
-            )
+                state.copy(
+                    timeCapsule = updatedTimeCapsule,
+                )
+            }
         }
     }
 
@@ -282,20 +302,35 @@ class CreateTimeCapsuleViewModel @Inject constructor(
         _formState.update { state ->
             val email = state.email
 
-            // number not valid
-            if (validateEmail(email).isNotEmpty()) return
+            val error = validateEmail(email)
 
-            // already in
-            if (email in state.timeCapsule.emails) return
+            // show black error only on submit (add)
+            if (error.isNotEmpty()) {
+                state.copy(
+                    emailError = error
+                )
+            }
+            else if (email.isBlank()) {
+                // show black error only on submit (add)
+                state.copy(
+                    emailError = context.getString(R.string.enter_email)
+                )
+            } else {
+                // number not valid
+                if (validateEmail(email).isNotEmpty()) return
 
-            val updatedEmails = state.timeCapsule.emails.toMutableList()
-            updatedEmails.add(email)
+                // already in
+                if (email in state.timeCapsule.emails) return
 
-            val updatedTimeCapsule = state.timeCapsule.copy(emails = updatedEmails)
+                val updatedEmails = state.timeCapsule.emails.toMutableList()
+                updatedEmails.add(email)
 
-            state.copy(
-                timeCapsule = updatedTimeCapsule,
-            )
+                val updatedTimeCapsule = state.timeCapsule.copy(emails = updatedEmails)
+
+                state.copy(
+                    timeCapsule = updatedTimeCapsule,
+                )
+            }
         }
     }
 
@@ -315,43 +350,18 @@ class CreateTimeCapsuleViewModel @Inject constructor(
         }
     }
 
-/*
-    fun onRemoveReceiver(receiver: String) {
-        val currentState = uiState.value
-        if (currentState is CreateTimeCapsuleUiState.Loading) return
-
-        _formState.update { state ->
-            val updatedEmails = state.timeCapsule.emails.toMutableList()
-            updatedEmails.remove(receiver)
-
-            val updatedPhones = state.timeCapsule.phones.toMutableList()
-            updatedPhones.remove(receiver)
-
-            val updatedReceiverIds = state.timeCapsule.receiversIds.toMutableList()
-            updatedReceiverIds.remove(receiver)
-
-            val updatedTimeCapsule = state.timeCapsule.copy(
-                phones = updatedPhones,
-                emails = updatedEmails,
-                receiversIds = updatedReceiverIds
-            )
-
-            state.copy(
-                timeCapsule = updatedTimeCapsule,
-            )
-        }
-    }
-*/
-
     private var matchingUsersJob: Job? = null
 
     fun onUpdatePartialUsername(newPartialUsername: String) {
         val currentState = uiState.value
         if (currentState is CreateTimeCapsuleUiState.Loading) return
 
+        val strippedUsername = newPartialUsername.trim()
+        if (strippedUsername == formState.value.partialUsername) return
+
         _formState.update { state ->
             state.copy(
-                partialUsername = newPartialUsername,
+                partialUsername = strippedUsername,
                 matchingUsers = listOf()
             )
         }
@@ -360,11 +370,11 @@ class CreateTimeCapsuleViewModel @Inject constructor(
         matchingUsersJob?.cancel()
 
         // minimum lenght is 1 for search
-        if (newPartialUsername.isEmpty()) return
+        if (strippedUsername.isEmpty()) return
 
         // Start a new coroutine for validation
         matchingUsersJob = viewModelScope.launch {
-            val matchingUsers = userRepository.getUsersMatchingPartialUsername(newPartialUsername)
+            val matchingUsers = userRepository.getUsersMatchingPartialUsername(strippedUsername)
 
             _formState.update { state ->
                 state.copy(

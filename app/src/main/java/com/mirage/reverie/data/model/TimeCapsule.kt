@@ -18,7 +18,8 @@ data class TimeCapsule (
     val receiversIds: List<String> = listOf(), // utenti che hanno cliccato il link ricevuto (inizialmente è vuota)
 
     val creationDate: Timestamp = Timestamp.now(), // data di creazione della capsula
-    val isSent: Boolean = false,             // TimeCapsule sent to emails and phones
+    // https://stackoverflow.com/questions/46406376/kotlin-class-does-not-get-its-boolean-value-from-firebase#comment79775161_46406376
+    @field:JvmField val isSent: Boolean = false,             // TimeCapsule sent to emails and phones
 ): Parcelable {
     // shadows Parcelable stability attribute
     @Exclude

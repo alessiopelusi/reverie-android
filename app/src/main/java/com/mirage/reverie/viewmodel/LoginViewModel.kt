@@ -55,11 +55,14 @@ class LoginViewModel @Inject constructor(
     }
 
     fun onEmailChange(newEmail: String) {
-        val error = validateEmail(newEmail)
+        val strippedEmail = newEmail.trim()
+        if (strippedEmail == inputState.value.email) return
+
+        val error = validateEmail(strippedEmail)
 
         _inputState.update { state ->
             state.copy(
-                email = newEmail,
+                email = strippedEmail,
                 emailError = error
             )
         }
