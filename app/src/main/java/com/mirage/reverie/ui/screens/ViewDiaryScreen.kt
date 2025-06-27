@@ -84,6 +84,7 @@ import androidx.compose.ui.text.style.TextAlign
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.mirage.reverie.data.model.DiaryImage
+import com.mirage.reverie.formatDate
 import com.mirage.reverie.ui.components.ConfirmDelete
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
@@ -347,93 +348,12 @@ fun ViewDiaryScreen(
                                 Text(
                                     text = "Inserisci foto"
                                 )
-                                Icon(Icons.Outlined.Camera, contentDescription = "Camera", modifier = Modifier.size(20.dp))
+                                Icon(Icons.Outlined.Camera, contentDescription = stringResource(R.string.select_image), modifier = Modifier.size(20.dp))
                             }
                         }
                     }
                 }
-//                Row(
-//                    modifier = Modifier.fillMaxWidth()
-//                ){
-//                    Column(
-//                        modifier = Modifier.weight(1f),
-//                        horizontalAlignment = Alignment.CenterHorizontally
-//                    ) {
-//                        Text(
-//                            text = stringResource(R.string.page),
-//                            style = TextStyle(
-//                                fontWeight = FontWeight.Bold,
-//                                fontSize = 18.sp
-//                            ),
-//                        )
-//                        Text(
-//                            text = "${pages.indexOf(currentPage) + 1}/${pages.size}",
-//                        )
-//                    }
-//                    Column(
-//                        modifier = Modifier.weight(1f),
-//                        horizontalAlignment = Alignment.CenterHorizontally
-//                    ) {
-//                        Text(
-//                            text = stringResource(R.string.sub_page),
-//                            style = TextStyle(
-//                                fontWeight = FontWeight.Bold,
-//                                fontSize = 18.sp
-//                            ),
-//                        )
-//                        Text(
-//                            text = "${currentPage.subPageIds.indexOf(currentSubPage.id) + 1}/${currentPage.subPageIds.size}",
-//                        )
-//                    }
-//                }
 
-
-                // Registers a photo picker activity launcher in single-select mode.
-
-//                Row {
-//                    if (currentPage != pages.last()) {
-//                        Button(
-//                            onClick = viewModel::onOpenDeleteDiaryDialog,
-//                        ) {
-//                            Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.delete))
-//                        }
-//                    }
-//
-//
-//                    Button(
-//                        onClick = {
-//                            // Launch the photo picker and let the user choose only images.
-//                            pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
-//                        },
-//                    ) {
-//                        Icon(Icons.Outlined.Camera, contentDescription = "Camera")
-//                    }
-//
-//
-//                    Button(
-//                        onClick = { onNavigateToEditDiaryPage(currentPage.id) },
-//                        colors = ButtonColors(
-//                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-//                            contentColor = MaterialTheme.colorScheme.primary,
-//                            disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
-//                            disabledContentColor = MaterialTheme.colorScheme.primary
-//                        ),
-//                    ) {
-//                        Icon(Icons.Outlined.Edit, contentDescription = "Edit")
-//                    }
-//                }
-//
-//                if (deleteDialogState) {
-//                    ConfirmDelete (
-//                        stringResource(R.string.confirm_page_deletion),
-//                        stringResource(R.string.delete_page),
-//                        viewModel::onCloseDeletePageDialog
-//                    ) {
-//                        viewModel.onDeletePage(
-//                            currentPage.id,
-//                        )
-//                    }
-//                }
             }
         }
         is ViewDiaryUiState.Error -> Text(text = "Error: ${(uiState as ViewDiaryUiState.Error).exception.message}")
@@ -457,7 +377,6 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
 
     BoxWithConstraints(
         modifier = modifier.fillMaxSize()
-            .border(BorderStroke(1.dp, Color.Red))
     ) {
         var isContextMenuVisible by rememberSaveable {
             mutableStateOf(false)

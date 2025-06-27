@@ -66,4 +66,14 @@
     <string name="phone_number">Numero di telefono</string>
     <string name="phone_number_already_selected">Numero di telefono già selezionato</string>
     <string name="email_already_selected">Email già selezionata</string>
+    <string name="edit_diary">Modifica diario</string>
+    <string name="select_image">Seleziona immagine</string>
+    <string name="arrival_date">Data di arrivo</string>
+    <string name="creation_date">Data di creazione</string>
+    <string name="receiver">Destinatario</string>
+    <string name="receivers">Destinatari</string>
+    <string name="sender">Mittente</string>
+    <string name="content_not_available">Contenuto non disponibile</string>
+    <string name="letter_content">Contenuto della lettera</string>
+    <string name="profile">Profilo</string>
 </resources>

@@ -4,21 +4,21 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.google.firebase.auth.FirebaseAuth
 import com.mirage.reverie.data.model.User
 import com.mirage.reverie.data.repository.UserRepository
 import com.mirage.reverie.navigation.ProfileRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 sealed class ProfileUiState {
     data object Loading : ProfileUiState()
     data class Success(
-        val profile: User
+        val profile: User,
+        val isOwner: Boolean
     ) : ProfileUiState()
     data class Error(val exception: Throwable) : ProfileUiState()
 }
@@ -27,6 +27,7 @@ sealed class ProfileUiState {
 class ProfileViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val userRepository: UserRepository,
+    private val auth: FirebaseAuth,
 ) : ViewModel() {
     private val profileId = savedStateHandle.toRoute<ProfileRoute>().profileId
 
@@ -41,12 +42,15 @@ class ProfileViewModel @Inject constructor(
     private fun onStart() {
         viewModelScope.launch {
             val user = userRepository.getUser(profileId)
-            _uiState.value = ProfileUiState.Success(user)
+            val isOwner = auth.uid == user.id
+            _uiState.value = ProfileUiState.Success(user, isOwner)
         }
     }
 
     fun overwriteProfile(profile: User?) {
-        if (profile != null)
-            _uiState.value = ProfileUiState.Success(profile)
+        if (profile != null) {
+            // we are returning from edit, so we are the owner of the profile
+            _uiState.value = ProfileUiState.Success(profile, true)
+        }
     }
 }
