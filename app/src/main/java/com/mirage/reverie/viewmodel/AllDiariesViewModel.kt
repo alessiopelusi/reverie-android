@@ -28,7 +28,9 @@ fun createPagerState(size: Int, selectedDiary: Int = size/2) : PagerState =
     )
 
 enum class ButtonState {
-    INFO, IMAGES, VIDEOS // puoi aggiungere altre sezioni
+    INFO,
+    IMAGES,
+    //VIDEOS
 }
 
 sealed class AllDiariesUiState {

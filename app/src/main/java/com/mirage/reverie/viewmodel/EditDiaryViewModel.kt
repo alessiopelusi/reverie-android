@@ -22,7 +22,8 @@ import javax.inject.Inject
 data class EditDiaryFormState(
     val diary: Diary = Diary(),
     val allCoversMap: Map<String, DiaryCover> = mapOf(),
-    val selectedCover: String = diary.coverId
+    val selectedCover: String = diary.coverId,
+    val titleError: String = ""
 )
 
 sealed class EditDiaryUiState {
@@ -84,14 +85,19 @@ class EditDiaryViewModel @Inject constructor(
     fun onUpdateDiary() {
         _uiState.update { EditDiaryUiState.Idle }
 
-        val state = formState.value
-        if (state.diary.title.isBlank()) {
-            _uiState.update { EditDiaryUiState.Error(context.getString(R.string.title_mandatory)) }
+        val titleError = validateTitle(formState.value.diary.title)
+        if (titleError.isNotBlank()) {
+            _formState.update { state ->
+                state.copy(
+                    titleError = titleError
+                )
+            }
             return
         }
 
         viewModelScope.launch {
             try {
+                val state = formState.value
                 if (state.diary.id != "") {
                     repository.updateDiary(state.diary)
                 } else {
@@ -106,14 +112,31 @@ class EditDiaryViewModel @Inject constructor(
         }
     }
 
-    // Handle business logic
+
+    private fun validateTitle(title: String): String {
+        return if (title.isBlank()) {
+            context.getString(R.string.title_mandatory)
+        } else {
+            ""
+        }
+    }
+
+
     fun onUpdateTitle(newTitle: String) {
         val currentState = uiState.value
         if (currentState is EditDiaryUiState.Loading) return
 
+        val strippedTitle = newTitle.trim()
+        if (strippedTitle == formState.value.diary.title) return
+
+        val error = validateTitle(strippedTitle)
+
         _formState.update { state ->
-            val updatedDiary = state.diary.copy(title = newTitle)
-            state.copy(diary = updatedDiary)
+            val updatedDiary = state.diary.copy(title = strippedTitle)
+            state.copy(
+                diary = updatedDiary,
+                titleError = error
+            )
         }
     }
 

@@ -232,9 +232,9 @@ fun AllDiariesScreen(
                             }
                         }
                     }
-                    ButtonState.VIDEOS -> {
-
-                    }
+//                    ButtonState.VIDEOS -> {
+//
+//                    }
                     ButtonState.INFO -> {
                         item(
                             span = StaggeredGridItemSpan.FullLine

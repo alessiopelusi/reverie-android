@@ -14,7 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.mirage.reverie.R
 import com.mirage.reverie.data.model.Diary
+import com.mirage.reverie.ui.components.SingleLineField
 import com.mirage.reverie.viewmodel.EditDiaryUiState
 import com.mirage.reverie.viewmodel.EditDiaryViewModel
 
@@ -55,7 +55,7 @@ fun EditDiaryScreen(
                     modifier = Modifier.padding(8.dp),
                     text = if (diary.id == "") stringResource(R.string.create_diary_message) else stringResource(R.string.edit_diary_message),
                 )
-                EditTitleField(diary.title, onNewValue = viewModel::onUpdateTitle)
+                SingleLineField(diary.title, formState.titleError, viewModel::onUpdateTitle, stringResource(R.string.title))
 
                 LazyVerticalGrid (
                     columns = GridCells.Fixed(3), // 3 columns grid
@@ -107,15 +107,4 @@ fun DiaryCoverPreview(coverUrl: String, modifier: Modifier = Modifier) {
             contentDescription = null
         )
     }
-}
-
-@Composable
-fun EditTitleField(value: String, onNewValue: (String) -> Unit, modifier: Modifier = Modifier) {
-    OutlinedTextField(
-        singleLine = true,
-        modifier = modifier,
-        value = value,
-        onValueChange = { onNewValue(it) },
-        placeholder = { Text(stringResource(R.string.title)) },
-    )
 }
