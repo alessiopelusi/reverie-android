@@ -28,7 +28,7 @@ fun createPagerState(size: Int, selectedDiary: Int = size/2) : PagerState =
     )
 
 enum class ButtonState {
-    TEXTS, IMAGES, VIDEOS // puoi aggiungere altre sezioni
+    INFO, IMAGES, VIDEOS // puoi aggiungere altre sezioni
 }
 
 sealed class AllDiariesUiState {
@@ -39,7 +39,7 @@ sealed class AllDiariesUiState {
         val diaryCoversMap: Map<String, DiaryCover>,
         val diaryPhotosMap: Map<String, List<DiaryImage>>,
         val pagerState: PagerState = createPagerState(allDiaries.diaryIds.size),
-        val buttonState: ButtonState = ButtonState.TEXTS,
+        val buttonState: ButtonState = ButtonState.INFO,
         val deleteDialogState: Boolean = false
     ) : AllDiariesUiState() {
         val diaries: List<Diary>

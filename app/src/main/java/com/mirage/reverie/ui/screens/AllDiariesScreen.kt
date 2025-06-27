@@ -321,7 +321,7 @@ fun AllDiariesScreen(
                     ButtonState.VIDEOS -> {
 
                     }
-                    ButtonState.TEXTS -> {
+                    ButtonState.INFO -> {
                         item(
                             span = StaggeredGridItemSpan.FullLine
                         ){
