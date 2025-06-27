@@ -351,7 +351,9 @@ fun MainComposable(
 
                         composable<ViewTimeCapsuleRoute> {
                             bottomBarVisibility = true
-                            ViewTimeCapsuleScreen()
+                            ViewTimeCapsuleScreen(onViewProfile = { uid ->
+                                navController.navigate(ViewProfileRoute(uid))
+                            })
                         }
 
                         composable<CreateTimeCapsuleRoute> { backStackEntry ->

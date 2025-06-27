@@ -38,6 +38,8 @@ fun ProfileScreen(
         is ProfileUiState.Loading -> CircularProgressIndicator()
         is ProfileUiState.Success -> {
             val profile = (uiState as ProfileUiState.Success).profile
+            val isOwner = (uiState as ProfileUiState.Success).isOwner
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -47,7 +49,7 @@ fun ProfileScreen(
             ) {
 
                 Text(
-                    text = stringResource(R.string.your_profile),
+                    text = stringResource(if (isOwner) R.string.your_profile else R.string.profile),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -74,18 +76,20 @@ fun ProfileScreen(
 
                 Spacer(modifier = Modifier.height(40.dp))
 
-                Button( onClick = {
-                    onEditProfile(profile.id)
-                }) {
-                    Text(stringResource(R.string.edit_profile))
-                }
+                if (isOwner) {
+                    Button( onClick = {
+                        onEditProfile(profile.id)
+                    }) {
+                        Text(stringResource(R.string.edit_profile))
+                    }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                Button( onClick = {
-                    onLogout(profile.id)
-                }) {
-                    Text(stringResource(R.string.logout))
+                    Button( onClick = {
+                        onLogout(profile.id)
+                    }) {
+                        Text(stringResource(R.string.logout))
+                    }
                 }
             }
         }

@@ -77,6 +77,7 @@ import androidx.compose.ui.res.stringResource
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.mirage.reverie.data.model.DiaryImage
+import com.mirage.reverie.formatDate
 import com.mirage.reverie.ui.components.ConfirmDelete
 import kotlinx.coroutines.delay
 import java.time.format.DateTimeFormatter
@@ -241,7 +242,7 @@ fun ViewDiaryScreen(
 
                 Text(
                     modifier = Modifier.padding(8.dp),
-                    text = "${stringResource(R.string.day)} ${currentPage.date.format(DateTimeFormatter.ofPattern("dd MM YYYY"))}",
+                    text = "${stringResource(R.string.day)} ${formatDate(currentPage.date)}",
                 )
                 Text(
                     modifier = Modifier.padding(8.dp),
@@ -275,7 +276,7 @@ fun ViewDiaryScreen(
                             pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
                         },
                     ) {
-                        Icon(Icons.Outlined.Camera, contentDescription = "Camera")
+                        Icon(Icons.Outlined.Camera, contentDescription = stringResource(R.string.select_image))
                     }
 
 
@@ -288,7 +289,7 @@ fun ViewDiaryScreen(
                             disabledContentColor = MaterialTheme.colorScheme.primary
                         ),
                     ) {
-                        Icon(Icons.Outlined.Edit, contentDescription = "Edit")
+                        Icon(Icons.Outlined.Edit, contentDescription = stringResource(R.string.edit_diary))
                     }
                 }
 

@@ -1,5 +1,6 @@
 package com.mirage.reverie.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -34,6 +35,7 @@ import java.text.SimpleDateFormat
 
 @Composable
 fun ViewTimeCapsuleScreen(
+    onViewProfile: (String) -> Unit,
     viewModel: ViewTimeCapsuleViewModel = hiltViewModel()
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -44,6 +46,7 @@ fun ViewTimeCapsuleScreen(
             val timeCapsule = (uiState as ViewTimeCapsuleState.Success).timeCapsule
             val timeCapsuleType = (uiState as ViewTimeCapsuleState.Success).timeCapsuleType
             val scrollState = rememberScrollState()
+            val receiversUsername = (uiState as ViewTimeCapsuleState.Success).receiversUsername
 
             Column (
                 modifier = Modifier
@@ -66,7 +69,7 @@ fun ViewTimeCapsuleScreen(
 
                 if (timeCapsuleType != TimeCapsuleType.SCHEDULED) {
                     Text(
-                        text = "Contenuto della lettera:",
+                        text = stringResource(R.string.letter_content) + ":",
                         style = TextStyle(
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp
@@ -80,7 +83,7 @@ fun ViewTimeCapsuleScreen(
                     )
                 } else {
                     Text(
-                        text = "Contenuto non disponibile.",
+                        text = stringResource(R.string.content_not_available) + ".",
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center
                     )
@@ -89,7 +92,7 @@ fun ViewTimeCapsuleScreen(
                 Spacer(modifier = Modifier.height(50.dp))
 
                 Text(
-                    text = "Mittente:",
+                    text = stringResource(R.string.sender) + ":",
                     style = TextStyle(
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
@@ -103,19 +106,25 @@ fun ViewTimeCapsuleScreen(
                     Spacer(modifier = Modifier.height(50.dp))
 
                     Text(
-                        text = if ((timeCapsule.emails + timeCapsule.phones + timeCapsule.receiversIds).count() == 1) {
-                            "Destinatario:"
+                        text = if ((timeCapsule.phones + timeCapsule.emails + timeCapsule.receiversIds).count() == 1) {
+                            stringResource(R.string.receiver) + ":"
                         } else {
-                            "Destinatari:"
+                            stringResource(R.string.receivers) + ":"
                         },
                         style = TextStyle(
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp
                         ),
                     )
-                    for (destinatario in (timeCapsule.emails + timeCapsule.phones + timeCapsule.receiversIds)){
+                    for (receiver in (timeCapsule.phones + timeCapsule.emails)){
                         Text(
-                            text = destinatario
+                            text = receiver
+                        )
+                    }
+                    for (receiver in receiversUsername) {
+                        Text(
+                            text = receiver.username,
+                            modifier = Modifier.clickable { onViewProfile(receiver.uid) }
                         )
                     }
                 }
@@ -131,7 +140,7 @@ fun ViewTimeCapsuleScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "Data di Creazione:",
+                            text = stringResource(R.string.creation_date) + ":",
                             style = TextStyle(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 18.sp
@@ -147,7 +156,7 @@ fun ViewTimeCapsuleScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "Data di Arrivo:",
+                            text = stringResource(R.string.arrival_date) + ":",
                             style = TextStyle(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 18.sp

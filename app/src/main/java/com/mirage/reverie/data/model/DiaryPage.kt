@@ -6,6 +6,7 @@ import com.google.firebase.firestore.Exclude
 import com.mirage.reverie.toLocalDate
 import kotlinx.parcelize.Parcelize
 import java.time.LocalDate
+import java.util.Date
 
 @Parcelize
 data class DiaryPage(
@@ -15,8 +16,8 @@ data class DiaryPage(
     val subPageIds: List<String> = listOf(),
     val timestamp: Timestamp = Timestamp.now()
 ): Parcelable {
-    val date: LocalDate
-        @Exclude get() = timestamp.toDate().toLocalDate()
+    val date: Date
+        @Exclude get() = timestamp.toDate()
 
     // shadows Parcelable stability attribute
     @Exclude
