@@ -5,6 +5,7 @@ import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,10 +15,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
@@ -53,6 +56,8 @@ import com.mirage.reverie.viewmodel.AllDiariesUiState
 import com.mirage.reverie.viewmodel.AllDiariesViewModel
 import com.mirage.reverie.viewmodel.ButtonState
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.Delete
@@ -61,16 +66,19 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.sp
 import com.mirage.reverie.R
 import com.mirage.reverie.data.model.DiaryImage
 import com.mirage.reverie.ui.components.ButtonBar
 import com.mirage.reverie.ui.components.ConfirmDelete
+import java.text.SimpleDateFormat
 
 @Composable
 fun AllDiariesScreen(
@@ -314,8 +322,47 @@ fun AllDiariesScreen(
 
                     }
                     ButtonState.TEXTS -> {
-                        item{
-                            Text("pages: ${currentDiary.pageIds.size}")
+                        item(
+                            span = StaggeredGridItemSpan.FullLine
+                        ){
+                            Column(
+                                modifier = Modifier.padding(vertical = 10.dp, horizontal = 16.dp)
+                            ){
+                                val formatter = SimpleDateFormat("dd MMMM yyyy")
+                                Text(
+                                    text = "Data di creazione:",
+                                    style = TextStyle(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 18.sp
+                                    ),
+                                )
+                                Text(
+                                    text = formatter.format(currentDiary.creationDate.toDate()),
+                                )
+                            }
+                        }
+                        item(
+                            span = StaggeredGridItemSpan.FullLine
+                        ){
+                            HorizontalDivider(thickness = 1.dp)
+                        }
+                        item(
+                            span = StaggeredGridItemSpan.FullLine
+                        ){
+                            Column(
+                                modifier = Modifier.padding(vertical = 10.dp, horizontal = 16.dp)
+                            ){
+                                Text(
+                                    text = "Numero di pagine:",
+                                    style = TextStyle(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 18.sp
+                                    ),
+                                )
+                                Text(
+                                    text = currentDiary.pageIds.size.toString(),
+                                )
+                            }
                         }
                     }
                 }
