@@ -171,7 +171,10 @@ class DiaryRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteSubPage(subPageId: String) {
-        val subPage = getSubPage(subPageId)
+        // TODO: why it's needed
+        val subPage = try {
+            getSubPage(subPageId)
+        } catch (_: Exception) { return }
 
         subPage.imageIds.forEach { imageId -> deleteDiaryImage(imageId) }
 

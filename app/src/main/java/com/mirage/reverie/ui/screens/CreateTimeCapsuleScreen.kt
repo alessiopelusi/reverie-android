@@ -45,6 +45,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.google.firebase.Timestamp
 import com.mirage.reverie.data.model.User
+import com.mirage.reverie.formatDate
 import com.mirage.reverie.ui.components.SingleLineField
 import com.mirage.reverie.ui.components.PhoneNumber
 import com.mirage.reverie.ui.components.formatPhoneNumber
@@ -88,8 +89,7 @@ fun CreateTimeCapsuleScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                val formatter = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
-                val formattedDate = formatter.format(timeCapsule.deadline.toDate())
+                val formattedDate = formatDate(timeCapsule.deadline.toDate())
 
                 Text(text = if (timeCapsule.deadline < Timestamp.now()) stringResource(R.string.no_date_selected) else "${stringResource(R.string.date)}: $formattedDate")
 
@@ -266,9 +266,6 @@ fun SelectUserDropDownMenu(
     users: List<User>,
     onSelectedUser: (User) -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
-
-// Scrollable Results
     Box(
         modifier = Modifier
             .fillMaxWidth()

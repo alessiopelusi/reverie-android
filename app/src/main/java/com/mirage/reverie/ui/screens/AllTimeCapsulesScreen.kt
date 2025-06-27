@@ -53,6 +53,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
 import com.mirage.reverie.R
 import com.mirage.reverie.data.model.TimeCapsule
+import com.mirage.reverie.formatDate
 import com.mirage.reverie.ui.components.ButtonBar
 import com.mirage.reverie.ui.components.ConfirmDelete
 import com.mirage.reverie.ui.theme.Purple80
@@ -188,7 +189,6 @@ fun TimeCapsuleComposable(modifier: Modifier) {
 
 @Composable
 fun ScheduledTimeCapsule(timeCapsule: TimeCapsule, onClick: (String, TimeCapsuleType) -> Unit, onOpenDeleteTimeCapsuleDialog: () -> Unit) {
-    val formatter = SimpleDateFormat("dd MMMM yyyy") // Define the desired format
     Row(
         modifier = Modifier
             .padding(vertical = 10.dp)
@@ -228,9 +228,9 @@ fun ScheduledTimeCapsule(timeCapsule: TimeCapsule, onClick: (String, TimeCapsule
                         }
                 )
                 Text(
-                    text = "Creata il " + formatter.format(timeCapsule.creationDate.toDate())
+                    text = "Creata il " + formatDate(timeCapsule.creationDate.toDate())
                 )
-                Text(text = "In arrivo il " + formatter.format(timeCapsule.deadline.toDate()))
+                Text(text = "In arrivo il " + formatDate(timeCapsule.deadline.toDate()))
             }
         }
         IconButton (
@@ -251,8 +251,6 @@ fun ScheduledTimeCapsule(timeCapsule: TimeCapsule, onClick: (String, TimeCapsule
 
 @Composable
 fun SentTimeCapsule(timeCapsule: TimeCapsule, onClick: (String, TimeCapsuleType) -> Unit) {
-    val formatter = SimpleDateFormat("dd MMMM yyyy") // Define the desired format
-
     Row(
         modifier = Modifier
             .padding(vertical = 10.dp)
@@ -293,9 +291,9 @@ fun SentTimeCapsule(timeCapsule: TimeCapsule, onClick: (String, TimeCapsuleType)
                             }
                 )
                 Text(
-                    text = "Creata il " + formatter.format(timeCapsule.creationDate.toDate())
+                    text = "Creata il " + formatDate(timeCapsule.creationDate.toDate())
                 )
-                Text(text = "Arrivata il " + formatter.format(timeCapsule.deadline.toDate()))
+                Text(text = "Arrivata il " + formatDate(timeCapsule.deadline.toDate()))
             }
         }
     }
@@ -303,8 +301,6 @@ fun SentTimeCapsule(timeCapsule: TimeCapsule, onClick: (String, TimeCapsuleType)
 
 @Composable
 fun ReceivedTimeCapsule(timeCapsule: TimeCapsule, onClick: (String, TimeCapsuleType) -> Unit) {
-    val formatter = SimpleDateFormat("dd MMMM yyyy") // Define the desired format
-
     Row(
         modifier = Modifier
             .padding(vertical = 10.dp)
@@ -345,9 +341,9 @@ fun ReceivedTimeCapsule(timeCapsule: TimeCapsule, onClick: (String, TimeCapsuleT
                             }
                 )
                 Text(
-                    text = "Creata il " + formatter.format(timeCapsule.creationDate.toDate())
+                    text = "Creata il " + formatDate(timeCapsule.creationDate.toDate())
                 )
-                Text(text = "Ricevuta il " + formatter.format(timeCapsule.deadline.toDate()))
+                Text(text = "Ricevuta il " + formatDate(timeCapsule.deadline.toDate()))
             }
         }
     }

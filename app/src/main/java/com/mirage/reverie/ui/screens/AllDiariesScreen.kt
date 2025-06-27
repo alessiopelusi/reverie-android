@@ -76,6 +76,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
 import com.mirage.reverie.R
 import com.mirage.reverie.data.model.DiaryImage
+import com.mirage.reverie.formatDate
 import com.mirage.reverie.ui.components.ButtonBar
 import com.mirage.reverie.ui.components.ConfirmDelete
 import java.text.SimpleDateFormat
@@ -328,7 +329,6 @@ fun AllDiariesScreen(
                             Column(
                                 modifier = Modifier.padding(vertical = 10.dp, horizontal = 16.dp)
                             ){
-                                val formatter = SimpleDateFormat("dd MMMM yyyy")
                                 Text(
                                     text = "Data di creazione:",
                                     style = TextStyle(
@@ -337,7 +337,7 @@ fun AllDiariesScreen(
                                     ),
                                 )
                                 Text(
-                                    text = formatter.format(currentDiary.creationDate.toDate()),
+                                    text = formatDate(currentDiary.creationDate.toDate()),
                                 )
                             }
                         }

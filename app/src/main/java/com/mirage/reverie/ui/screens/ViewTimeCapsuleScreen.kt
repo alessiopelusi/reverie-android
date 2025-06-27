@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mirage.reverie.R
+import com.mirage.reverie.formatDate
 import com.mirage.reverie.viewmodel.TimeCapsuleType
 import com.mirage.reverie.viewmodel.ViewTimeCapsuleState
 import com.mirage.reverie.viewmodel.ViewTimeCapsuleViewModel
@@ -42,7 +43,6 @@ fun ViewTimeCapsuleScreen(
         is ViewTimeCapsuleState.Success -> {
             val timeCapsule = (uiState as ViewTimeCapsuleState.Success).timeCapsule
             val timeCapsuleType = (uiState as ViewTimeCapsuleState.Success).timeCapsuleType
-            val formatter = SimpleDateFormat("dd MMMM yyyy")
             val scrollState = rememberScrollState()
 
             Column (
@@ -139,7 +139,7 @@ fun ViewTimeCapsuleScreen(
                         )
                         Text(
                             modifier = Modifier.padding(8.dp),
-                            text = formatter.format(timeCapsule.creationDate.toDate())
+                            text = formatDate(timeCapsule.creationDate.toDate())
                         )
                     }
                     Column(
@@ -155,7 +155,7 @@ fun ViewTimeCapsuleScreen(
                         )
                         Text(
                             modifier = Modifier.padding(8.dp),
-                            text = formatter.format(timeCapsule.deadline.toDate())
+                            text = formatDate(timeCapsule.deadline.toDate())
 
                         )
                     }
