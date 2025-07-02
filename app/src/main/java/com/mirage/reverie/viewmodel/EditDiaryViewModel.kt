@@ -23,7 +23,8 @@ data class EditDiaryFormState(
     val diary: Diary = Diary(),
     val allCoversMap: Map<String, DiaryCover> = mapOf(),
     val selectedCover: String = diary.coverId,
-    val titleError: String = ""
+    val titleError: String = "",
+    val descriptionError: String = ""
 )
 
 sealed class EditDiaryUiState {
@@ -85,13 +86,15 @@ class EditDiaryViewModel @Inject constructor(
     fun onUpdateDiary() {
         _uiState.update { EditDiaryUiState.Idle }
 
-        val titleError = validateTitle(formState.value.diary.title)
-        if (titleError.isNotBlank()) {
-            _formState.update { state ->
-                state.copy(
-                    titleError = titleError
-                )
-            }
+        _formState.update { state ->
+            state.copy(
+                titleError = validateTitle(formState.value.diary.title),
+                descriptionError = validateDescription(formState.value.diary.description)
+            )
+        }
+
+        if (_formState.value.titleError.isNotBlank() || _formState.value.descriptionError.isNotBlank()) {
+            _uiState.update { EditDiaryUiState.Error("") }
             return
         }
 
@@ -112,7 +115,6 @@ class EditDiaryViewModel @Inject constructor(
         }
     }
 
-
     private fun validateTitle(title: String): String {
         return if (title.isBlank()) {
             context.getString(R.string.title_mandatory)
@@ -121,6 +123,13 @@ class EditDiaryViewModel @Inject constructor(
         }
     }
 
+    private fun validateDescription(description: String): String {
+        return if (description.isBlank()) {
+            context.getString(R.string.description_mandatory)
+        } else {
+            ""
+        }
+    }
 
     fun onUpdateTitle(newTitle: String) {
         val currentState = uiState.value
@@ -136,6 +145,24 @@ class EditDiaryViewModel @Inject constructor(
             state.copy(
                 diary = updatedDiary,
                 titleError = error
+            )
+        }
+    }
+
+    fun onUpdateDescription(newDescription: String) {
+        val currentState = uiState.value
+        if (currentState is EditDiaryUiState.Loading) return
+
+        val strippedDescription = newDescription.trim()
+        if (strippedDescription == formState.value.diary.description) return
+
+        val error = validateTitle(strippedDescription)
+
+        _formState.update { state ->
+            val updatedDiary = state.diary.copy(description = strippedDescription)
+            state.copy(
+                diary = updatedDiary,
+                descriptionError = error
             )
         }
     }

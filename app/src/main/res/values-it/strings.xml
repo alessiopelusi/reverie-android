@@ -20,6 +20,7 @@
     <string name="edit_diary_message">Stai modificando il tuo diario!</string>
     <string name="create_time_capsule_message">Stai creando la tua capsula del tempo!</string>
     <string name="content">Contenuto</string>
+    <string name="description">Descrizione</string>
     <string name="your_profile">Il tuo profilo</string>
     <string name="name">Nome</string>
     <string name="surname">Cognome</string>
@@ -31,6 +32,7 @@
     <string name="surname_mandatory">Il cognome è obbligatorio</string>
     <string name="title_mandatory">Il titolo è obbligatorio</string>
     <string name="content_mandatory">Il contentuo è obbligatorio</string>
+    <string name="description_mandatory">La descrizione è obbligatoria</string>
     <string name="password_mandatory">La password è obbligatoria</string>
     <string name="passwords_dont_match">Le due password non corrispondono</string>
     <string name="password_length">La password deve avere almeno 8 caratteri</string>

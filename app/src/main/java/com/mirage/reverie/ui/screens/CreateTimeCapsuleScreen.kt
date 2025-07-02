@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.sp
 import com.google.firebase.Timestamp
 import com.mirage.reverie.data.model.User
 import com.mirage.reverie.formatDate
+import com.mirage.reverie.ui.components.ErrorField
 import com.mirage.reverie.ui.components.SingleLineField
 import com.mirage.reverie.ui.components.PhoneNumber
 import com.mirage.reverie.ui.components.formatPhoneNumber
@@ -102,6 +103,7 @@ fun CreateTimeCapsuleScreen(
                             else "${stringResource(R.string.date)}: ${formatDate(timeCapsule.deadline.toDate())}"
                     )
                 }
+                ErrorField(formState.deadlineError)
 
                 SingleLineField(partialUsername, viewModel::onUpdatePartialUsername, stringResource(R.string.username))
                 if (matchingUsers.isNotEmpty()) SelectUserDropDownMenu(matchingUsers, onSelectedUser = viewModel::onAddUser)
@@ -148,15 +150,14 @@ fun CreateTimeCapsuleScreen(
                     }
                 }
 
+                if (uiState is CreateTimeCapsuleUiState.Error) {
+                    ErrorField(errorMessage = (uiState as CreateTimeCapsuleUiState.Error).errorMessage)
+                }
+
                 Button (
                     onClick = viewModel::onCreateTimeCapsule
                 ) {
                     Text(stringResource(R.string.create))
-                }
-
-
-                if (uiState is CreateTimeCapsuleUiState.Error) {
-                    Text(text = (uiState as CreateTimeCapsuleUiState.Error).errorMessage, color = MaterialTheme.colorScheme.error)
                 }
             }
         }

@@ -388,33 +388,44 @@ class CreateTimeCapsuleViewModel @Inject constructor(
         _uiState.update { CreateTimeCapsuleUiState.Idle }
 
         val state = formState.value
-        if (state.timeCapsule.title.isBlank()) {
-            _uiState.update { CreateTimeCapsuleUiState.Error(context.getString(R.string.title_mandatory)) }
-        }
-        if (state.timeCapsule.content.isBlank()) {
-            _uiState.update { CreateTimeCapsuleUiState.Error(context.getString(R.string.content_mandatory)) }
-        }
-        if (state.timeCapsule.deadline < Timestamp.now()) {
-            _uiState.update { CreateTimeCapsuleUiState.Error(context.getString(R.string.select_a_date)) }
-        }
-
-        if (state.timeCapsule.emails.isEmpty() && state.timeCapsule.phones.isEmpty() && state.timeCapsule.receiversIds.isEmpty()) {
-            _uiState.update { CreateTimeCapsuleUiState.Error(context.getString(R.string.receiver_mandatory)) }
-        }
-
-        // if uiState is error, we save the error string and return
-        if (uiState.value is CreateTimeCapsuleUiState.Error) {
-            return
-        }
 
         viewModelScope.launch {
+            // Validate all fields and update formState with error messages
+            val updatedState = state.copy(
+                titleError = validateTitle(state.timeCapsule.title),
+                contentError = validateContent(state.timeCapsule.content),
+                deadlineError = validateDeadline(state.timeCapsule.deadline)
+            )
+
+            _formState.update { updatedState }
+
+            // Check for any validation errors
+            if (
+                listOf(
+                    updatedState.titleError,
+                    updatedState.contentError,
+                    updatedState.deadlineError,
+                ).any { it.isNotBlank() }
+            ) {
+                _uiState.update { CreateTimeCapsuleUiState.Error("") }
+            }
+
+            if (state.timeCapsule.emails.isEmpty() && state.timeCapsule.phones.isEmpty() && state.timeCapsule.receiversIds.isEmpty()) {
+                _uiState.update { CreateTimeCapsuleUiState.Error(context.getString(R.string.receiver_mandatory)) }
+            }
+
+            if (_uiState.value is CreateTimeCapsuleUiState.Error) return@launch
+
             try {
+                val saved = repository.saveTimeCapsule(updatedState.timeCapsule)
                 _formState.update {
-                    state.copy(timeCapsule = repository.saveTimeCapsule(state.timeCapsule))
+                    updatedState.copy(timeCapsule = saved)
                 }
-                _uiState.value = CreateTimeCapsuleUiState.Success
+                _uiState.update { CreateTimeCapsuleUiState.Success }
             } catch (exception: Exception) {
-                _uiState.value = CreateTimeCapsuleUiState.Error(exception.message.toString()) // Gestisci errori
+                _uiState.update {
+                    CreateTimeCapsuleUiState.Error(exception.message.orEmpty())
+                }
             }
         }
     }

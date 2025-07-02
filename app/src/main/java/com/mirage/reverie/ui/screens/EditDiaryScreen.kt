@@ -27,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.mirage.reverie.R
 import com.mirage.reverie.data.model.Diary
+import com.mirage.reverie.ui.components.ContentTextField
 import com.mirage.reverie.ui.components.SingleLineField
 import com.mirage.reverie.viewmodel.EditDiaryUiState
 import com.mirage.reverie.viewmodel.EditDiaryViewModel
@@ -56,6 +57,7 @@ fun EditDiaryScreen(
                     text = if (diary.id == "") stringResource(R.string.create_diary_message) else stringResource(R.string.edit_diary_message),
                 )
                 SingleLineField(diary.title, formState.titleError, viewModel::onUpdateTitle, stringResource(R.string.title))
+                ContentTextField(diary.description, formState.descriptionError, viewModel::onUpdateDescription, stringResource(R.string.description))
 
                 LazyVerticalGrid (
                     columns = GridCells.Fixed(3), // 3 columns grid
