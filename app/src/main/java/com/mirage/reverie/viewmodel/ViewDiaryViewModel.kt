@@ -28,6 +28,7 @@ import javax.inject.Inject
 import kotlin.math.min
 import androidx.core.graphics.scale
 import com.mirage.reverie.toLocalDate
+import kotlinx.coroutines.Job
 
 sealed class ViewDiaryUiState {
     data object Loading : ViewDiaryUiState()
@@ -75,6 +76,18 @@ class ViewDiaryViewModel @Inject constructor(
 
     init {
         onStart()
+    }
+
+    // TODO: needed to prevent accidental data overwrite
+    private var dbJob: Job? = null
+
+    private fun launchExclusiveScope(block: suspend () -> Unit) {
+        // If there's an active job, wait for it
+        val previousJob = dbJob
+        dbJob = viewModelScope.launch {
+            previousJob?.join()  // wait for previous job to finish
+            block()
+        }
     }
 
     // load diary
@@ -274,7 +287,7 @@ class ViewDiaryViewModel @Inject constructor(
 
         // firebase update
         //if (updatedSubPage != state.subPagesMap.getValue(updatedSubPage.id)) {
-        viewModelScope.launch {
+        launchExclusiveScope() {
             repository.updateSubPage(updatedSubPage)
         }
         //}
@@ -378,29 +391,30 @@ class ViewDiaryViewModel @Inject constructor(
         val state = uiState.value
         if (state !is ViewDiaryUiState.Success) return
 
-        viewModelScope.launch {
+        val subPage = state.subPagesMap[subPageId] ?: return
+
+        launchExclusiveScope {
             repository.deleteSubPage(subPageId)
+        }
 
-            val updatedSubPagesMap = state.subPagesMap.toMutableMap()
-            val subPage = updatedSubPagesMap.getValue(subPageId)
-            updatedSubPagesMap.remove(subPageId)
+        val updatedSubPagesMap = state.subPagesMap.toMutableMap()
+        updatedSubPagesMap.remove(subPageId)
 
-            val updatedPagesMap = state.pagesMap.toMutableMap()
-            val updatedPage = updatedPagesMap.getValue(subPage.pageId)
-            val updatedSubPagesIds = updatedPage.subPageIds.toMutableList()
-            updatedSubPagesIds.remove(subPageId)
+        val updatedPagesMap = state.pagesMap.toMutableMap()
+        val updatedPage = updatedPagesMap.getValue(subPage.pageId)
+        val updatedSubPagesIds = updatedPage.subPageIds.toMutableList()
+        updatedSubPagesIds.remove(subPageId)
 
-            updatedPagesMap[subPage.pageId] = updatedPage.copy(subPageIds = updatedSubPagesIds)
+        updatedPagesMap[subPage.pageId] = updatedPage.copy(subPageIds = updatedSubPagesIds)
 
-            _uiState.update{
-                ViewDiaryUiState.Success(
-                    state.diary,
-                    updatedPagesMap,
-                    updatedSubPagesMap,
-                    state.imagesMap,
-                    state.diaryPageListState
-                )
-            }
+        _uiState.update{
+            ViewDiaryUiState.Success(
+                state.diary,
+                updatedPagesMap,
+                updatedSubPagesMap,
+                state.imagesMap,
+                state.diaryPageListState
+            )
         }
     }
 
@@ -408,7 +422,7 @@ class ViewDiaryViewModel @Inject constructor(
         val state = uiState.value
         if (state !is ViewDiaryUiState.Success) return
 
-        var subPage = state.subPagesMap.getValue(subPageId)
+        var subPage = state.subPagesMap[subPageId] ?: return
         val pageId = state.subPagesMap.getValue(subPageId).pageId
 
         when(subPage.testOverflow) {
@@ -458,7 +472,7 @@ class ViewDiaryViewModel @Inject constructor(
         val state = uiState.value
         if (state !is ViewDiaryUiState.Success) return
 
-        if (!locally) viewModelScope.launch {
+        if (!locally) launchExclusiveScope {
             repository.updateDiaryImage(updatedDiaryImage)
         }
 
@@ -480,8 +494,7 @@ class ViewDiaryViewModel @Inject constructor(
         val state = uiState.value
         if (state !is ViewDiaryUiState.Success) return
 
-        val imageMap = state.imagesMap
-        val diaryImage = imageMap.getValue(diaryImageId)
+        val diaryImage = state.imagesMap[diaryImageId] ?: return
 
         // should never be null (if we update, we loaded the image)
         val updatedDiaryImage = diaryImage.copy(offsetX = offsetX, offsetY = offsetY, scale = scale, rotation = rotation)
@@ -493,39 +506,38 @@ class ViewDiaryViewModel @Inject constructor(
         val state = uiState.value
         if (state !is ViewDiaryUiState.Success) return
 
-        viewModelScope.launch {
+        val diaryImage = state.imagesMap[diaryImageId] ?: return
+
+        launchExclusiveScope {
             repository.deleteDiaryImage(diaryImageId)
-
-            val updatedImagesMap = state.imagesMap.toMutableMap()
-            val diaryImage = updatedImagesMap.getValue(diaryImageId)
-            updatedImagesMap.remove(diaryImageId)
-
-            val updatedSubPagesMap = state.subPagesMap.toMutableMap()
-            val updatedSubPage = updatedSubPagesMap.getValue(diaryImage.subPageId)
-            val updatedImageIds = updatedSubPage.imageIds.toMutableList()
-            updatedImageIds.remove(diaryImageId)
-
-            updatedSubPagesMap[diaryImage.subPageId] = updatedSubPage.copy(imageIds = updatedImageIds)
-
-            _uiState.update {
-                ViewDiaryUiState.Success(
-                    state.diary,
-                    state.pagesMap,
-                    updatedSubPagesMap,
-                    updatedImagesMap,
-                    state.diaryPageListState
-                )
-            }
         }
 
+        val updatedImagesMap = state.imagesMap.toMutableMap()
+        updatedImagesMap.remove(diaryImageId)
+
+        val updatedSubPagesMap = state.subPagesMap.toMutableMap()
+        val updatedSubPage = updatedSubPagesMap.getValue(diaryImage.subPageId)
+        val updatedImageIds = updatedSubPage.imageIds.toMutableList()
+        updatedImageIds.remove(diaryImageId)
+
+        updatedSubPagesMap[diaryImage.subPageId] = updatedSubPage.copy(imageIds = updatedImageIds)
+
+        _uiState.update {
+            ViewDiaryUiState.Success(
+                state.diary,
+                state.pagesMap,
+                updatedSubPagesMap,
+                updatedImagesMap,
+                state.diaryPageListState
+            )
+        }
     }
 
     fun moveImageUp(diaryImageId: String) {
         val state = uiState.value
         if (state !is ViewDiaryUiState.Success) return
 
-        val imageMap = state.imagesMap
-        val diaryImage = imageMap.getValue(diaryImageId)
+        val diaryImage = state.imagesMap[diaryImageId] ?: return
         val subPagesMap = state.subPagesMap
         val subPage = subPagesMap.getValue(diaryImage.subPageId)
 
@@ -542,10 +554,7 @@ class ViewDiaryViewModel @Inject constructor(
         val state = uiState.value
         if (state !is ViewDiaryUiState.Success) return
 
-        if (!state.imagesMap.containsKey(diaryImageId)) return
-
-        val imageMap = state.imagesMap
-        val diaryImage = imageMap.getValue(diaryImageId)
+        val diaryImage = state.imagesMap[diaryImageId] ?: return
         val subPagesMap = state.subPagesMap
         val subPage = subPagesMap.getValue(diaryImage.subPageId)
 
@@ -562,10 +571,7 @@ class ViewDiaryViewModel @Inject constructor(
         val state = uiState.value
         if (state !is ViewDiaryUiState.Success) return false
 
-        if (!state.imagesMap.containsKey(diaryImageId)) return false
-
-        val imageMap = state.imagesMap
-        val diaryImage = imageMap.getValue(diaryImageId)
+        val diaryImage = state.imagesMap[diaryImageId] ?: return false
         val subPagesMap = state.subPagesMap
         val subPage = subPagesMap.getValue(diaryImage.subPageId)
 
@@ -577,10 +583,7 @@ class ViewDiaryViewModel @Inject constructor(
         val state = uiState.value
         if (state !is ViewDiaryUiState.Success) return false
 
-        if (!state.imagesMap.containsKey(diaryImageId)) return false
-
-        val imageMap = state.imagesMap
-        val diaryImage = imageMap.getValue(diaryImageId)
+        val diaryImage = state.imagesMap[diaryImageId] ?: return false
         val subPagesMap = state.subPagesMap
         val subPage = subPagesMap.getValue(diaryImage.subPageId)
 
@@ -592,10 +595,7 @@ class ViewDiaryViewModel @Inject constructor(
         val state = uiState.value
         if (state !is ViewDiaryUiState.Success) return false
 
-        if (!state.imagesMap.containsKey(diaryImageId)) return false
-
-        val imageMap = state.imagesMap
-        val diaryImage = imageMap.getValue(diaryImageId)
+        val diaryImage = state.imagesMap[diaryImageId] ?: return false
         val subPagesMap = state.subPagesMap
         val subPage = subPagesMap.getValue(diaryImage.subPageId)
         val page = state.pagesMap.getValue(subPage.pageId)
@@ -607,10 +607,7 @@ class ViewDiaryViewModel @Inject constructor(
         val state = uiState.value
         if (state !is ViewDiaryUiState.Success) return false
 
-        if (!state.imagesMap.containsKey(diaryImageId)) return false
-
-        val imageMap = state.imagesMap
-        val diaryImage = imageMap.getValue(diaryImageId)
+        val diaryImage = state.imagesMap[diaryImageId] ?: return false
         val subPagesMap = state.subPagesMap
         val subPage = subPagesMap.getValue(diaryImage.subPageId)
         val page = state.pagesMap.getValue(subPage.pageId)
@@ -619,17 +616,13 @@ class ViewDiaryViewModel @Inject constructor(
     }
 
     fun moveImagePrevSubPage(diaryImageId: String) {
-        val currState = uiState.value
-        if (currState !is ViewDiaryUiState.Success) return
+        val state = uiState.value
+        if (state !is ViewDiaryUiState.Success) return
 
-        if (!currState.imagesMap.containsKey(diaryImageId)) return
-
-
-        val imageMap = currState.imagesMap
-        val diaryImage = imageMap.getValue(diaryImageId)
-        val subPagesMap = currState.subPagesMap
+        val diaryImage = state.imagesMap[diaryImageId] ?: return
+        val subPagesMap = state.subPagesMap
         val subPage = subPagesMap.getValue(diaryImage.subPageId)
-        val page = currState.pagesMap.getValue(subPage.pageId)
+        val page = state.pagesMap.getValue(subPage.pageId)
         val prevSubPageId = page.subPageIds[page.subPageIds.indexOf(subPage.id) - 1]
         val prevSubPage = subPagesMap.getValue(prevSubPageId)
 
@@ -648,16 +641,13 @@ class ViewDiaryViewModel @Inject constructor(
     }
 
     fun moveImageNextSubPage(diaryImageId: String) {
-        val currState = uiState.value
-        if (currState !is ViewDiaryUiState.Success) return
+        val state = uiState.value
+        if (state !is ViewDiaryUiState.Success) return
 
-        if (!currState.imagesMap.containsKey(diaryImageId)) return
-
-        val imageMap = currState.imagesMap
-        val diaryImage = imageMap.getValue(diaryImageId)
-        val subPagesMap = currState.subPagesMap
+        val diaryImage = state.imagesMap[diaryImageId] ?: return
+        val subPagesMap = state.subPagesMap
         val subPage = subPagesMap.getValue(diaryImage.subPageId)
-        val page = currState.pagesMap.getValue(subPage.pageId)
+        val page = state.pagesMap.getValue(subPage.pageId)
         val nextSubPageId = page.subPageIds[page.subPageIds.indexOf(subPage.id) + 1]
         val nextSubPage = subPagesMap.getValue(nextSubPageId)
 
@@ -706,48 +696,35 @@ class ViewDiaryViewModel @Inject constructor(
         // it's not possible to delete last page
         if (pageId == state.pages.last().id) return
 
-        viewModelScope.launch {
+        launchExclusiveScope {
             repository.deletePage(pageId)
+        }
 
-            val diaryPageIds = state.diary.pageIds.toMutableList()
-            diaryPageIds.remove(pageId)
-            val diary = state.diary.copy(pageIds = diaryPageIds)
+        val diaryPageIds = state.diary.pageIds.toMutableList()
+        diaryPageIds.remove(pageId)
+        val diary = state.diary.copy(pageIds = diaryPageIds)
 
-            val subPagesMap = state.subPagesMap.toMutableMap()
-            val imagesMap = state.imagesMap.toMutableMap()
+        val subPagesMap = state.subPagesMap.toMutableMap()
+        val imagesMap = state.imagesMap.toMutableMap()
 
-            val pagesMap = state.pagesMap.toMutableMap()
-            pagesMap.getValue(pageId).subPageIds.forEach { subPageId ->
-                subPagesMap.getValue(subPageId).imageIds.forEach { imageId ->
-                    imagesMap.remove(imageId)
-                }
-                subPagesMap.remove(subPageId)
+        val pagesMap = state.pagesMap.toMutableMap()
+        pagesMap.getValue(pageId).subPageIds.forEach { subPageId ->
+            subPagesMap.getValue(subPageId).imageIds.forEach { imageId ->
+                imagesMap.remove(imageId)
             }
-            pagesMap.remove(pageId)
+            subPagesMap.remove(subPageId)
+        }
+        pagesMap.remove(pageId)
 
-            _uiState.update {
-                ViewDiaryUiState.Success(
-                    diary,
-                    pagesMap,
-                    subPagesMap,
-                    imagesMap,
-                    state.diaryPageListState,
-                    false
-                )
-            }
-
-/*
-            _uiState as ViewDiaryUiState.Success
-
-            if (_uiState.diaryPageListState.firstVisibleItemIndex >)
-
-            _uiState.update { state ->
-                state as ViewDiaryUiState.Success
-                state.copy(
-                    diaryPageListState = state.subPages.
-                )
-            }
-*/
+        _uiState.update {
+            ViewDiaryUiState.Success(
+                diary,
+                pagesMap,
+                subPagesMap,
+                imagesMap,
+                state.diaryPageListState,
+                false
+            )
         }
     }
 }

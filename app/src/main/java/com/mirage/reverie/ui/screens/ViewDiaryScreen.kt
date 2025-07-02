@@ -4,11 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -76,6 +72,7 @@ import androidx.compose.material3.IconButtonColors
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.graphicsLayer
@@ -85,8 +82,8 @@ import androidx.compose.ui.text.style.TextAlign
 import com.mirage.reverie.data.model.DiaryImage
 import com.mirage.reverie.formatDate
 import com.mirage.reverie.ui.components.ConfirmDelete
-import com.mirage.reverie.ui.theme.PaperColor
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
@@ -118,7 +115,10 @@ fun ViewDiaryScreen(
             val pages = (uiState as ViewDiaryUiState.Success).pages
             val pagesMap = (uiState as ViewDiaryUiState.Success).pagesMap
             val subPages = (uiState as ViewDiaryUiState.Success).subPages
+            val subPagesMap = (uiState as ViewDiaryUiState.Success).subPagesMap
             val deleteDialogState = (uiState as ViewDiaryUiState.Success).deleteDialogState
+
+            val coroutineScope = rememberCoroutineScope()
 
             Column(
                 modifier = Modifier
@@ -138,6 +138,7 @@ fun ViewDiaryScreen(
                 )
 
                 val diaryPageListState = (uiState as ViewDiaryUiState.Success).diaryPageListState
+
                 val currentSubPageIndex by remember {
                     derivedStateOf {
                         val layoutInfo = diaryPageListState.layoutInfo
@@ -153,8 +154,9 @@ fun ViewDiaryScreen(
                         }?.index ?: 0
                     }
                 }
-                val currentSubPage = subPages[currentSubPageIndex]
+                val currentSubPage = subPages.getOrNull(currentSubPageIndex) ?: subPages[0]
                 val currentPage = pagesMap.getValue(currentSubPage.pageId)
+                val currentPageIndex = pages.indexOf(currentPage)
                 // start lazyrow from the end
                 /*LaunchedEffect(Unit) {
                     diaryPageListState.scrollToItem(subPages.lastIndex)
@@ -296,16 +298,32 @@ fun ViewDiaryScreen(
                                 viewModel.onDeletePage(
                                     currentPage.id,
                                 )
+
+                                // go to the first subpage of previous page to avoid issues
+                                val prevPage = pages[currentPageIndex-1]
+                                val index = subPages.indexOf(subPagesMap.getValue(prevPage.subPageIds.first()))
+                                coroutineScope.launch {
+                                    diaryPageListState.animateScrollToItem(index)
+                                }
                             }
                         }
                     }
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(5.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Button(
-                            onClick = { onNavigateToEditDiaryPage(currentPage.id) },
+                            onClick = {
+                                onNavigateToEditDiaryPage(currentPage.id)
+
+                                // go to the first subpage of page to avoid issues
+                                val index = subPages.indexOf(subPagesMap.getValue(currentPage.subPageIds.first()))
+                                coroutineScope.launch {
+                                    diaryPageListState.animateScrollToItem(index)
+                                }
+                            },
                             colors = ButtonColors(
                                 containerColor = colorScheme.secondary,
                                 contentColor = colorScheme.primary,

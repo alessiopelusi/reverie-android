@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -38,11 +40,10 @@ fun EditDiaryPageScreen(
         is EditDiaryPageUiState.Idle, is EditDiaryPageUiState.Error -> {
             val page = formState.page
 
-
             Column (
-                modifier = Modifier.padding(50.dp, 20.dp),
+                modifier = Modifier.padding(50.dp, 20.dp).verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                verticalArrangement = Arrangement.spacedBy(20.dp),
             ){
                 Text(
                     text = stringResource(R.string.edit_diary_page_message),
