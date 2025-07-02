@@ -11,7 +11,7 @@ interface TimeCapsuleRepository {
     suspend fun getTimeCapsule(timeCapsuleId: String): TimeCapsule
 
     suspend fun saveTimeCapsule(timeCapsule: TimeCapsule): TimeCapsule
-    suspend fun deleteTimeCapsule(timeCapsuleId: String)
+    suspend fun deleteTimeCapsule(timeCapsule: TimeCapsule)
 //
 //    suspend fun addTimeCapsuleProfileReceiver(userId: String)
 //    suspend fun addTimeCapsuleEmailReceiver(email: String)
@@ -57,25 +57,7 @@ class TimeCapsuleRepositoryImpl @Inject constructor(
         return getTimeCapsule(savedTimeCapsule.id)
     }
 
-    override suspend fun deleteTimeCapsule(timeCapsuleId: String) {
-        val timeCapsule = getTimeCapsule(timeCapsuleId)
-
-        val sendingUser = userRepository.getUser(timeCapsule.userId)
-        val updatedSentTimeCapsuleIds = sendingUser.sentTimeCapsuleIds.toMutableList()
-        updatedSentTimeCapsuleIds.remove(timeCapsuleId)
-
-        val updatedSendingUser = sendingUser.copy(sentTimeCapsuleIds = updatedSentTimeCapsuleIds)
-        userRepository.updateUser(updatedSendingUser)
-
-        timeCapsule.receiversIds.forEach { receiverId ->
-            val user = userRepository.getUser(receiverId)
-            val updatedReceivedTimeCapsuleIds = user.receivedTimeCapsuleIds.toMutableList()
-            updatedReceivedTimeCapsuleIds.remove(timeCapsuleId)
-
-            val updatedUser = user.copy(receivedTimeCapsuleIds = updatedReceivedTimeCapsuleIds)
-            userRepository.updateUser(updatedUser)
-        }
-
-        storageService.deleteTimeCapsule(timeCapsuleId)
+    override suspend fun deleteTimeCapsule(timeCapsule: TimeCapsule) {
+        storageService.deleteTimeCapsule(timeCapsule)
     }
 }

@@ -195,8 +195,10 @@ class AllDiariesViewModel @Inject constructor(
         val state = uiState.value
         if (state !is AllDiariesUiState.Success) return
 
+        val diary = state.diariesMap[diaryId] ?: return
+
         viewModelScope.launch {
-            repository.deleteDiary(diaryId)
+            repository.deleteDiary(diary)
 
             val diaryIds = state.allDiaries.diaryIds.toMutableList()
             val diaryPhotosMap = state.diaryPhotosMap.toMutableMap()

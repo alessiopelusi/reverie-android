@@ -24,7 +24,7 @@ interface UserRepository {
 
     suspend fun getUser(userId: String): User
     suspend fun updateUser(user: User)
-    suspend fun deleteUser(userId: String)
+    suspend fun deleteUser(user: User)
     suspend fun isUsernameTaken(username: String): Boolean
     suspend fun isEmailTaken(email: String): Boolean
 
@@ -103,11 +103,10 @@ class UserRepositoryImpl @Inject constructor(
         storageService.updateUser(user)
     }
 
-    override suspend fun deleteUser(userId: String) {
-        val user = getUser(userId)
-        user.diaryIds.forEach { diaryId -> diaryRepository.deleteDiary(diaryId) }
+    override suspend fun deleteUser(user: User) {
+        user.diaryIds.forEach { diaryId -> diaryRepository.deleteDiary(diaryRepository.getDiary(diaryId)) }
 
-        storageService.deleteUser(userId)
+        storageService.deleteUser(user)
     }
 
     override suspend fun isUsernameTaken(username: String): Boolean =

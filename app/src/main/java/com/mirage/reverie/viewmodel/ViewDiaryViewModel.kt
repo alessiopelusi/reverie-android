@@ -28,7 +28,6 @@ import javax.inject.Inject
 import kotlin.math.min
 import androidx.core.graphics.scale
 import com.mirage.reverie.toLocalDate
-import kotlinx.coroutines.Job
 
 sealed class ViewDiaryUiState {
     data object Loading : ViewDiaryUiState()
@@ -76,18 +75,6 @@ class ViewDiaryViewModel @Inject constructor(
 
     init {
         onStart()
-    }
-
-    // TODO: needed to prevent accidental data overwrite
-    private var dbJob: Job? = null
-
-    private fun launchExclusiveScope(block: suspend () -> Unit) {
-        // If there's an active job, wait for it
-        val previousJob = dbJob
-        dbJob = viewModelScope.launch {
-            previousJob?.join()  // wait for previous job to finish
-            block()
-        }
     }
 
     // load diary
@@ -287,7 +274,7 @@ class ViewDiaryViewModel @Inject constructor(
 
         // firebase update
         //if (updatedSubPage != state.subPagesMap.getValue(updatedSubPage.id)) {
-        launchExclusiveScope() {
+        viewModelScope.launch {
             repository.updateSubPage(updatedSubPage)
         }
         //}
@@ -393,8 +380,8 @@ class ViewDiaryViewModel @Inject constructor(
 
         val subPage = state.subPagesMap[subPageId] ?: return
 
-        launchExclusiveScope {
-            repository.deleteSubPage(subPageId)
+        viewModelScope.launch {
+            repository.deleteSubPage(subPage)
         }
 
         val updatedSubPagesMap = state.subPagesMap.toMutableMap()
@@ -472,7 +459,7 @@ class ViewDiaryViewModel @Inject constructor(
         val state = uiState.value
         if (state !is ViewDiaryUiState.Success) return
 
-        if (!locally) launchExclusiveScope {
+        if (!locally) viewModelScope.launch {
             repository.updateDiaryImage(updatedDiaryImage)
         }
 
@@ -508,8 +495,8 @@ class ViewDiaryViewModel @Inject constructor(
 
         val diaryImage = state.imagesMap[diaryImageId] ?: return
 
-        launchExclusiveScope {
-            repository.deleteDiaryImage(diaryImageId)
+        viewModelScope.launch {
+            repository.deleteDiaryImage(diaryImage)
         }
 
         val updatedImagesMap = state.imagesMap.toMutableMap()
@@ -693,11 +680,13 @@ class ViewDiaryViewModel @Inject constructor(
         val state = uiState.value
         if (state !is ViewDiaryUiState.Success) return
 
+        val page = state.pagesMap[pageId] ?: return
+
         // it's not possible to delete last page
         if (pageId == state.pages.last().id) return
 
-        launchExclusiveScope {
-            repository.deletePage(pageId)
+        viewModelScope.launch {
+            repository.deletePage(page)
         }
 
         val diaryPageIds = state.diary.pageIds.toMutableList()

@@ -1,14 +1,12 @@
 package com.mirage.reverie.data.repository
 
 import android.net.Uri
-import android.util.Log
 import com.mirage.reverie.StorageService
 import com.mirage.reverie.data.model.Diary
 import com.mirage.reverie.data.model.DiaryCover
 import com.mirage.reverie.data.model.DiaryImage
 import com.mirage.reverie.data.model.DiaryPage
 import com.mirage.reverie.data.model.DiarySubPage
-import java.io.File
 import javax.inject.Inject
 import javax.inject.Provider
 
@@ -18,25 +16,25 @@ interface DiaryRepository {
     suspend fun getUserDiaries(userId: String): List<Diary>
     suspend fun saveDiary(diary: Diary): Diary
     suspend fun updateDiary(diary: Diary)
-    suspend fun deleteDiary(diaryId: String)
+    suspend fun deleteDiary(diary: Diary)
 
     suspend fun getPage(pageId: String): DiaryPage
     suspend fun getPages(pageIds: List<String>): List<DiaryPage>
     suspend fun savePage(page: DiaryPage): DiaryPage
     suspend fun updatePage(page: DiaryPage)
-    suspend fun deletePage(pageId: String)
+    suspend fun deletePage(page: DiaryPage)
 
     suspend fun getSubPage(subPageId: String): DiarySubPage
     suspend fun getSubPages(subPageIds: List<String>): List<DiarySubPage>
     suspend fun saveSubPage(subPage: DiarySubPage): DiarySubPage
     suspend fun updateSubPage(subPage: DiarySubPage)
-    suspend fun deleteSubPage(subPageId: String)
+    suspend fun deleteSubPage(subPage: DiarySubPage)
 
     suspend fun getDiaryImage(diaryImageId: String): DiaryImage
     suspend fun getAllDiaryImages(diaryId: String): List<DiaryImage>
     suspend fun saveDiaryImage(diaryImage: DiaryImage, imageUri: Uri): DiaryImage
     suspend fun updateDiaryImage(diaryImage: DiaryImage)
-    suspend fun deleteDiaryImage(diaryImageId: String)
+    suspend fun deleteDiaryImage(diaryImage: DiaryImage)
 
     suspend fun getDiaryCover(diaryCoverId: String): DiaryCover
     suspend fun getAllDiaryCovers(): List<DiaryCover>
@@ -85,18 +83,9 @@ class DiaryRepositoryImpl @Inject constructor(
         storageService.updateDiary(diary)
     }
 
-    override suspend fun deleteDiary(diaryId: String) {
-        val diary = getDiary(diaryId)
-
-        diary.pageIds.forEach { pageId -> deletePage(pageId) }
-
-        val user = userRepository.getUser(diary.uid)
-        val diaryIds = user.diaryIds.toMutableList()
-        diaryIds.remove(diaryId)
-
-        userRepository.updateUser(user.copy(diaryIds = diaryIds))
-
-        storageService.deleteDiary(diaryId)
+    override suspend fun deleteDiary(diary: Diary) {
+        diary.pageIds.forEach { pageId -> deletePage(getPage(pageId)) }
+        storageService.deleteDiary(diary)
     }
 
 
@@ -130,17 +119,9 @@ class DiaryRepositoryImpl @Inject constructor(
         storageService.updatePage(page)
     }
 
-    override suspend fun deletePage(pageId: String) {
-        val page = getPage(pageId)
-
-        page.subPageIds.forEach { subPageId -> deleteSubPage(subPageId) }
-
-        val diary = getDiary(page.diaryId)
-        val pageIds = diary.pageIds.toMutableList()
-        pageIds.remove(pageId)
-        updateDiary(diary.copy(pageIds = pageIds))
-
-        storageService.deletePage(pageId)
+    override suspend fun deletePage(page: DiaryPage) {
+        page.subPageIds.forEach { subPageId -> deleteSubPage(getSubPage(subPageId)) }
+        storageService.deletePage(page)
     }
 
 
@@ -158,7 +139,7 @@ class DiaryRepositoryImpl @Inject constructor(
     override suspend fun saveSubPage(subPage: DiarySubPage): DiarySubPage {
         val savedSubPage = storageService.saveSubPage(subPage)
 
-        val page = getPage(subPage.pageId) ?: return DiarySubPage()
+        val page = getPage(subPage.pageId)
         val subPageIds = page.subPageIds.toMutableList()
         subPageIds.add(savedSubPage.id)
         updatePage(page.copy(subPageIds = subPageIds))
@@ -170,20 +151,9 @@ class DiaryRepositoryImpl @Inject constructor(
         storageService.updateSubPage(subPage)
     }
 
-    override suspend fun deleteSubPage(subPageId: String) {
-        // TODO: why it's needed
-        val subPage = try {
-            getSubPage(subPageId)
-        } catch (_: Exception) { return }
-
-        subPage.imageIds.forEach { imageId -> deleteDiaryImage(imageId) }
-
-        val page = getPage(subPage.pageId)
-        val subPageIds = page.subPageIds.toMutableList()
-        subPageIds.remove(subPageId)
-        updatePage(page.copy(subPageIds = subPageIds))
-
-        storageService.deleteSubPage(subPageId)
+    override suspend fun deleteSubPage(subPage: DiarySubPage) {
+        subPage.imageIds.forEach { imageId -> deleteDiaryImage(getDiaryImage(imageId)) }
+        storageService.deleteSubPage(subPage)
     }
 
     override suspend fun getDiaryImage(diaryImageId: String): DiaryImage =
@@ -212,15 +182,8 @@ class DiaryRepositoryImpl @Inject constructor(
         storageService.updateDiaryImage(diaryImage)
     }
 
-    override suspend fun deleteDiaryImage(diaryImageId: String) {
-        val image = getDiaryImage(diaryImageId)
-
-        storageService.deleteDiaryImage(diaryImageId)
-
-        val subPage = getSubPage(image.subPageId)
-        val imageIds = subPage.imageIds.toMutableList()
-        imageIds.remove(diaryImageId)
-        updateSubPage(subPage.copy(imageIds = imageIds))
+    override suspend fun deleteDiaryImage(diaryImage: DiaryImage) {
+        storageService.deleteDiaryImage(diaryImage)
     }
 
 

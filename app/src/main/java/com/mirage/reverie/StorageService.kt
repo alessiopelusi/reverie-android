@@ -2,9 +2,9 @@ package com.mirage.reverie
 
 import android.content.Context
 import android.net.Uri
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.toObject
-import com.google.firebase.firestore.toObjects
 import com.mirage.reverie.data.model.Diary
 import com.mirage.reverie.data.model.DiaryCover
 import com.mirage.reverie.data.model.DiaryImage
@@ -33,7 +33,7 @@ interface StorageService {
     suspend fun saveUsername(username: Username): Result<Boolean>
     suspend fun saveEmail(email: Email): Result<Boolean>
     suspend fun updateUser(user: User)
-    suspend fun deleteUser(userId: String)
+    suspend fun deleteUser(user: User)
     suspend fun isUsernameTaken(username: String): Boolean
     suspend fun isEmailTaken(email: String): Boolean
     suspend fun getUsersMatchingPartialUsername(partialUsername: String): List<User>
@@ -42,23 +42,23 @@ interface StorageService {
     suspend fun saveDiary(diary: Diary): Diary
     suspend fun updateDiary(diary: Diary)
     suspend fun updateDiaryTitle(diaryId: String, title: String)
-    suspend fun deleteDiary(diaryId: String)
+    suspend fun deleteDiary(diary: Diary)
 
     suspend fun getPage(pageId: String): DiaryPage?
     suspend fun savePage(page: DiaryPage): DiaryPage
     suspend fun updatePage(page: DiaryPage)
-    suspend fun deletePage(pageId: String)
+    suspend fun deletePage(page: DiaryPage)
 
     suspend fun getSubPage(subPageId: String): DiarySubPage?
     suspend fun saveSubPage(subPage: DiarySubPage): DiarySubPage
     suspend fun updateSubPage(subPage: DiarySubPage)
-    suspend fun deleteSubPage(subPageId: String)
+    suspend fun deleteSubPage(subPage: DiarySubPage)
 
     suspend fun getDiaryImage(diaryImageId: String): DiaryImage?
     suspend fun getAllDiaryImages(diaryId: String): List<DiaryImage>
     suspend fun saveDiaryImage(diaryImage: DiaryImage): DiaryImage
     suspend fun updateDiaryImage(diaryImage: DiaryImage)
-    suspend fun deleteDiaryImage(diaryImageId: String)
+    suspend fun deleteDiaryImage(diaryImage: DiaryImage)
 
     suspend fun saveImage(imageUri: Uri): String
 
@@ -67,7 +67,7 @@ interface StorageService {
 
     suspend fun getTimeCapsule(timeCapsuleId: String): TimeCapsule?
     suspend fun saveTimeCapsule(timeCapsule: TimeCapsule): TimeCapsule
-    suspend fun deleteTimeCapsule(timeCapsuleId: String)
+    suspend fun deleteTimeCapsule(timeCapsule: TimeCapsule)
 }
 
 @Singleton
@@ -76,19 +76,18 @@ class StorageServiceImpl @Inject constructor(
     private val storage: Storage, // Supabase
     private val context: Context
 ) : StorageService {
-    val USERS_COLLECTION = "users"
-    val DIARIES_COLLECTION = "diaries"
-    val PAGES_COLLECTION = "pages"
-    val SUB_PAGES_COLLECTION = "subPages"
-    val DIARY_IMAGES_COLLECTION = "diaryImages"
-    val DIARY_COVERS_COLLECTION = "diaryCovers"
-    val USERNAMES_COLLECTION = "usernames"
-    val EMAILS_COLLECTION = "emails"
-    val USER_ID_FIELD = "uid"
+    private val USERS_COLLECTION = "users"
+    private val DIARIES_COLLECTION = "diaries"
+    private val PAGES_COLLECTION = "pages"
+    private val SUB_PAGES_COLLECTION = "subPages"
+    private val DIARY_IMAGES_COLLECTION = "diaryImages"
+    private val DIARY_COVERS_COLLECTION = "diaryCovers"
+    private val USERNAMES_COLLECTION = "usernames"
+    private val EMAILS_COLLECTION = "emails"
+    private val TIME_CAPSULE_COLLECTION = "timeCapsules"
 
-    val DIARY_IMAGE_BUCKET = "diary-images"
+    private val DIARY_IMAGE_BUCKET = "diary-images"
 
-    val TIME_CAPSULE_COLLECTION = "timeCapsules"
 
     /*override val diaries: Flow<List<Diary>>
         get() =
@@ -195,8 +194,8 @@ class StorageServiceImpl @Inject constructor(
         firestore.collection(USERS_COLLECTION).document(user.id).set(user).await()
     }
 
-    override suspend fun deleteUser(userId: String) {
-        firestore.collection(USERS_COLLECTION).document(userId).delete().await()
+    override suspend fun deleteUser(user: User) {
+        firestore.collection(USERS_COLLECTION).document(user.id).delete().await()
     }
 
     override suspend fun isUsernameTaken(username: String): Boolean =
@@ -223,8 +222,11 @@ class StorageServiceImpl @Inject constructor(
         firestore.collection(DIARIES_COLLECTION).document(diaryId).update("title", title).await()
     }
 
-    override suspend fun deleteDiary(diaryId: String) {
-        firestore.collection(DIARIES_COLLECTION).document(diaryId).delete().await()
+    override suspend fun deleteDiary(diary: Diary) {
+        firestore.collection(DIARIES_COLLECTION).document(diary.id).delete().await()
+
+        val userRef = firestore.collection(USERS_COLLECTION).document(diary.uid)
+        userRef.update(User::diaryIds.name, FieldValue.arrayRemove(diary.id))
     }
 
 
@@ -241,8 +243,11 @@ class StorageServiceImpl @Inject constructor(
         firestore.collection(PAGES_COLLECTION).document(page.id).set(page).await()
     }
 
-    override suspend fun deletePage(pageId: String) {
-        firestore.collection(PAGES_COLLECTION).document(pageId).delete().await()
+    override suspend fun deletePage(page: DiaryPage) {
+        firestore.collection(PAGES_COLLECTION).document(page.id).delete().await()
+
+        val diaryRef = firestore.collection(DIARIES_COLLECTION).document(page.diaryId)
+        diaryRef.update(Diary::pageIds.name, FieldValue.arrayRemove(page.id))
     }
 
 
@@ -259,8 +264,11 @@ class StorageServiceImpl @Inject constructor(
         firestore.collection(SUB_PAGES_COLLECTION).document(subPage.id).set(subPage).await()
     }
 
-    override suspend fun deleteSubPage(subPageId: String) {
-        firestore.collection(SUB_PAGES_COLLECTION).document(subPageId).delete().await()
+    override suspend fun deleteSubPage(subPage: DiarySubPage) {
+        firestore.collection(SUB_PAGES_COLLECTION).document(subPage.id).delete().await()
+
+        val pageRef = firestore.collection(PAGES_COLLECTION).document(subPage.pageId)
+        pageRef.update(DiaryPage::subPageIds.name, FieldValue.arrayRemove(subPage.id))
     }
 
 
@@ -315,8 +323,11 @@ class StorageServiceImpl @Inject constructor(
         firestore.collection(DIARY_IMAGES_COLLECTION).document(diaryImage.id).set(diaryImage).await()
     }
 
-    override suspend fun deleteDiaryImage(diaryImageId: String) {
-        firestore.collection(DIARY_IMAGES_COLLECTION).document(diaryImageId).delete().await()
+    override suspend fun deleteDiaryImage(diaryImage: DiaryImage) {
+        firestore.collection(DIARY_IMAGES_COLLECTION).document(diaryImage.id).delete().await()
+
+        val subPageRef = firestore.collection(SUB_PAGES_COLLECTION).document(diaryImage.subPageId)
+        subPageRef.update(DiarySubPage::imageIds.name, FieldValue.arrayRemove(diaryImage.id))
     }
 
 
@@ -350,8 +361,16 @@ class StorageServiceImpl @Inject constructor(
         return timeCapsule.copy(id = timeCapsuleId)
     }
 
-    override suspend fun deleteTimeCapsule(timeCapsuleId: String) {
-        firestore.collection(TIME_CAPSULE_COLLECTION).document(timeCapsuleId).delete().await()
+    override suspend fun deleteTimeCapsule(timeCapsule: TimeCapsule) {
+        firestore.collection(TIME_CAPSULE_COLLECTION).document(timeCapsule.id).delete().await()
+
+        val senderRef = firestore.collection(USERS_COLLECTION).document(timeCapsule.userId)
+        senderRef.update(User::sentTimeCapsuleIds.name, FieldValue.arrayRemove(timeCapsule.id))
+
+        timeCapsule.receiversIds.forEach{ receiverId ->
+            val receiverRef = firestore.collection(USERS_COLLECTION).document(receiverId)
+            receiverRef.update(User::receivedTimeCapsuleIds.name, FieldValue.arrayRemove(timeCapsule.id))
+        }
     }
 
     override suspend fun getUsersMatchingPartialUsername(partialUsername: String): List<User> {

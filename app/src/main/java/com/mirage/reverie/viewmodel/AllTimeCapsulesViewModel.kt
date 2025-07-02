@@ -134,8 +134,10 @@ class AllTimeCapsulesViewModel @Inject constructor(
         val state = uiState.value
         if (state !is AllTimeCapsulesUiState.Success) return
 
+        val timeCapsule = state.timeCapsuleSentMap[state.deleteDialogCapsuleId] ?: return
+
         viewModelScope.launch {
-            repository.deleteTimeCapsule(state.deleteDialogCapsuleId)
+            repository.deleteTimeCapsule(timeCapsule)
 
             val updatedSentTimeCapsule = state.sentTimeCapsule.toMutableMap()
             updatedSentTimeCapsule.remove(state.deleteDialogCapsuleId)
