@@ -2,7 +2,6 @@ package com.mirage.reverie.viewmodel
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -141,8 +140,6 @@ class ViewDiaryViewModel @Inject constructor(
             page.subPageIds.forEach{ subPageId ->
                 subPagesMap[subPageId] = subPagesMap.getValue(subPageId).copy(testOverflow = 0, contentEndIndex = 0)
             }
-            Log.d("overwritePage", state.subPagesMap.toString())
-            Log.d("overwritePage", subPagesMap.toString())
 
             _uiState.update {
                 ViewDiaryUiState.Success(state.diary, pagesMap, subPagesMap, state.imagesMap, state.diaryPageListState)
@@ -603,8 +600,6 @@ class ViewDiaryViewModel @Inject constructor(
         val subPage = subPagesMap.getValue(diaryImage.subPageId)
         val page = state.pagesMap.getValue(subPage.pageId)
 
-        Log.d("ciao", page.subPageIds.toString() + " " + subPage.id)
-
         return page.subPageIds.last() == subPage.id
     }
 
@@ -642,9 +637,7 @@ class ViewDiaryViewModel @Inject constructor(
         updateDiaryImage(updatedImage)
 
         val updatedCurrImageIds = subPage.imageIds.toMutableList()
-        Log.d("ciao", "$updatedCurrImageIds $diaryImageId")
         updatedCurrImageIds.remove(diaryImageId)
-        Log.d("ciao", "$updatedCurrImageIds $diaryImageId")
         val updatedCurrSubPage = subPage.copy(imageIds = updatedCurrImageIds)
         updateSubPage(updatedCurrSubPage)
 
