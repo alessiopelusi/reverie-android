@@ -5,7 +5,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
-import com.mirage.reverie.data.model.AllDiaries
 import com.mirage.reverie.data.model.Diary
 import com.mirage.reverie.data.model.DiaryCover
 import com.mirage.reverie.data.model.DiaryImage
@@ -18,11 +17,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.math.max
 
-fun createPagerState(size: Int, selectedDiary: Int = size/2) : PagerState =
+fun createPagerState(size: Int, selectedDiary: Int = 0) : PagerState =
     PagerState(
-        // endlessPagerMultiplier = 1000
-        // endlessPagerMultiplier/2 = 500
-        // offset = 1
         pageCount = {if (size > 1) size*1000 else 1},
         currentPage = if (size > 1) size*500 + selectedDiary else 0
     )
@@ -36,19 +32,19 @@ enum class ButtonState {
 sealed class AllDiariesUiState {
     data object Loading : AllDiariesUiState()
     data class Success(
-        val allDiaries: AllDiaries,
+        val diariesIds: List<String>,
         val diariesMap: Map<String, Diary>,
         val diaryCoversMap: Map<String, DiaryCover>,
         val diaryPhotosMap: Map<String, List<DiaryImage>>,
-        val pagerState: PagerState = createPagerState(allDiaries.diaryIds.size),
+        val pagerState: PagerState = createPagerState(diariesMap.size),
         val buttonState: ButtonState = ButtonState.INFO,
         val deleteDialogState: Boolean = false
     ) : AllDiariesUiState() {
         val diaries: List<Diary>
-            get() = allDiaries.diaryIds.map { diaryId -> diariesMap.getValue(diaryId) }
+            get() = diariesIds.map { diaryId -> diariesMap.getValue(diaryId) }
 
         val currentPage: Int
-            get() = pagerState.currentPage % allDiaries.diaryIds.size
+            get() = pagerState.currentPage % diariesMap.size
 
         val buttonElements: List<ButtonState>
             get() = ButtonState.entries
@@ -56,10 +52,8 @@ sealed class AllDiariesUiState {
     data class Error(val exception: Throwable) : AllDiariesUiState()
 }
 
-// HiltViewModel inject SavedStateHandle + other dependencies provided by AppModule
 @HiltViewModel
 class AllDiariesViewModel @Inject constructor(
-    private val savedStateHandle: SavedStateHandle,
     private val repository: DiaryRepository,
     private val auth: FirebaseAuth
 ) : ViewModel() {
@@ -68,7 +62,6 @@ class AllDiariesViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     init {
-        // TODO: it's correct?
         onStart()
     }
 
@@ -77,12 +70,12 @@ class AllDiariesViewModel @Inject constructor(
         auth.uid?.let { userId ->
             viewModelScope.launch {
                 val diaries = repository.getUserDiaries(userId)
-                val allDiaries = AllDiaries(userId, diaries.map { diary -> diary.id })
+                val diariesIds = diaries.map { diary -> diary.id }
                 val diariesMap = diaries.associateBy { diary -> diary.id }
                 val diaryCoversSet = diaries.map { diary -> diary.coverId }.toSet()
                 val diaryCoversMap = diaryCoversSet.associateWith { diaryCoverId -> repository.getDiaryCover(diaryCoverId) }
                 val diaryPhotosMap = diaries.map { diary -> diary.id }.associateWith { diaryId -> repository.getAllDiaryImages(diaryId) }
-                _uiState.value = AllDiariesUiState.Success(allDiaries, diariesMap, diaryCoversMap, diaryPhotosMap)
+                _uiState.value = AllDiariesUiState.Success(diariesIds, diariesMap, diaryCoversMap, diaryPhotosMap)
             }
         }
     }
@@ -93,7 +86,7 @@ class AllDiariesViewModel @Inject constructor(
 
         if (updatedDiary != null) {
             viewModelScope.launch {
-                val diaryIds = state.allDiaries.diaryIds.toMutableList()
+                val diaryIds = state.diariesIds.toMutableList()
                 val diaryPhotosMap = state.diaryPhotosMap.toMutableMap()
                 var pagerState = state.pagerState
                 if (!diaryIds.contains(updatedDiary.id)) {
@@ -101,8 +94,6 @@ class AllDiariesViewModel @Inject constructor(
                     diaryPhotosMap[updatedDiary.id] = listOf()
                     pagerState = createPagerState(diaryIds.size, diaryIds.size-1)
                 }
-
-                val allDiaries = AllDiaries(state.allDiaries.userId, diaryIds)
 
                 val diariesMap = state.diariesMap.toMutableMap()
                 diariesMap[updatedDiary.id] = updatedDiary
@@ -115,7 +106,7 @@ class AllDiariesViewModel @Inject constructor(
 
                 _uiState.update {
                     AllDiariesUiState.Success(
-                        allDiaries,
+                        diaryIds,
                         diariesMap,
                         diaryCoversMap,
                         diaryPhotosMap,
@@ -138,7 +129,7 @@ class AllDiariesViewModel @Inject constructor(
 
                 _uiState.update {
                     AllDiariesUiState.Success(
-                        state.allDiaries,
+                        state.diariesIds,
                         state.diariesMap,
                         state.diaryCoversMap,
                         diaryPhotosMap,
@@ -156,7 +147,7 @@ class AllDiariesViewModel @Inject constructor(
 
         _uiState.update {
             AllDiariesUiState.Success(
-                state.allDiaries,
+                state.diariesIds,
                 state.diariesMap,
                 state.diaryCoversMap,
                 state.diaryPhotosMap,
@@ -172,7 +163,7 @@ class AllDiariesViewModel @Inject constructor(
 
         _uiState.update {
             AllDiariesUiState.Success(
-                state.allDiaries,
+                state.diariesIds,
                 state.diariesMap,
                 state.diaryCoversMap,
                 state.diaryPhotosMap,
@@ -200,12 +191,10 @@ class AllDiariesViewModel @Inject constructor(
         viewModelScope.launch {
             repository.deleteDiary(diary)
 
-            val diaryIds = state.allDiaries.diaryIds.toMutableList()
+            val diaryIds = state.diariesIds.toMutableList()
             val diaryPhotosMap = state.diaryPhotosMap.toMutableMap()
             diaryIds.remove(diaryId)
             diaryPhotosMap.remove(diaryId)
-
-            val allDiaries = AllDiaries(state.allDiaries.userId, diaryIds)
 
             val diariesMap = state.diariesMap.toMutableMap()
             diariesMap.remove(diaryId)
@@ -214,7 +203,7 @@ class AllDiariesViewModel @Inject constructor(
 
             _uiState.update {
                 AllDiariesUiState.Success(
-                    allDiaries,
+                    diaryIds,
                     diariesMap,
                     state.diaryCoversMap,
                     diaryPhotosMap,
