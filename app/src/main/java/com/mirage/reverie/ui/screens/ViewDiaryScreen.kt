@@ -170,7 +170,7 @@ fun ViewDiaryScreen(
                     val boxWithConstraintsScope = this
 
                     // TODO: big big hack to load everything and update end indices
-                    subPages.forEachIndexed{ index, subPage ->
+                    viewModel.getSubPagesToRender().forEachIndexed{ index, subPage ->
                         Layout(
                             content = {
                                 // Here's the content of each list item.
@@ -178,7 +178,10 @@ fun ViewDiaryScreen(
                                 DiaryPage(
                                     modifier = Modifier
                                         .widthIn(max = LocalWindowInfo.current.containerSize.width.dp * widthFraction)
-                                        .aspectRatio(9f / 16f),
+                                        .aspectRatio(9f / 16f)
+                                        .fillMaxSize()
+                                        .padding(horizontal = 5.dp, vertical = 10.dp)
+                                    ,
                                     subPage.id,
                                     viewModel,
                                     transparent = true
@@ -221,15 +224,15 @@ fun ViewDiaryScreen(
                                     val widthFraction = 0.90f
                                     val diaryPaperWhite = Color(0xFFFFFBF0)
                                     Card (
-//                                        Modifier.padding(horizontal = 40.dp, vertical = 8.dp),
                                         colors = CardDefaults.cardColors(containerColor = diaryPaperWhite),
                                         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                                     ){
                                         DiaryPage(
                                             modifier = Modifier
                                                 .widthIn(max = LocalWindowInfo.current.containerSize.width.dp * widthFraction)
-                                                .padding(horizontal = 5.dp, vertical = 10.dp)
-                                                .aspectRatio(9f / 16f),
+                                                .aspectRatio(9f / 16f)
+                                                .fillMaxSize()
+                                                .padding(horizontal = 5.dp, vertical = 10.dp),
                                             subPage.id,
                                             viewModel
                                         )
@@ -395,35 +398,12 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
         TextStyle(color = if (transparent) Color.Transparent else colorScheme.onSurface, fontSize = 18.sp)
     )
 
-    /*viewModel.incrementSubPageCipolla(subPageId)*/
-
     BoxWithConstraints(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier,
     ) {
-        var isContextMenuVisible by rememberSaveable {
-            mutableStateOf(false)
-        }
-        var contextMenuImageId by rememberSaveable {
-            mutableStateOf("")
-        }
-        var pressOffset by remember {
-            mutableStateOf(DpOffset.Zero)
-        }
-        /*var itemHeight by remember {
-            mutableStateOf(0.dp)
-        }
-        val density = LocalDensity.current*/
-        data class DropDownItem(
-            val text: String,
-            val onClick: (String) -> Unit
-        )
-        val dropdownItems = listOfNotNull(
-            DropDownItem(stringResource(R.string.delete), viewModel::deleteImage),
-            if (!viewModel.isLastSubPageImage(contextMenuImageId)) DropDownItem(stringResource(R.string.move_up), viewModel::moveImageUp) else null,
-            if (!viewModel.isFirstSubPageImage(contextMenuImageId)) DropDownItem(stringResource(R.string.move_down), viewModel::moveImageDown) else null,
-            if (!viewModel.isImageInFirstSubPage(contextMenuImageId)) DropDownItem(stringResource(R.string.move_prev_subpage), viewModel::moveImagePrevSubPage) else null,
-            if (!viewModel.isImageInLastSubPage(contextMenuImageId)) DropDownItem(stringResource(R.string.move_next_subpage), viewModel::moveImageNextSubPage) else null,
-        )
+        var isContextMenuVisible by rememberSaveable { mutableStateOf(false) }
+        var contextMenuImageId by rememberSaveable { mutableStateOf("") }
+        var pressOffset by remember { mutableStateOf(DpOffset.Zero) }
 
         val parentWidth = constraints.maxWidth.toFloat()
         val parentHeight = constraints.maxHeight.toFloat()
@@ -435,51 +415,63 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
             justification = TextFlowJustification.Auto,
             columns = 1,
             onTextFlowLayoutResult = { textFlowLayoutResult ->
-                viewModel.updateSubPageOffset(
-                    subPageId,
-                    textFlowLayoutResult.lastOffset
-                )
+                if (transparent) {
+                    viewModel.updateSubPageOffset(
+                        subPageId,
+                        textFlowLayoutResult.lastOffset
+                    )
+                }
                 // switch based on testOverflow state
             },
         ) {
-            // workaround to update textflow when changin contentEndIndex
-            Text(
-                subPage.cipolla.toString(),
-                color = Color.Transparent,
-                modifier = Modifier
-                    .size(0.2f.dp)
-                    .align(Alignment.BottomEnd)
-            )
-
-            val exampleBitmap = drawableToBitmap(LocalContext.current, R.drawable.ic_launcher_background)
-            // workaround to update textflow when there is no image
-            val subPageImages = subPagesImagesMap.getValue(subPageId)
-            if (subPageImages.isEmpty()) {
-                Image(
+            // workaround to update textflow when changing contentEndIndex
+            if (!transparent) {
+                Text(
+                    subPage.refreshCounter.toString(),
+                    color = Color.Transparent,
                     modifier = Modifier
-                        .align(Alignment.TopStart)
-                        //.fillMaxSize()
-                        .flowShape(FlowType.None, 0.dp, exampleBitmap.toPath(0.5f).asComposePath()),
-                    bitmap = exampleBitmap.asImageBitmap(),
-                    contentDescription = "",
-                    alpha = 0f
+                        .size(0.2f.dp)
+                        .align(Alignment.BottomEnd)
                 )
+            }
+
+            val subPageImages = subPagesImagesMap.getValue(subPageId)
+            if (transparent) {
+                val exampleBitmap =
+                    drawableToBitmap(LocalContext.current, R.drawable.ic_launcher_background)
+                // workaround to update textflow when there is no image
+                if (subPageImages.isEmpty()) {
+                    Image(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .flowShape(
+                                FlowType.None,
+                                0.dp,
+                                exampleBitmap.toPath(0.5f).asComposePath()
+                            ),
+                        bitmap = exampleBitmap.asImageBitmap(),
+                        contentDescription = "",
+                        alpha = 0f
+                    )
+                }
             }
             subPageImages.forEach { currentImage ->
                 // necessary to prevent block on pointerInput and to pass the actual updated value
                 val image by rememberUpdatedState(currentImage)
 
                 var lastUpdateTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
-                var updated by remember { mutableStateOf(false) }
+                var updated by remember { mutableStateOf(true) }
 
-                LaunchedEffect(Unit) {
-                    while (true) {
-                        val currentTime = System.currentTimeMillis()
-                        if (!updated && currentTime - lastUpdateTime > 300) {
-                            viewModel.updateDiaryImage(image)
-                            updated = true
+                if (!transparent) {
+                    LaunchedEffect(updated) {
+                        while (true) {
+                            val currentTime = System.currentTimeMillis()
+                            if (!updated && currentTime - lastUpdateTime > 300) {
+                                viewModel.updateDiaryImage(image)
+                                updated = true
+                            }
+                            delay(100) // Small delay to avoid busy looping
                         }
-                        delay(100) // Small delay to avoid busy looping
                     }
                 }
 
@@ -490,11 +482,9 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
                 val path = currentImage.bitmap.toPath().asComposePath()
                 path.transform(matrix)
 
-
                 Image(
                     modifier = Modifier
                         .align(Alignment.TopStart)
-                        //.fillMaxSize()
                         .offset { IntOffset(image.offsetX, image.offsetY) }
                         .graphicsLayer(
                             scaleX = image.scale,
@@ -504,101 +494,112 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
                         .pointerInput(Unit) {
                             detectTapGestures(
                                 onLongPress = {
-                                    isContextMenuVisible = true
-                                    contextMenuImageId = image.id
-                                    pressOffset = DpOffset(it.x.toDp() + image.offsetX.toDp(), it.y.toDp() + image.offsetY.toDp())
+                                    if (!transparent) {
+                                        isContextMenuVisible = true
+                                        contextMenuImageId = image.id
+                                        pressOffset = DpOffset(
+                                            it.x.toDp() + image.offsetX.toDp(),
+                                            it.y.toDp() + image.offsetY.toDp()
+                                        )
+                                    }
                                 }
                             )
                         }
                         .pointerInput(currentImage.bitmap) {
                             detectTransformGestures { _, pan, zoom, rotation ->
-                                // new scale
-                                var newScale = image.scale * zoom
+                                if(!transparent) {
+                                    // new scale
+                                    var newScale = image.scale * zoom
 
-                                // newRotation
-                                val newRotation = image.rotation + rotation
+                                    // newRotation
+                                    val newRotation = image.rotation + rotation
 
-                                // Rotation in radians
-                                val rotationRad = Math.toRadians(newRotation.toDouble())
+                                    // Rotation in radians
+                                    val rotationRad = Math.toRadians(newRotation.toDouble())
 
-                                val cosTheta = abs(cos(rotationRad)).toFloat()
-                                val sinTheta = abs(sin(rotationRad)).toFloat()
+                                    val cosTheta = abs(cos(rotationRad)).toFloat()
+                                    val sinTheta = abs(sin(rotationRad)).toFloat()
 
-                                // Adjust pan to rotation space
-                                val adjustedPanX = (pan.x * cos(rotationRad) - pan.y * sin(rotationRad)).toFloat()
-                                val adjustedPanY = (pan.x * sin(rotationRad) + pan.y * cos(rotationRad)).toFloat()
-
-
-                                val originalWidth = currentImage.bitmap.width
-                                val originalHeight = currentImage.bitmap.height
-
-                                var scaledWidth = originalWidth * newScale
-                                var scaledHeight = originalHeight * newScale
-
-                                var scaledRotatedWidth = scaledWidth * cosTheta + scaledHeight * sinTheta
-                                var scaledRotateHeight = scaledWidth * sinTheta + scaledHeight * cosTheta
-
-                                // Calculate half difference for padding similar to your scale logic
-                                var halfWidthDiff = abs(originalWidth - scaledRotatedWidth) / 2
-                                var halfHeightDiff = abs(originalHeight - scaledRotateHeight) / 2
+                                    // Adjust pan to rotation space
+                                    val adjustedPanX =
+                                        (pan.x * cos(rotationRad) - pan.y * sin(rotationRad)).toFloat()
+                                    val adjustedPanY =
+                                        (pan.x * sin(rotationRad) + pan.y * cos(rotationRad)).toFloat()
 
 
-                                // Divide pan by scale to compensate for zoom level
-                                var correctedPanX = adjustedPanX * newScale
-                                var correctedPanY = adjustedPanY * newScale
+                                    val originalWidth = currentImage.bitmap.width
+                                    val originalHeight = currentImage.bitmap.height
 
-                                while (halfWidthDiff > (parentWidth - originalWidth - halfWidthDiff) || halfHeightDiff > (parentHeight - originalHeight - halfHeightDiff)) {
-                                    // TODO: bad hack. While scaling or rotating, if the image size is too big the app would crash. We reduce the scale until it fits.
-                                    newScale = (newScale * 0.99).toFloat()
+                                    var scaledWidth = originalWidth * newScale
+                                    var scaledHeight = originalHeight * newScale
 
-                                    // recalculate everything with old scale
-                                    scaledWidth = originalWidth * newScale
-                                    scaledHeight = originalHeight * newScale
-
-                                    scaledRotatedWidth = scaledWidth * cosTheta + scaledHeight * sinTheta
-                                    scaledRotateHeight = scaledWidth * sinTheta + scaledHeight * cosTheta
+                                    var scaledRotatedWidth =
+                                        scaledWidth * cosTheta + scaledHeight * sinTheta
+                                    var scaledRotateHeight =
+                                        scaledWidth * sinTheta + scaledHeight * cosTheta
 
                                     // Calculate half difference for padding similar to your scale logic
-                                    halfWidthDiff = abs(originalWidth - scaledRotatedWidth) / 2
-                                    halfHeightDiff = abs(originalHeight - scaledRotateHeight) / 2
+                                    var halfWidthDiff = abs(originalWidth - scaledRotatedWidth) / 2
+                                    var halfHeightDiff =
+                                        abs(originalHeight - scaledRotateHeight) / 2
 
 
                                     // Divide pan by scale to compensate for zoom level
-                                    correctedPanX = adjustedPanX * newScale
-                                    correctedPanY = adjustedPanY * newScale
+                                    var correctedPanX = adjustedPanX * newScale
+                                    var correctedPanY = adjustedPanY * newScale
+
+                                    while (halfWidthDiff > (parentWidth - originalWidth - halfWidthDiff) || halfHeightDiff > (parentHeight - originalHeight - halfHeightDiff)) {
+                                        // TODO: bad hack. While scaling or rotating, if the image size is too big the app would crash. We reduce the scale until it fits.
+                                        newScale = (newScale * 0.99).toFloat()
+
+                                        // recalculate everything with old scale
+                                        scaledWidth = originalWidth * newScale
+                                        scaledHeight = originalHeight * newScale
+
+                                        scaledRotatedWidth =
+                                            scaledWidth * cosTheta + scaledHeight * sinTheta
+                                        scaledRotateHeight =
+                                            scaledWidth * sinTheta + scaledHeight * cosTheta
+
+                                        // Calculate half difference for padding similar to your scale logic
+                                        halfWidthDiff = abs(originalWidth - scaledRotatedWidth) / 2
+                                        halfHeightDiff =
+                                            abs(originalHeight - scaledRotateHeight) / 2
+
+
+                                        // Divide pan by scale to compensate for zoom level
+                                        correctedPanX = adjustedPanX * newScale
+                                        correctedPanY = adjustedPanY * newScale
+                                    }
+
+                                    val newX = (image.offsetX + correctedPanX)
+                                        .coerceIn(
+                                            halfWidthDiff,
+                                            parentWidth - originalWidth - halfWidthDiff
+                                        )
+                                        .toInt()
+
+                                    val newY = (image.offsetY + correctedPanY)
+                                        .coerceIn(
+                                            halfHeightDiff,
+                                            parentHeight - originalHeight - halfHeightDiff
+                                        )
+                                        .toInt()
+
+                                    viewModel.updateDiaryImageTransform(
+                                        diaryImageId = image.id,
+                                        offsetX = newX,
+                                        offsetY = newY,
+                                        scale = newScale,
+                                        rotation = newRotation,
+                                        locally = true
+                                    )
+
+                                    lastUpdateTime = System.currentTimeMillis()
+                                    updated = false
                                 }
-
-                                val newX = (image.offsetX + correctedPanX)
-                                    .coerceIn(
-                                        halfWidthDiff,
-                                        parentWidth - originalWidth - halfWidthDiff
-                                    )
-                                    .toInt()
-
-                                val newY = (image.offsetY + correctedPanY)
-                                    .coerceIn(
-                                        halfHeightDiff,
-                                        parentHeight - originalHeight - halfHeightDiff
-                                    )
-                                    .toInt()
-
-                                viewModel.updateDiaryImageTransform(
-                                    diaryImageId = image.id,
-                                    offsetX = newX,
-                                    offsetY = newY,
-                                    scale = newScale,
-                                    rotation = newRotation,
-                                    locally = true
-                                )
-                                viewModel.resetSubPageTestOverflow(subPageId)
-
-                                lastUpdateTime = System.currentTimeMillis()
-                                updated = false
                             }
                         }
-                        /*.onSizeChanged {
-                            itemHeight = with(density) { it.height.toDp() }
-                        }*/
                         .flowShape(FlowType.Outside, 0.dp, path),
                     bitmap = currentImage.bitmap.asImageBitmap(),
                     contentDescription = "",
@@ -606,26 +607,41 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
                 )
             }
         }
-        DropdownMenu (
-            expanded = isContextMenuVisible,
-            onDismissRequest = {
-                isContextMenuVisible = false
-            },
-            offset = pressOffset
-        ) {
-            dropdownItems.forEach { item ->
-                DropdownMenuItem(
-                    onClick = {
-                        item.onClick(contextMenuImageId)
-                        isContextMenuVisible = false
-                    },
-                    text = {
-                        Text(
-                            item.text,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-                )
+
+        if (!transparent) {
+            data class DropDownItem(
+                val text: String,
+                val onClick: (String) -> Unit
+            )
+
+            val dropdownItems = listOfNotNull(
+                DropDownItem(stringResource(R.string.delete), viewModel::deleteImage),
+                if (!viewModel.isLastSubPageImage(contextMenuImageId)) DropDownItem(stringResource(R.string.move_up), viewModel::moveImageUp) else null,
+                if (!viewModel.isFirstSubPageImage(contextMenuImageId)) DropDownItem(stringResource(R.string.move_down), viewModel::moveImageDown) else null,
+                if (!viewModel.isImageInFirstSubPage(contextMenuImageId)) DropDownItem(stringResource(R.string.move_prev_subpage), viewModel::moveImagePrevSubPage) else null,
+                if (!viewModel.isImageInLastSubPage(contextMenuImageId)) DropDownItem(stringResource(R.string.move_next_subpage), viewModel::moveImageNextSubPage) else null,
+            )
+            DropdownMenu(
+                expanded = isContextMenuVisible,
+                onDismissRequest = {
+                    isContextMenuVisible = false
+                },
+                offset = pressOffset
+            ) {
+                dropdownItems.forEach { item ->
+                    DropdownMenuItem(
+                        onClick = {
+                            item.onClick(contextMenuImageId)
+                            isContextMenuVisible = false
+                        },
+                        text = {
+                            Text(
+                                item.text,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    )
+                }
             }
         }
     }

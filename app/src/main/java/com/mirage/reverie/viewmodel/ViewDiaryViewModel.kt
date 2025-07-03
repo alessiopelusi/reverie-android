@@ -54,7 +54,6 @@ sealed class ViewDiaryUiState {
     data class Error(val exception: Throwable) : ViewDiaryUiState()
 }
 
-// HiltViewModel inject SavedStateHandle + other dependencies provided by AppModule
 @HiltViewModel
 class ViewDiaryViewModel @Inject constructor(
     private val context: Context,
@@ -62,14 +61,7 @@ class ViewDiaryViewModel @Inject constructor(
     private val repository: DiaryRepository,
 ) : ViewModel() {
     private val diaryId = savedStateHandle.toRoute<ViewDiaryRoute>().diaryId
-    // Expose screen UI state
-    /*
-        val uiState : StateFlow<DiaryState> = repository.getDiaryById(diary.diaryId).stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(),
-            initialValue = repository.getDiaryById(diary.diaryId).value // Wrong?
-        )
-    */
+
     private val _uiState = MutableStateFlow<ViewDiaryUiState>(ViewDiaryUiState.Loading)
     val uiState = _uiState.asStateFlow()
 
@@ -192,7 +184,6 @@ class ViewDiaryViewModel @Inject constructor(
         val imageLoader = ImageLoader(context)
         val request = ImageRequest.Builder(context)
             .data(image.url)
-            //.allowHardware(false) // Required if you want to manipulate the bitmap later
             .build()
 
         val result = imageLoader.execute(request)
@@ -273,11 +264,9 @@ class ViewDiaryViewModel @Inject constructor(
         if (updatedSubPage == state.subPagesMap.getValue(updatedSubPage.id)) return
 
         // firebase update
-        //if (updatedSubPage != state.subPagesMap.getValue(updatedSubPage.id)) {
         viewModelScope.launch {
             repository.updateSubPage(updatedSubPage)
         }
-        //}
 
         // local update
         val updatedSubPagesMap = state.subPagesMap.toMutableMap()
@@ -300,7 +289,7 @@ class ViewDiaryViewModel @Inject constructor(
 
         val subPagesMap = state.subPagesMap
         val subPage = subPagesMap.getValue(subPageId)
-        val updatedSubPage = subPage.copy(contentEndIndex = contentEndIndex, cipolla = subPage.cipolla+1)
+        val updatedSubPage = subPage.copy(contentEndIndex = contentEndIndex, refreshCounter = subPage.refreshCounter+1)
 
         updateSubPage(updatedSubPage)
     }
@@ -323,7 +312,7 @@ class ViewDiaryViewModel @Inject constructor(
 
         val subPagesMap = state.subPagesMap
         val subPage = subPagesMap.getValue(subPageId)
-        val updatedSubPage = subPage.copy(testOverflow = testOverflow, cipolla = subPage.cipolla+1)
+        val updatedSubPage = subPage.copy(testOverflow = testOverflow, refreshCounter = subPage.refreshCounter+1)
 
         updateSubPage(updatedSubPage)
     }
@@ -338,11 +327,13 @@ class ViewDiaryViewModel @Inject constructor(
         updateSubPageTestOverflow(subPageId, subPage.testOverflow+1)
     }
 
-    fun resetSubPageTestOverflow(subPageId: String) {
-        val state = uiState.value
-        if (state !is ViewDiaryUiState.Success) return
-
+    private fun resetSubPageTestOverflow(subPageId: String) {
         updateSubPageTestOverflow(subPageId, 0)
+    }
+
+    private fun resetSubPageTextCalculation(subPageId: String) {
+        resetSubPageTestOverflow(subPageId)
+        resetSubPageContentEndIndex(subPageId)
     }
 
     private fun addSubPage(subPage: DiarySubPage) {
@@ -413,10 +404,7 @@ class ViewDiaryViewModel @Inject constructor(
         val pageId = state.subPagesMap.getValue(subPageId).pageId
 
         when(subPage.testOverflow) {
-            0 -> {
-                resetSubPageContentEndIndex(subPageId)
-            }
-            2 -> {
+            1 -> {
                 // if empty page, page not last and page without images
                 if (offset == 1 && getPreviousSubPage(subPageId) != null && subPage.imageIds.isEmpty()) {
                     deleteSubPage(subPage.id)
@@ -434,7 +422,7 @@ class ViewDiaryViewModel @Inject constructor(
                 val nextSubPage = getNextSubPage(subPageId)
                 if (nextSubPage != null) {
                     updateSubPageContentEndIndex(nextSubPage.id, page.content.length)
-                    resetSubPageTestOverflow(nextSubPage.id)
+                    resetSubPageTextCalculation(nextSubPage.id)
                 } else if (subPage.contentEndIndex < page.content.length) {
                     addSubPage(
                         DiarySubPage(
@@ -448,9 +436,9 @@ class ViewDiaryViewModel @Inject constructor(
         }
 
         // we update one page at a time
-        if (subPage.testOverflow < 3) {
+        if (subPage.testOverflow < 2) {
             val prevSubPage = getPreviousSubPage(subPageId)
-            if (prevSubPage == null || prevSubPage.testOverflow == 3)
+            if (prevSubPage == null || prevSubPage.testOverflow == 2)
                 incrementSubPageTestOverflow(subPageId)
         }
     }
@@ -487,6 +475,7 @@ class ViewDiaryViewModel @Inject constructor(
         val updatedDiaryImage = diaryImage.copy(offsetX = offsetX, offsetY = offsetY, scale = scale, rotation = rotation)
 
         updateDiaryImage(updatedDiaryImage, locally = locally)
+        resetSubPageTestOverflow(diaryImage.subPageId)
     }
 
     fun deleteImage(diaryImageId: String) {
@@ -715,5 +704,12 @@ class ViewDiaryViewModel @Inject constructor(
                 false
             )
         }
+    }
+
+    fun getSubPagesToRender(): List<DiarySubPage> {
+        val state = uiState.value
+        if (state !is ViewDiaryUiState.Success) return listOf()
+
+        return state.subPages.filter{ subPage -> subPage.testOverflow < 2 }
     }
 }

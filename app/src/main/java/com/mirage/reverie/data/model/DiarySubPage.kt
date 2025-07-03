@@ -7,7 +7,7 @@ data class DiarySubPage(
     val pageId: String = "",
     val diaryId: String = "",
     @get:Exclude val contentEndIndex: Int = 0,
-    @get:Exclude val cipolla: Int = 0,
+    @get:Exclude val refreshCounter: Int = 0,
     @get:Exclude val testOverflow: Int = 0,
     val imageIds: List<String> = listOf()
 )
