@@ -19,6 +19,10 @@ activityCompose = "1.10.1"
 composeBom = "2025.06.01"
 material = "1.8.3"
 materialIconsExtended = "1.7.8"
+mockitoAndroid = "5.18.0"
+mockitoCore = "5.18.0"
+mockitoInline = "5.2.0"
+mockitoKotlin = "5.4.0"
 navigationCompose = "2.9.0"
 pathway = "0.18.0"
 supabaseStorageKt = "3.2.0"
@@ -60,6 +64,10 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktorClientOkhttp" }
 libphonenumber = { module = "com.googlecode.libphonenumber:libphonenumber", version.ref = "libphonenumber" }
+mockito-android = { module = "org.mockito:mockito-android", version.ref = "mockitoAndroid" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoCore" }
+mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockitoInline" }
+mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
 pathway = { module = "dev.romainguy:pathway", version.ref = "pathway" }
 supabase-storage-kt = { module = "io.github.jan-tennert.supabase:storage-kt", version.ref = "supabaseStorageKt" }
 

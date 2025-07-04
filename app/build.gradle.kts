@@ -132,4 +132,12 @@ dependencies {
 
     // libphoneutil
     implementation(libs.libphonenumber)
+
+    //testing
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.inline)  // per classi finali
+    androidTestImplementation(libs.mockito.android)
+    androidTestImplementation(libs.mockito.inline)
+    testImplementation(libs.mockito.kotlin)
+    androidTestImplementation(libs.mockito.kotlin)
 }
