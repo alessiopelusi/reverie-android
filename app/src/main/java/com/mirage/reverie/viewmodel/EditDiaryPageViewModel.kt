@@ -29,7 +29,6 @@ sealed class EditDiaryPageUiState {
     data object Loading : EditDiaryPageUiState()
     data object Idle: EditDiaryPageUiState()
     data object Success : EditDiaryPageUiState()
-    data class Error(val errorMessage: String) : EditDiaryPageUiState()
 }
 
 @HiltViewModel
@@ -65,16 +64,12 @@ class EditDiaryPageViewModel @Inject constructor(
         _uiState.update { EditDiaryPageUiState.Idle }
 
         val state = formState.value
-        if (state.page.content.isBlank()) {
-            _uiState.update { EditDiaryPageUiState.Error("Il contenuto è obbligatorio") }
-        }
 
         viewModelScope.launch {
             try {
                 repository.updatePage(state.page)
                 _uiState.update { EditDiaryPageUiState.Success }
-            } catch (exception: Exception) {
-                _uiState.update { EditDiaryPageUiState.Error(exception.message.toString()) } // Gestisci errori
+            } catch (_: Exception) {
             }
         }
     }

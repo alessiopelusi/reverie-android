@@ -37,7 +37,7 @@ fun EditDiaryPageScreen(
 
     when(uiState) {
         is EditDiaryPageUiState.Loading -> CircularProgressIndicator()
-        is EditDiaryPageUiState.Idle, is EditDiaryPageUiState.Error -> {
+        is EditDiaryPageUiState.Idle -> {
             val page = formState.page
 
             Column (
