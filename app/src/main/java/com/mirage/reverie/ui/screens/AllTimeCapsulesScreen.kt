@@ -1,6 +1,7 @@
 package com.mirage.reverie.ui.screens
 
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,7 +32,6 @@ import androidx.compose.ui.unit.dp
 
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.compose.AsyncImage
 
 import com.mirage.reverie.viewmodel.AllTimeCapsulesUiState
 import com.mirage.reverie.viewmodel.AllTimeCapsulesViewModel
@@ -41,6 +41,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
@@ -176,9 +177,9 @@ fun TimeCapsuleComposable() {
     Box(
         contentAlignment = Alignment.Center,
     ) {
-        AsyncImage(
-            model = "https://wjecfnvsxxnvgheqdnpx.supabase.co/storage/v1/object/sign/time-capsules/letter.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xNTIwYmQ5Yy05ZTUxLTQ5MjMtODRmMy1kNzFiNTRkNTNjZjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0aW1lLWNhcHN1bGVzL2xldHRlci5wbmciLCJpYXQiOjE3NTA3NTc1MDQsImV4cCI6MTc4MjI5MzUwNH0.RTnD7Gu7q2mF6MlXhHmZXgn-xN4QJ3CVxUt4xf48s98",
-            contentDescription = null
+        Image(
+            painter = painterResource(id = R.drawable.letter),
+            contentDescription = stringResource(R.string.letter_for_the_future),
         )
     }
 }
@@ -197,9 +198,9 @@ fun TimeCapsule(timeCapsule: TimeCapsule, timeCapsuleType: TimeCapsuleType, onCl
                 .weight(1f),
             contentAlignment = Alignment.Center
         ) {
-            AsyncImage(
-                model = "https://wjecfnvsxxnvgheqdnpx.supabase.co/storage/v1/object/sign/time-capsules/letter.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8xNTIwYmQ5Yy05ZTUxLTQ5MjMtODRmMy1kNzFiNTRkNTNjZjUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ0aW1lLWNhcHN1bGVzL2xldHRlci5wbmciLCJpYXQiOjE3NTA3NTc1MDQsImV4cCI6MTc4MjI5MzUwNH0.RTnD7Gu7q2mF6MlXhHmZXgn-xN4QJ3CVxUt4xf48s98",
-                contentDescription = null,
+            Image(
+                painter = painterResource(id = R.drawable.letter),
+                contentDescription = stringResource(R.string.letter_for_the_future),
                 modifier = Modifier.size(80.dp)
             )
         }
