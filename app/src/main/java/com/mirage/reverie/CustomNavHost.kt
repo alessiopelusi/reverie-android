@@ -26,6 +26,18 @@ import com.mirage.reverie.navigation.TimeCapsulesRoute
 import com.mirage.reverie.navigation.ViewDiaryRoute
 import com.mirage.reverie.navigation.ViewProfileRoute
 import com.mirage.reverie.navigation.ViewTimeCapsuleRoute
+import com.mirage.reverie.ui.screens.AllDiariesScreen
+import com.mirage.reverie.ui.screens.AllTimeCapsulesScreen
+import com.mirage.reverie.ui.screens.CreateTimeCapsuleScreen
+import com.mirage.reverie.ui.screens.EditDiaryPageScreen
+import com.mirage.reverie.ui.screens.EditDiaryScreen
+import com.mirage.reverie.ui.screens.EditProfileScreen
+import com.mirage.reverie.ui.screens.LoginScreen
+import com.mirage.reverie.ui.screens.ProfileScreen
+import com.mirage.reverie.ui.screens.ResetPasswordScreen
+import com.mirage.reverie.ui.screens.SignupScreen
+import com.mirage.reverie.ui.screens.ViewDiaryScreen
+import com.mirage.reverie.ui.screens.ViewTimeCapsuleScreen
 
 @Composable
 fun CustomNavHost(
@@ -63,7 +75,7 @@ fun CustomNavHost(
                 )
 
                 onBottomBarVisibilityChanged(true)
-                _root_ide_package_.com.mirage.reverie.ui.screens.AllDiariesScreen(
+                AllDiariesScreen(
                     updatedDiary = updatedDiary,
                     updatedImages = updatedImages,
                     onNavigateToEditDiary = { diaryId ->
@@ -86,7 +98,7 @@ fun CustomNavHost(
 
             composable<EditDiaryRoute> { backStackEntry ->
                 onBottomBarVisibilityChanged(true)
-                _root_ide_package_.com.mirage.reverie.ui.screens.EditDiaryScreen(
+                EditDiaryScreen(
                     onComplete = { diary ->
                         navController.previousBackStackEntry
                             ?.savedStateHandle
@@ -99,7 +111,7 @@ fun CustomNavHost(
 
             composable<CreateDiaryRoute> { backStackEntry ->
                 onBottomBarVisibilityChanged(true)
-                _root_ide_package_.com.mirage.reverie.ui.screens.EditDiaryScreen(
+                EditDiaryScreen(
                     onComplete = { diary ->
                         navController.previousBackStackEntry
                             ?.savedStateHandle
@@ -121,7 +133,7 @@ fun CustomNavHost(
                     )
 
                     onBottomBarVisibilityChanged(true)
-                    _root_ide_package_.com.mirage.reverie.ui.screens.ViewDiaryScreen(
+                    ViewDiaryScreen(
                         updatedPage = updatedPage,
                         onNavigateToEditDiaryPage = { page ->
                             navController.navigate(
@@ -142,7 +154,7 @@ fun CustomNavHost(
 
                 composable<EditDiaryPageRoute> { backStackEntry ->
                     onBottomBarVisibilityChanged(false)
-                    _root_ide_package_.com.mirage.reverie.ui.screens.EditDiaryPageScreen(
+                    EditDiaryPageScreen(
                         onComplete = { page ->
                             navController.previousBackStackEntry
                                 ?.savedStateHandle
@@ -160,7 +172,7 @@ fun CustomNavHost(
         ) {
             composable<LoginRoute> {
                 onBottomBarVisibilityChanged(false)
-                _root_ide_package_.com.mirage.reverie.ui.screens.LoginScreen(
+                LoginScreen(
                     onLoginSuccess = {
                         navController.navigate(AllDiariesRoute) {
                             popUpTo(LoginRoute) {
@@ -179,7 +191,7 @@ fun CustomNavHost(
 
             composable<SignupRoute> {
                 onBottomBarVisibilityChanged(false)
-                _root_ide_package_.com.mirage.reverie.ui.screens.SignupScreen(
+                SignupScreen(
                     onSignupSuccess = {
                         navController.popBackStack()  // Torna al login dopo registrazione
                     },
@@ -191,7 +203,7 @@ fun CustomNavHost(
 
             composable<ResetPasswordRoute> {
                 onBottomBarVisibilityChanged(false)
-                _root_ide_package_.com.mirage.reverie.ui.screens.ResetPasswordScreen(
+                ResetPasswordScreen(
                     onNavigateBack = {
                         navController.popBackStack()
                     }
@@ -213,7 +225,7 @@ fun CustomNavHost(
                     "timeCapsule"
                 )
 
-                _root_ide_package_.com.mirage.reverie.ui.screens.AllTimeCapsulesScreen(
+                AllTimeCapsulesScreen(
                     newTimeCapsule = newTimeCapsule,
                     onNavigateToCreateTimeCapsule = { navController.navigate(CreateTimeCapsuleRoute) },
                     onNavigateToViewTimeCapsule = { timeCapsuleId, timeCapsuleType ->
@@ -229,7 +241,7 @@ fun CustomNavHost(
 
             composable<ViewTimeCapsuleRoute> {
                 onBottomBarVisibilityChanged(true)
-                _root_ide_package_.com.mirage.reverie.ui.screens.ViewTimeCapsuleScreen(onViewProfile = { uid ->
+                ViewTimeCapsuleScreen(onViewProfile = { uid ->
                     navController.navigate(
                         ViewProfileRoute(
                             uid
@@ -240,7 +252,7 @@ fun CustomNavHost(
 
             composable<CreateTimeCapsuleRoute> { backStackEntry ->
                 onBottomBarVisibilityChanged(true)
-                _root_ide_package_.com.mirage.reverie.ui.screens.CreateTimeCapsuleScreen(
+                CreateTimeCapsuleScreen(
                     onComplete = { timeCapsule ->
                         navController.previousBackStackEntry
                             ?.savedStateHandle
@@ -263,7 +275,7 @@ fun CustomNavHost(
                     "profile"
                 )
 
-                _root_ide_package_.com.mirage.reverie.ui.screens.ProfileScreen(
+                ProfileScreen(
                     onEditProfile = { profileId ->
                         navController.navigate(
                             EditProfileRoute(
@@ -283,7 +295,7 @@ fun CustomNavHost(
 
             composable<EditProfileRoute> {
                 onBottomBarVisibilityChanged(false)
-                _root_ide_package_.com.mirage.reverie.ui.screens.EditProfileScreen(
+                EditProfileScreen(
                     onComplete = { profile ->
                         navController.previousBackStackEntry
                             ?.savedStateHandle
