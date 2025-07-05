@@ -23,7 +23,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 
 @Composable
-fun <T> ButtonBar(buttonState: T, buttonElements: List<T>, onButtonStateUpdate: (T) -> Unit){
+fun <T> ButtonBar(
+    buttonState: T,
+    buttonElements: List<T>,
+    onButtonStateUpdate: (T) -> Unit,
+    displayNameBuilder: @Composable (T) -> String
+){
     Card (
         modifier = Modifier.fillMaxWidth()
             .padding(16.dp),
@@ -53,7 +58,6 @@ fun <T> ButtonBar(buttonState: T, buttonElements: List<T>, onButtonStateUpdate: 
 //            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             buttonElements.forEachIndexed { index, item ->
-
                 val isSelected = item == buttonState
 
                 Box(
@@ -66,7 +70,7 @@ fun <T> ButtonBar(buttonState: T, buttonElements: List<T>, onButtonStateUpdate: 
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = item.toString(),
+                        text = displayNameBuilder(item),
                         style = TextStyle(
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                         ),

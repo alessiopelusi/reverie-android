@@ -64,7 +64,7 @@ fun AllTimeCapsulesScreen(
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     when (uiState) {
-        is AllTimeCapsulesUiState.Loading -> CircularProgressIndicator()
+        is AllTimeCapsulesUiState.Loading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         is AllTimeCapsulesUiState.Success -> {
             val timeCapsuleScheduled = (uiState as AllTimeCapsulesUiState.Success).timeCapsuleScheduled
             val timeCapsuleSent = (uiState as AllTimeCapsulesUiState.Success).timeCapsuleSent
@@ -102,7 +102,13 @@ fun AllTimeCapsulesScreen(
                     }
                 }
                 item {
-                    ButtonBar(buttonState, buttonElements, viewModel::onButtonStateUpdate)
+                    ButtonBar(buttonState, buttonElements, viewModel::onButtonStateUpdate){ item ->
+                        when(item) {
+                            TimeCapsuleType.SCHEDULED -> stringResource(R.string.scheduled)
+                            TimeCapsuleType.SENT -> stringResource(R.string.sent)
+                            else -> stringResource(R.string.received)
+                        }
+                    }
                 }
                 when(buttonState) {
                     TimeCapsuleType.SCHEDULED -> {

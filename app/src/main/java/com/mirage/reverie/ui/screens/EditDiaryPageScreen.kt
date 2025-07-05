@@ -1,7 +1,9 @@
 package com.mirage.reverie.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -36,7 +38,7 @@ fun EditDiaryPageScreen(
     val formState by viewModel.formState.collectAsStateWithLifecycle()
 
     when(uiState) {
-        is EditDiaryPageUiState.Loading -> CircularProgressIndicator()
+        is EditDiaryPageUiState.Loading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         is EditDiaryPageUiState.Idle -> {
             val page = formState.page
 

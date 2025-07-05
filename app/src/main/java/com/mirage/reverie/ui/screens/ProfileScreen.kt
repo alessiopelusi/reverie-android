@@ -1,6 +1,7 @@
 package com.mirage.reverie.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,7 +36,7 @@ fun ProfileScreen(
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     when (uiState) {
-        is ProfileUiState.Loading -> CircularProgressIndicator()
+        is ProfileUiState.Loading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         is ProfileUiState.Success -> {
             val profile = (uiState as ProfileUiState.Success).profile
             val isOwner = (uiState as ProfileUiState.Success).isOwner

@@ -77,7 +77,7 @@ fun AllDiariesScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     when (uiState) {
-        is AllDiariesUiState.Loading -> CircularProgressIndicator()
+        is AllDiariesUiState.Loading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         is AllDiariesUiState.Success -> {
             val diaries = (uiState as AllDiariesUiState.Success).diaries
             val currentPage = (uiState as AllDiariesUiState.Success).currentPage
@@ -178,7 +178,7 @@ fun AllDiariesScreen(
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Outlined.Delete,
-                                                contentDescription = "Delete",
+                                                contentDescription = stringResource(R.string.delete),
                                                 modifier = Modifier.size(20.dp)
                                             )
                                         }
@@ -213,7 +213,12 @@ fun AllDiariesScreen(
                 item(
                     span = StaggeredGridItemSpan.FullLine
                 ) {
-                    ButtonBar(buttonState, buttonElements, viewModel::onButtonStateUpdate)
+                    ButtonBar(buttonState, buttonElements, viewModel::onButtonStateUpdate) { item ->
+                        when(item) {
+                            ButtonState.INFO -> stringResource(R.string.info)
+                            else -> stringResource(R.string.images)
+                        }
+                    }
                 }
                 when(buttonState) {
                     ButtonState.IMAGES -> {

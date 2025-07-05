@@ -9,6 +9,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -109,7 +110,7 @@ fun ViewDiaryScreen(
     }
 
     when (uiState) {
-        is ViewDiaryUiState.Loading -> CircularProgressIndicator()
+        is ViewDiaryUiState.Loading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         is ViewDiaryUiState.Success -> {
             val diary = (uiState as ViewDiaryUiState.Success).diary
             val pages = (uiState as ViewDiaryUiState.Success).pages

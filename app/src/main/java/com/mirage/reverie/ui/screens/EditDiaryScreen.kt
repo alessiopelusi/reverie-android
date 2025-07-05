@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -40,7 +41,7 @@ fun EditDiaryScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     when(uiState) {
-        is EditDiaryUiState.Loading -> CircularProgressIndicator()
+        is EditDiaryUiState.Loading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         is EditDiaryUiState.Idle, is EditDiaryUiState.Error -> {
             val formState by viewModel.formState.collectAsStateWithLifecycle()
             val diary = formState.diary

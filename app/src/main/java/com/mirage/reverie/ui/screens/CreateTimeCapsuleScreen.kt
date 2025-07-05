@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -68,7 +69,7 @@ fun CreateTimeCapsuleScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     when(uiState) {
-        is CreateTimeCapsuleUiState.Loading -> CircularProgressIndicator()
+        is CreateTimeCapsuleUiState.Loading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         is CreateTimeCapsuleUiState.Idle, is CreateTimeCapsuleUiState.Error -> {
             val formState by viewModel.formState.collectAsStateWithLifecycle()
             val timeCapsule = formState.timeCapsule

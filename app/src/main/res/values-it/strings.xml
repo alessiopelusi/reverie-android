@@ -91,4 +91,9 @@
     <string name="add">Aggiungi</string>
     <string name="enter_phone_number">Inserisci un numero di telefono</string>
     <string name="enter_email">Inserisci un\'email</string>
+    <string name="info">Info</string>
+    <string name="images">Immagini</string>
+    <string name="scheduled">Programmate</string>
+    <string name="sent">Inviate</string>
+    <string name="received">Ricevute</string>
 </resources>

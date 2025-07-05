@@ -1,6 +1,7 @@
 package com.mirage.reverie.ui.screens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -38,7 +39,7 @@ fun ViewTimeCapsuleScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     when(uiState) {
-        is ViewTimeCapsuleState.Loading -> CircularProgressIndicator()
+        is ViewTimeCapsuleState.Loading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         is ViewTimeCapsuleState.Success -> {
             val timeCapsule = (uiState as ViewTimeCapsuleState.Success).timeCapsule
             val timeCapsuleType = (uiState as ViewTimeCapsuleState.Success).timeCapsuleType
