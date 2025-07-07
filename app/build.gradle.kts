@@ -33,7 +33,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "$applicationId.HiltTestRunner"
     }
 
     buildTypes {
@@ -46,8 +46,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures {
         compose = true
@@ -56,7 +56,7 @@ android {
 
 kotlin {
     compilerOptions {
-        jvmTarget = JvmTarget.JVM_11
+        jvmTarget = JvmTarget.JVM_17
     }
 }
 
@@ -133,11 +133,29 @@ dependencies {
     // libphoneutil
     implementation(libs.libphonenumber)
 
-    //testing
+    // Compose UI Testing
+    implementation(libs.androidx.ui.test.junit4.android)
+    androidTestImplementation(libs.ui.test.junit4)
+    debugImplementation(libs.ui.test.manifest)
+    testImplementation(libs.hilt.android.testing)
+    kspTest(libs.hilt.android.compiler)
+    //testAnnotationProcessor(libs.hilt.android.compiler)
+    androidTestImplementation(libs.hilt.android.testing)
+    kspAndroidTest(libs.hilt.android.compiler)
+    //androidTestAnnotationProcessor(libs.hilt.android.compiler)
+
+    // MockK for mocking ViewModels and dependencies
+    testImplementation(libs.mockk)
+
+    // Turbine for collecting Flows in tests
+    testImplementation(libs.turbine)
+
+    // Coroutine Testing
+    testImplementation(libs.kotlinx.coroutines.test)
+
+    //mockito
     testImplementation(libs.mockito.core)
-    testImplementation(libs.mockito.inline)  // per classi finali
-    androidTestImplementation(libs.mockito.android)
-    androidTestImplementation(libs.mockito.inline)
+    testImplementation(libs.mockito.inline)
     testImplementation(libs.mockito.kotlin)
-    androidTestImplementation(libs.mockito.kotlin)
+    androidTestImplementation(libs.mockito.android)
 }

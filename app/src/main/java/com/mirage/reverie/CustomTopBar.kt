@@ -12,12 +12,12 @@ import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.navigation.NavController
-import com.mirage.reverie.navigation.ProfileRoute
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CustomTopBar(navController: NavController) {
+fun CustomTopBar(
+    onNavigateToProfile: () -> Unit
+) {
     TopAppBar(
         colors = topAppBarColors(
             containerColor = MaterialTheme.colorScheme.secondary,
@@ -26,12 +26,7 @@ fun CustomTopBar(navController: NavController) {
             Text(stringResource(R.string.app_name), textAlign = TextAlign.Center)
         },
         actions = {
-            IconButton(onClick = {
-                navController.navigate(ProfileRoute(getUserId())) {
-                    popUpTo(ProfileRoute::class) { saveState = true }
-                    launchSingleTop = true
-                }
-            }) {
+            IconButton(onClick = onNavigateToProfile) {
                 Icon(Icons.Rounded.Person, contentDescription = stringResource(R.string.account))
             }
         }

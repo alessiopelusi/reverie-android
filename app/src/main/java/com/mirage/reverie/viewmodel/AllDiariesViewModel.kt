@@ -1,7 +1,6 @@
 package com.mirage.reverie.viewmodel
 
 import androidx.compose.foundation.pager.PagerState
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth

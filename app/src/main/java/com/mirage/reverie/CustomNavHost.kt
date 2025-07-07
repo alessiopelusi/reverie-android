@@ -43,12 +43,14 @@ import com.mirage.reverie.ui.screens.ViewTimeCapsuleScreen
 fun CustomNavHost(
     navController: NavHostController,
     innerPadding: PaddingValues,
+    isUserAuthenticated: Boolean,
     onBottomBarVisibilityChanged: (Boolean) -> Unit,
+    onLogout: () -> Unit,
 ) {
 
     NavHost(
         navController,
-        startDestination = if (isUserAuthenticated()) DiariesRoute else AuthenticationRoute,
+        startDestination = if (isUserAuthenticated) DiariesRoute else AuthenticationRoute,
         Modifier.padding(innerPadding)
     )
     {
@@ -283,12 +285,7 @@ fun CustomNavHost(
                             )
                         )
                     },
-                    onLogout = {
-                        logout()
-                        navController.navigate(LoginRoute) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    },
+                    onLogout = onLogout,
                     updatedProfile = updatedProfile
                 )
             }

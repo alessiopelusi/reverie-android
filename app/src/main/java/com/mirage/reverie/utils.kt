@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
-import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.ZoneId
@@ -39,16 +38,3 @@ fun formatDate(date: Date, pattern: String = "dd MMMM yyyy", locale: Locale = Lo
     val formatter = SimpleDateFormat(pattern, locale)
     return formatter.format(date)
 }
-
-fun isUserAuthenticated(): Boolean {
-    return FirebaseAuth.getInstance().currentUser != null
-}
-
-fun logout() {
-    FirebaseAuth.getInstance().signOut()
-}
-
-fun getUserId() : String {
-    return FirebaseAuth.getInstance().uid.toString()
-}
-

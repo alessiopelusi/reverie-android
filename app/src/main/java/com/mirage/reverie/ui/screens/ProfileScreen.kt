@@ -29,7 +29,7 @@ import com.mirage.reverie.viewmodel.ProfileViewModel
 fun ProfileScreen(
     updatedProfile: User? = null,
     onEditProfile: (String) -> Unit,
-    onLogout: (String) -> Unit,
+    onLogout: () -> Unit,
     viewModel: ProfileViewModel = hiltViewModel()
 ){
     viewModel.overwriteProfile(updatedProfile)
@@ -86,9 +86,7 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    Button( onClick = {
-                        onLogout(profile.id)
-                    }) {
+                    Button( onClick = onLogout) {
                         Text(stringResource(R.string.logout))
                     }
                 }
