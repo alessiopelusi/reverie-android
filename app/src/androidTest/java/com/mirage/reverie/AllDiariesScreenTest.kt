@@ -33,14 +33,14 @@ class AllDiariesScreenTest {
             )
         }
 
-        // Check that diary title is displayed
+        val fabContentDescription = composeTestRule.activity.getString(R.string.create_diary)
+
         composeTestRule
             .onNodeWithText("Test Diary")
             .assertIsDisplayed()
 
-        // Check that FAB is present and clickable
         composeTestRule
-            .onNodeWithContentDescription(composeTestRule.activity.getString(R.string.create_diary))
+            .onNodeWithContentDescription(fabContentDescription)
             .assertIsDisplayed()
             .performClick()
     }
@@ -55,15 +55,87 @@ class AllDiariesScreenTest {
             )
         }
 
-        // Tap on "Images" button after Success UI is visible
-        composeTestRule.onNodeWithText(composeTestRule.activity.getString(R.string.images)).performClick()
-
-        // Assert that image grid has content
-/*
+        // Wait until the diary title is visible to ensure Success UI is loaded
         composeTestRule
-            .onAllNodes(hasAnyAncestor(hasTestTag("LazyVerticalStaggeredGrid")))
+            .onNodeWithText("Test Diary")
+            .assertIsDisplayed()
+
+        // Click the "Images" button
+        val imagesButtonText = composeTestRule.activity.getString(R.string.images)
+        composeTestRule
+            .onNodeWithText(imagesButtonText)
+            .assertIsDisplayed()
+            .performClick()
+
+        // Wait for the image with the expected content description to appear
+        val imageContentDesc = composeTestRule.activity.getString(R.string.image)
+        composeTestRule.waitUntil(
+            condition = {
+                composeTestRule
+                    .onAllNodesWithContentDescription(imageContentDesc)
+                    .fetchSemanticsNodes()
+                    .isNotEmpty()
+            },
+            timeoutMillis = 5_000
+        )
+
+        // Assert that at least one image is displayed
+        composeTestRule
+            .onAllNodesWithContentDescription(imageContentDesc)
             .onFirst()
-            .assertExists()
-*/
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun displaysMultipleDiaries_andHandlesPagerSwipe() {
+        composeTestRule.activity.setContent {
+            AllDiariesScreen(
+                onNavigateToDiary = {},
+                onNavigateToEditDiary = {},
+                onNavigateToCreateDiary = {}
+            )
+        }
+
+        // Assert that the first diary is shown
+        composeTestRule.onNodeWithText("Test Diary").assertIsDisplayed()
+
+        // Swipe left on the title (or any visible node in the pager)
+        composeTestRule
+            .onNodeWithText("Test Diary")
+            .performTouchInput { swipeLeft() }
+
+        // Assert second diary is displayed
+        composeTestRule.onNodeWithText("Second Diary").assertIsDisplayed()
+
+        composeTestRule
+            .onNodeWithText("Second Diary")
+            .performTouchInput { swipeLeft() }
+
+        // Assert second diary is displayed
+        composeTestRule.onNodeWithText("Third Diary").assertIsDisplayed()
+    }
+
+    @Test
+    fun switchingToInfoTab_displaysCreationDateAndPageNumber() {
+        composeTestRule.activity.setContent {
+            AllDiariesScreen(
+                onNavigateToDiary = {},
+                onNavigateToEditDiary = {},
+                onNavigateToCreateDiary = {}
+            )
+        }
+
+        val infoText = composeTestRule.activity.getString(R.string.info)
+        val creationDateLabel = composeTestRule.activity.getString(R.string.creation_date) + ":"
+        val pageNumberLabel = composeTestRule.activity.getString(R.string.page_number) + ":"
+
+        // Tap the Info button
+        composeTestRule
+            .onNodeWithText(infoText, ignoreCase = true)
+            .performClick()
+
+        // Validate labels are displayed
+        composeTestRule.onNodeWithText(creationDateLabel).assertIsDisplayed()
+        composeTestRule.onNodeWithText(pageNumberLabel).assertIsDisplayed()
     }
 }

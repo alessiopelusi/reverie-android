@@ -58,7 +58,9 @@
     <string name="save_changes">Salva modifiche</string>
     <string name="update_error">Errore di aggiornamento</string>
     <string name="confirm_diary_deletion">Conferma eliminazione diario</string>
+    <string name="confirm_capsule_deletion">Conferma eliminazione capsula</string>
     <string name="delete_diary">Sei sicuro di voler cancellare questo diario? Questa opzione non può essere annullata.</string>
+    <string name="delete_capsule">Sei sicuro di voler cancellare questa capsula? Questa opzione non può essere annullata.</string>
     <string name="confirm_page_deletion">Conferma eliminazione pagina</string>
     <string name="delete_page">Sei sicuro di voler cancallare questa pagina? Questa opzione non può essere annullata.</string>
     <string name="move_prev_subpage">Muovi alla precedente sotto pagina</string>
@@ -96,4 +98,5 @@
     <string name="scheduled">Programmate</string>
     <string name="sent">Inviate</string>
     <string name="received">Ricevute</string>
+    <string name="image">Immagine</string>
 </resources>

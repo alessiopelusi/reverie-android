@@ -107,7 +107,9 @@ fun AllDiariesScreen(
                     ) {
                         HorizontalPager(
                             state = pagerState
-                        ) {
+                        ) { diaryNumber ->
+                            val diary = diaries[diaryNumber%diaries.size]
+
                             Card(
                                 Modifier
                                     .padding(horizontal = 40.dp, vertical = 8.dp)
@@ -115,7 +117,7 @@ fun AllDiariesScreen(
                                         interactionSource = pageInteractionSource,
                                         indication = LocalIndication.current
                                     ) {
-                                        onNavigateToDiary(currentDiary.id)
+                                        onNavigateToDiary(diary.id)
                                     },
                                 colors = CardDefaults.cardColors(containerColor = Color.White),
                                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
@@ -124,23 +126,21 @@ fun AllDiariesScreen(
                                     verticalArrangement = Arrangement.spacedBy(8.dp), // Adds spacing between elements
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                 ) {
-
-
                                     DiaryCoverComposable(
                                         modifier = Modifier,
-                                        coverUrl = diaryCoversMap.getValue(currentDiary.coverId).url
+                                        coverUrl = diaryCoversMap.getValue(diary.coverId).url
                                     )
                                     Text(
                                         modifier = Modifier.fillMaxWidth(),
                                         textAlign = TextAlign.Center,
                                         fontWeight = FontWeight.Bold,
-                                        text = currentDiary.title
+                                        text = diary.title
                                     )
-                                    if (currentDiary.description.isNotEmpty()){
+                                    if (diary.description.isNotEmpty()){
                                         Text(
                                             modifier = Modifier.fillMaxWidth(),
                                             textAlign = TextAlign.Center,
-                                            text = currentDiary.description
+                                            text = diary.description
                                         )
                                     }
                                     Row(
@@ -152,7 +152,7 @@ fun AllDiariesScreen(
                                     ){
                                         IconButton(
                                             onClick = {
-                                                onNavigateToEditDiary(currentDiary.id)
+                                                onNavigateToEditDiary(diary.id)
                                             },
                                             colors = IconButtonColors(
                                                 containerColor = Color.Transparent,
@@ -229,7 +229,7 @@ fun AllDiariesScreen(
                                 AsyncImage(
                                     model = image.url,
                                     contentScale = ContentScale.Crop,
-                                    contentDescription = null,
+                                    contentDescription = stringResource(R.string.image),
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .wrapContentHeight()

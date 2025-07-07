@@ -55,9 +55,9 @@ import com.mirage.reverie.viewmodel.TimeCapsuleType
 
 @Composable
 fun AllTimeCapsulesScreen(
-    newTimeCapsule: TimeCapsule?,
     onNavigateToCreateTimeCapsule: () -> Unit,
     onNavigateToViewTimeCapsule: (String, TimeCapsuleType) -> Unit,
+    newTimeCapsule: TimeCapsule? = null,
     viewModel: AllTimeCapsulesViewModel = hiltViewModel()
 ) {
     // add new time capsule sent from CreateTimeCapsuleRoute
@@ -161,8 +161,8 @@ fun AllTimeCapsulesScreen(
 
             if (deleteDialogCapsuleId.isNotEmpty()) {
                 ConfirmDelete (
-                    stringResource(R.string.confirm_diary_deletion),
-                    stringResource(R.string.delete_diary),
+                    stringResource(R.string.confirm_capsule_deletion),
+                    stringResource(R.string.delete_capsule),
                     viewModel::onCloseDeleteTimeCapsuleDialog,
                     viewModel::onDeleteTimeCapsule
                 )

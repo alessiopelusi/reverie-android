@@ -4,19 +4,14 @@ import android.net.Uri
 import com.google.firebase.Timestamp
 import com.mirage.reverie.data.model.*
 import com.mirage.reverie.data.repository.DiaryRepository
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import java.util.concurrent.ConcurrentHashMap
 import java.util.*
 
 class FakeDiaryRepository : DiaryRepository {
-    private val mutex = Mutex()
-
-    private val diaries = ConcurrentHashMap<String, Diary>()
-    private val pages = ConcurrentHashMap<String, DiaryPage>()
-    private val subPages = ConcurrentHashMap<String, DiarySubPage>()
-    private val images = ConcurrentHashMap<String, DiaryImage>()
-    private val covers = ConcurrentHashMap<String, DiaryCover>()
+    private val diaries = linkedMapOf<String, Diary>()
+    private val pages = linkedMapOf<String, DiaryPage>()
+    private val subPages = linkedMapOf<String, DiarySubPage>()
+    private val images = linkedMapOf<String, DiaryImage>()
+    private val covers = linkedMapOf<String, DiaryCover>()
 
     init {
         initDefaults()
@@ -24,7 +19,7 @@ class FakeDiaryRepository : DiaryRepository {
 
     private fun initDefaults() {
         val userId = "test-user-id"
-        val diaryId = "test-diary-id"
+        val diaryId = "test-diary-id-1"
         val pageId = "test-page-id"
         val subPageId = "test-subpage-id"
         val imageId = "test-image-id"
@@ -36,13 +31,33 @@ class FakeDiaryRepository : DiaryRepository {
             url = "https://picsum.photos/200/300"
         )
 
-        val diary = Diary(
+        val diary1 = Diary(
             id = diaryId,
             uid = userId,
             title = "Test Diary",
             description = "Test description",
             creationDate = Timestamp.now(),
             pageIds = listOf(pageId),
+            coverId = coverId
+        )
+
+        val diary2 = Diary(
+            id = "test-diary-id-2",
+            uid = userId,
+            title = "Second Diary",
+            description = "Another diary for testing",
+            creationDate = Timestamp.now(),
+            pageIds = listOf(),
+            coverId = coverId
+        )
+
+        val diary3 = Diary(
+            id = "test-diary-id-3",
+            uid = userId,
+            title = "Third Diary",
+            description = "Yet another one",
+            creationDate = Timestamp.now(),
+            pageIds = listOf(),
             coverId = coverId
         )
 
@@ -67,7 +82,9 @@ class FakeDiaryRepository : DiaryRepository {
             url = "https://picsum.photos/200/300"
         )
 
-        diaries[diaryId] = diary
+        diaries[diary1.id] = diary1
+        diaries[diary2.id] = diary2
+        diaries[diary3.id] = diary3
         pages[pageId] = page
         subPages[subPageId] = subPage
         images[imageId] = image
@@ -83,7 +100,7 @@ class FakeDiaryRepository : DiaryRepository {
     override suspend fun getUserDiaries(userId: String): List<Diary> =
         diaries.values.filter { it.uid == userId }
 
-    override suspend fun saveDiary(diary: Diary): Diary = mutex.withLock {
+    override suspend fun saveDiary(diary: Diary): Diary {
         val id = diary.id.ifBlank { UUID.randomUUID().toString() }
         val saved = diary.copy(id = id)
         diaries[id] = saved
@@ -105,7 +122,7 @@ class FakeDiaryRepository : DiaryRepository {
     override suspend fun getPages(pageIds: List<String>): List<DiaryPage> =
         pageIds.mapNotNull { pages[it] }
 
-    override suspend fun savePage(page: DiaryPage): DiaryPage = mutex.withLock {
+    override suspend fun savePage(page: DiaryPage): DiaryPage {
         val id = page.id.ifBlank { UUID.randomUUID().toString() }
         val saved = page.copy(id = id)
         pages[id] = saved
@@ -132,7 +149,7 @@ class FakeDiaryRepository : DiaryRepository {
     override suspend fun getSubPages(subPageIds: List<String>): List<DiarySubPage> =
         subPageIds.mapNotNull { subPages[it] }
 
-    override suspend fun saveSubPage(subPage: DiarySubPage): DiarySubPage = mutex.withLock {
+    override suspend fun saveSubPage(subPage: DiarySubPage): DiarySubPage {
         val id = subPage.id.ifBlank { UUID.randomUUID().toString() }
         val saved = subPage.copy(id = id)
         subPages[id] = saved
@@ -159,7 +176,7 @@ class FakeDiaryRepository : DiaryRepository {
     override suspend fun getAllDiaryImages(diaryId: String): List<DiaryImage> =
         images.values.filter { it.diaryId == diaryId }
 
-    override suspend fun saveDiaryImage(diaryImage: DiaryImage, imageUri: Uri): DiaryImage = mutex.withLock {
+    override suspend fun saveDiaryImage(diaryImage: DiaryImage, imageUri: Uri): DiaryImage {
         val id = diaryImage.id.ifBlank { UUID.randomUUID().toString() }
         val saved = diaryImage.copy(id = id, url = imageUri.toString())
         images[id] = saved

@@ -67,7 +67,9 @@
     <string name="save_changes">Save changes</string>
     <string name="update_error">Update error</string>
     <string name="confirm_diary_deletion">Confirm diary deletion</string>
+    <string name="confirm_capsule_deletion">Confirm capsule deletion</string>
     <string name="delete_diary">Are you sure you want to delete this diary? This action cannot be undone.</string>
+    <string name="delete_capsule">Are you sure you want to delete this capsule? This action cannot be undone.</string>
     <string name="confirm_page_deletion">confirm page deletion</string>
     <string name="delete_page">are you sure you want to delete this page? this action cannot be undone.</string>
     <string name="move_prev_subpage">Move to prev subpage</string>
@@ -105,4 +107,5 @@
     <string name="scheduled">Scheduled</string>
     <string name="sent">Sent</string>
     <string name="received">Received</string>
+    <string name="image">Image</string>
 </resources>
