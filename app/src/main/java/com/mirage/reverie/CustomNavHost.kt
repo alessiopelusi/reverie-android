@@ -8,6 +8,11 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
+import com.mirage.reverie.data.model.Diary
+import com.mirage.reverie.data.model.DiaryImage
+import com.mirage.reverie.data.model.DiaryPage
+import com.mirage.reverie.data.model.TimeCapsule
+import com.mirage.reverie.data.model.User
 import com.mirage.reverie.navigation.AllDiariesRoute
 import com.mirage.reverie.navigation.AllTimeCapsulesRoute
 import com.mirage.reverie.navigation.AuthenticationRoute
@@ -62,17 +67,17 @@ fun CustomNavHost(
         navigation<DiariesRoute>(startDestination = AllDiariesRoute) {
             composable<AllDiariesRoute> { backStackEntry ->
                 val updatedDiary =
-                    backStackEntry.savedStateHandle.get<_root_ide_package_.com.mirage.reverie.data.model.Diary>(
+                    backStackEntry.savedStateHandle.get<Diary>(
                         "diary"
                     )
                 val updatedImages =
-                    backStackEntry.savedStateHandle.get<List<_root_ide_package_.com.mirage.reverie.data.model.DiaryImage>>(
+                    backStackEntry.savedStateHandle.get<List<DiaryImage>>(
                         "diaryImages"
                     )
-                backStackEntry.savedStateHandle.remove<_root_ide_package_.com.mirage.reverie.data.model.Diary>(
+                backStackEntry.savedStateHandle.remove<Diary>(
                     "diary"
                 )
-                backStackEntry.savedStateHandle.remove<List<_root_ide_package_.com.mirage.reverie.data.model.DiaryImage>>(
+                backStackEntry.savedStateHandle.remove<List<DiaryImage>>(
                     "diaryImages"
                 )
 
@@ -127,10 +132,10 @@ fun CustomNavHost(
             navigation<DiaryRoute>(startDestination = ViewDiaryRoute::class) {
                 composable<ViewDiaryRoute> { backStackEntry ->
                     val updatedPage =
-                        backStackEntry.savedStateHandle.get<_root_ide_package_.com.mirage.reverie.data.model.DiaryPage>(
+                        backStackEntry.savedStateHandle.get<DiaryPage>(
                             "page"
                         )
-                    backStackEntry.savedStateHandle.remove<_root_ide_package_.com.mirage.reverie.data.model.DiaryPage>(
+                    backStackEntry.savedStateHandle.remove<DiaryPage>(
                         "page"
                     )
 
@@ -177,12 +182,7 @@ fun CustomNavHost(
                 LoginScreen(
                     onLoginSuccess = {
                         navController.navigate(DiariesRoute) {
-                            popUpTo(DiariesRoute) {
-                                inclusive = true
-                            }
-                            popUpTo(TimeCapsulesRoute) {
-                                inclusive = true
-                            }
+                            popUpTo(0) { inclusive = true } // 0 = removes entire back stack
                         }
                     },
                     onNavigateToRegister = {
@@ -199,12 +199,7 @@ fun CustomNavHost(
                 SignupScreen(
                     onSignupSuccess = {
                         navController.navigate(DiariesRoute) {
-                            popUpTo(DiariesRoute) {
-                                inclusive = true
-                            }
-                            popUpTo(TimeCapsulesRoute) {
-                                inclusive = true
-                            }
+                            popUpTo(0) { inclusive = true } // 0 = removes entire back stack
                         }
                     },
                     onNavigateToLogin = {
@@ -230,10 +225,10 @@ fun CustomNavHost(
                 onBottomBarVisibilityChanged(true)
 
                 val newTimeCapsule =
-                    backStackEntry.savedStateHandle.get<_root_ide_package_.com.mirage.reverie.data.model.TimeCapsule>(
+                    backStackEntry.savedStateHandle.get<TimeCapsule>(
                         "timeCapsule"
                     )
-                backStackEntry.savedStateHandle.remove<_root_ide_package_.com.mirage.reverie.data.model.TimeCapsule>(
+                backStackEntry.savedStateHandle.remove<TimeCapsule>(
                     "timeCapsule"
                 )
 
@@ -280,10 +275,10 @@ fun CustomNavHost(
             composable<ViewProfileRoute> { backStackEntry ->
                 onBottomBarVisibilityChanged(false)
                 val updatedProfile =
-                    backStackEntry.savedStateHandle.get<_root_ide_package_.com.mirage.reverie.data.model.User>(
+                    backStackEntry.savedStateHandle.get<User>(
                         "profile"
                     )
-                backStackEntry.savedStateHandle.remove<_root_ide_package_.com.mirage.reverie.data.model.User>(
+                backStackEntry.savedStateHandle.remove<User>(
                     "profile"
                 )
 
