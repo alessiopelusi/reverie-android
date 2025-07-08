@@ -203,12 +203,16 @@ class SignupViewModel @Inject constructor(
         }
     }
 
+    private var onSignupJob: Job? = null
+
     fun onSignup() {
         _uiState.update { SignupUiState.Idle }
 
         val inState = inputState.value
 
-        viewModelScope.launch {
+        if (onSignupJob?.isActive == true) return
+
+        onSignupJob = viewModelScope.launch {
             // Validate all fields and update input state
             val updatedState = inState.copy(
                 usernameError = validateUsername(inState.username),

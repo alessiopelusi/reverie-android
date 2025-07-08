@@ -39,14 +39,6 @@ class FakeUserRepository : UserRepository {
         _currentUser.value = user
     }
 
-    override fun createAnonymousAccount(onResult: (Throwable?) -> Unit) {
-        val id = UUID.randomUUID().toString()
-        val user = User(id = id)
-        users[id] = user
-        _currentUser.value = user
-        onResult(null)
-    }
-
     override suspend fun authenticate(email: String, password: String): Boolean {
         val userId = emailIndex[email] ?: return false
         _currentUser.value = users[userId]
@@ -71,15 +63,6 @@ class FakeUserRepository : UserRepository {
         } else {
             onResult(null)
         }
-    }
-
-    override fun linkAccount(email: String, password: String, onResult: (Throwable?) -> Unit) {
-        val user = _currentUser.value ?: return onResult(IllegalStateException("No current user"))
-        val updated = user.copy(email = email)
-        users[user.id] = updated
-        emailIndex[email] = user.id
-        _currentUser.value = updated
-        onResult(null)
     }
 
     override suspend fun getUser(userId: String): User {

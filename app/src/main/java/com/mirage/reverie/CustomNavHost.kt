@@ -195,7 +195,11 @@ fun CustomNavHost(
                 onBottomBarVisibilityChanged(false)
                 SignupScreen(
                     onSignupSuccess = {
-                        navController.popBackStack()  // Torna al login dopo registrazione
+                        navController.navigate(DiariesRoute) {
+                            popUpTo(LoginRoute) {
+                                inclusive = true
+                            }
+                        }
                     },
                     onNavigateToLogin = {
                         navController.popBackStack()

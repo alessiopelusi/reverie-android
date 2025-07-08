@@ -1,6 +1,5 @@
 package com.mirage.reverie.data.repository
 
-import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.mirage.reverie.StorageService
 import com.mirage.reverie.data.model.User
@@ -16,11 +15,9 @@ interface UserRepository {
     val hasUser: Boolean
     val currentUser: Flow<User>
 
-    fun createAnonymousAccount(onResult: (Throwable?) -> Unit)
     suspend fun authenticate(email: String, password: String): Boolean
     suspend fun createAccount(user: User, password: String): User?
     fun sendPasswordResetEmail(email: String, onResult: (Throwable?) -> Unit)
-    fun linkAccount(email: String, password: String, onResult: (Throwable?) -> Unit)
 
     suspend fun getUser(userId: String): User
     suspend fun updateUser(user: User)
@@ -57,11 +54,6 @@ class UserRepositoryImpl @Inject constructor(
             awaitClose { auth.removeAuthStateListener(listener) }
         }
 
-    override fun createAnonymousAccount(onResult: (Throwable?) -> Unit) {
-        auth.signInAnonymously()
-            .addOnCompleteListener { onResult(it.exception) }
-    }
-
     override suspend fun authenticate(email: String, password: String): Boolean {
         try {
             auth.signInWithEmailAndPassword(email, password).await()
@@ -72,11 +64,12 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     override suspend fun createAccount(user: User, password: String): User? {
-        val userWithId = storageService.saveUser(user) ?: return null
 
         try {
-            auth.createUserWithEmailAndPassword(user.email, password).await()
-            return userWithId
+            val firebaseUser = auth.createUserWithEmailAndPassword(user.email, password).await().user ?: return null
+
+            val userWithId = user.copy(id = firebaseUser.uid)
+            return storageService.saveUser(userWithId)
         } catch (e: Exception) {
             return null
         }
@@ -84,13 +77,6 @@ class UserRepositoryImpl @Inject constructor(
 
     override fun sendPasswordResetEmail(email: String, onResult: (Throwable?) -> Unit) {
         auth.sendPasswordResetEmail(email)
-            .addOnCompleteListener { onResult(it.exception) }
-    }
-
-    override fun linkAccount(email: String, password: String, onResult: (Throwable?) -> Unit) {
-        val credential = EmailAuthProvider.getCredential(email, password)
-
-        auth.currentUser!!.linkWithCredential(credential)
             .addOnCompleteListener { onResult(it.exception) }
     }
 

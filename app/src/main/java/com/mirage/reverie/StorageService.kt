@@ -119,36 +119,35 @@ class StorageServiceImpl @Inject constructor(
     // we need a transaction to ensure the correct creation of username and email documents.
     // if one fails, the whole signup needs to fail, without committing anything
     override suspend fun saveUser(user: User): User? {
+        if (user.id.isBlank()) return null
+
         return try {
-            val userRef = firestore.collection(USERS_COLLECTION).document()
+            val userRef = firestore.collection(USERS_COLLECTION).document(user.id)
 
             firestore.runTransaction { transaction ->
-                // Update the user object with the generated ID
-                val userWithId = user.copy(id = userRef.id)
-
                 // Check if the username exists
-                val usernameRef = firestore.collection(USERNAMES_COLLECTION).document(userWithId.username)
+                val usernameRef = firestore.collection(USERNAMES_COLLECTION).document(user.username)
                 if (transaction.get(usernameRef).exists()) {
                     throw IllegalStateException(context.getString(R.string.username_already_taken))
                 }
 
                 // Check if the email exists
-                val emailRef = firestore.collection(EMAILS_COLLECTION).document(userWithId.email)
+                val emailRef = firestore.collection(EMAILS_COLLECTION).document(user.email)
                 if (transaction.get(emailRef).exists()) {
                     throw IllegalStateException(context.getString(R.string.email_already_taken))
                 }
 
                 // Set the username document
-                transaction.set(usernameRef, Username(uid = userRef.id))
+                transaction.set(usernameRef, Username(uid = user.id))
 
                 // Set the email document
-                transaction.set(emailRef, Email(uid = userRef.id))
+                transaction.set(emailRef, Email(uid = user.id))
 
                 // Add the user document
-                transaction.set(userRef, userWithId)
+                transaction.set(userRef, user)
             }.await()
 
-            user.copy(id = userRef.id)
+            return user
         } catch (e: Exception) {
             e.printStackTrace()
             null // Return null if the transaction fails
