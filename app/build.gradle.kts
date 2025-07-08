@@ -52,6 +52,22 @@ android {
     buildFeatures {
         compose = true
     }
+
+    buildTypes {
+        release {
+            isDebuggable = false
+            signingConfig = signingConfigs.getByName("debug") // usa la chiave debug anche per release
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                // Default file with automatically generated optimization rules.
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+            )
+        }
+        debug {
+            isDebuggable = true
+        }
+    }
 }
 
 kotlin {

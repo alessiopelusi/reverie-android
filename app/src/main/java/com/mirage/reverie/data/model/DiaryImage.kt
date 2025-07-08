@@ -1,9 +1,11 @@
 package com.mirage.reverie.data.model
 
 import android.graphics.Bitmap
+import androidx.annotation.Keep
 import com.google.firebase.firestore.Exclude
 import androidx.core.graphics.createBitmap
 
+@Keep
 data class DiaryImage(
     @get:Exclude val id: String = "",
     val subPageId: String = "",

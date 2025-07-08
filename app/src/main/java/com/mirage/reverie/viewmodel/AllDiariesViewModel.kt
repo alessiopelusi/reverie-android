@@ -1,5 +1,6 @@
 package com.mirage.reverie.viewmodel
 
+import androidx.annotation.Keep
 import androidx.compose.foundation.pager.PagerState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -22,6 +23,8 @@ fun createPagerState(size: Int, selectedDiary: Int = 0) : PagerState =
         currentPage = if (size > 1) size*500 + selectedDiary else 0
     )
 
+// keep needed to avoid errors on minify
+@Keep
 enum class ButtonState {
     INFO,
     IMAGES,

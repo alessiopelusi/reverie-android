@@ -1,11 +1,13 @@
 package com.mirage.reverie.data.model
 
 import android.os.Parcelable
+import androidx.annotation.Keep
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.Exclude
 import kotlinx.parcelize.Parcelize
 
 // DiaryState contains all the data of the diary
+@Keep
 @Parcelize
 data class Diary (
     @get:Exclude val id: String = "",

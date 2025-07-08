@@ -1,9 +1,11 @@
 package com.mirage.reverie.data.model
 
 import android.os.Parcelable
+import androidx.annotation.Keep
 import com.google.firebase.firestore.Exclude
 import kotlinx.parcelize.Parcelize
 
+@Keep
 @Parcelize
 data class User(
     @get:Exclude val id: String = "",

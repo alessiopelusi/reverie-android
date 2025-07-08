@@ -1,5 +1,6 @@
 package com.mirage.reverie.viewmodel
 
+import androidx.annotation.Keep
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.Timestamp
@@ -13,7 +14,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-
+// keep needed to avoid errors on minify
+@Keep
 enum class TimeCapsuleType {
     SCHEDULED, SENT, RECEIVED // puoi aggiungere altre sezioni
 }
