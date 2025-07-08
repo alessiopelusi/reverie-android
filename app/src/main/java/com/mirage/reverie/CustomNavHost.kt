@@ -176,8 +176,11 @@ fun CustomNavHost(
                 onBottomBarVisibilityChanged(false)
                 LoginScreen(
                     onLoginSuccess = {
-                        navController.navigate(AllDiariesRoute) {
-                            popUpTo(LoginRoute) {
+                        navController.navigate(DiariesRoute) {
+                            popUpTo(DiariesRoute) {
+                                inclusive = true
+                            }
+                            popUpTo(TimeCapsulesRoute) {
                                 inclusive = true
                             }
                         }
@@ -196,7 +199,10 @@ fun CustomNavHost(
                 SignupScreen(
                     onSignupSuccess = {
                         navController.navigate(DiariesRoute) {
-                            popUpTo(LoginRoute) {
+                            popUpTo(DiariesRoute) {
+                                inclusive = true
+                            }
+                            popUpTo(TimeCapsulesRoute) {
                                 inclusive = true
                             }
                         }
