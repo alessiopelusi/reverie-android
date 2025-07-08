@@ -45,6 +45,9 @@ sealed class AllDiariesUiState {
         val currentPage: Int
             get() = pagerState.currentPage % diariesMap.size
 
+        val currentDiary: Diary
+            get() = diaries[currentPage]
+
         val buttonElements: List<ButtonState>
             get() = ButtonState.entries
     }

@@ -99,4 +99,5 @@
     <string name="sent">Inviate</string>
     <string name="received">Ricevute</string>
     <string name="image">Immagine</string>
+    <string name="create_first_diary">Crea il tuo primo diario!</string>
 </resources>

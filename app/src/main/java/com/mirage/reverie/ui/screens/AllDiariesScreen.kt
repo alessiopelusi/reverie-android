@@ -80,209 +80,247 @@ fun AllDiariesScreen(
         is AllDiariesUiState.Loading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         is AllDiariesUiState.Success -> {
             val diaries = (uiState as AllDiariesUiState.Success).diaries
-            val currentPage = (uiState as AllDiariesUiState.Success).currentPage
             val pagerState = (uiState as AllDiariesUiState.Success).pagerState
             val diaryCoversMap = (uiState as AllDiariesUiState.Success).diaryCoversMap
-
-            val currentDiary = diaries[currentPage]
 
             val buttonElements = (uiState as AllDiariesUiState.Success).buttonElements
             val buttonState = (uiState as AllDiariesUiState.Success).buttonState
 
             val deleteDialogState = (uiState as AllDiariesUiState.Success).deleteDialogState
 
-            LazyVerticalStaggeredGrid(
-                modifier = Modifier
-                    .fillMaxSize(),
-                columns = StaggeredGridCells.Fixed(3),
-            ) {
-                item(
-                    span = StaggeredGridItemSpan.FullLine,
-
+            if (diaries.isNotEmpty()) {
+                val currentPage = (uiState as AllDiariesUiState.Success).currentPage
+                val currentDiary = (uiState as AllDiariesUiState.Success).currentDiary
+                LazyVerticalStaggeredGrid(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    columns = StaggeredGridCells.Fixed(3),
                 ) {
-                    val pageInteractionSource = remember { MutableInteractionSource() }
-                    Column(
-                        modifier = Modifier.padding(vertical = 40.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        HorizontalPager(
-                            state = pagerState
-                        ) { diaryNumber ->
-                            val diary = diaries[diaryNumber%diaries.size]
+                    item(
+                        span = StaggeredGridItemSpan.FullLine,
 
-                            Card(
-                                Modifier
-                                    .padding(horizontal = 40.dp, vertical = 8.dp)
-                                    .clickable(
-                                        interactionSource = pageInteractionSource,
-                                        indication = LocalIndication.current
-                                    ) {
-                                        onNavigateToDiary(diary.id)
-                                    },
-                                colors = CardDefaults.cardColors(containerColor = Color.White),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-                            ) {
-                                Column(
-                                    verticalArrangement = Arrangement.spacedBy(8.dp), // Adds spacing between elements
-                                    horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                        val pageInteractionSource = remember { MutableInteractionSource() }
+                        Column(
+                            modifier = Modifier.padding(vertical = 40.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            HorizontalPager(
+                                state = pagerState
+                            ) { diaryNumber ->
+                                val diary = diaries[diaryNumber % diaries.size]
+
+                                Card(
+                                    Modifier
+                                        .padding(horizontal = 40.dp, vertical = 8.dp)
+                                        .clickable(
+                                            interactionSource = pageInteractionSource,
+                                            indication = LocalIndication.current
+                                        ) {
+                                            onNavigateToDiary(diary.id)
+                                        },
+                                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                                 ) {
-                                    DiaryCoverComposable(
-                                        modifier = Modifier,
-                                        coverUrl = diaryCoversMap.getValue(diary.coverId).url
-                                    )
-                                    Text(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        textAlign = TextAlign.Center,
-                                        fontWeight = FontWeight.Bold,
-                                        text = diary.title
-                                    )
-                                    if (diary.description.isNotEmpty()){
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(8.dp), // Adds spacing between elements
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                    ) {
+                                        DiaryCoverComposable(
+                                            modifier = Modifier,
+                                            coverUrl = diaryCoversMap.getValue(diary.coverId).url
+                                        )
                                         Text(
                                             modifier = Modifier.fillMaxWidth(),
                                             textAlign = TextAlign.Center,
-                                            text = diary.description
+                                            fontWeight = FontWeight.Bold,
+                                            text = diary.title
                                         )
-                                    }
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(8.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.End
-                                    ){
-                                        IconButton(
-                                            onClick = {
-                                                onNavigateToEditDiary(diary.id)
-                                            },
-                                            colors = IconButtonColors(
-                                                containerColor = Color.Transparent,
-                                                contentColor = MaterialTheme.colorScheme.primary,
-                                                disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                                disabledContentColor = MaterialTheme.colorScheme.primary
-                                            ),
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Edit,
-                                                contentDescription = stringResource(R.string.edit_diary),
-                                                modifier = Modifier.size(20.dp)
+                                        if (diary.description.isNotEmpty()) {
+                                            Text(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                textAlign = TextAlign.Center,
+                                                text = diary.description
                                             )
                                         }
-                                        IconButton(
-                                            onClick = viewModel::onOpenDeleteDiaryDialog,
-                                            colors = IconButtonColors(
-                                                containerColor = Color.Transparent,
-                                                contentColor = MaterialTheme.colorScheme.primary,
-                                                disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                                disabledContentColor = MaterialTheme.colorScheme.primary
-                                            ),
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.End
                                         ) {
-                                            Icon(
-                                                imageVector = Icons.Outlined.Delete,
-                                                contentDescription = stringResource(R.string.delete),
-                                                modifier = Modifier.size(20.dp)
-                                            )
+                                            IconButton(
+                                                onClick = {
+                                                    onNavigateToEditDiary(diary.id)
+                                                },
+                                                colors = IconButtonColors(
+                                                    containerColor = Color.Transparent,
+                                                    contentColor = MaterialTheme.colorScheme.primary,
+                                                    disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                                    disabledContentColor = MaterialTheme.colorScheme.primary
+                                                ),
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Edit,
+                                                    contentDescription = stringResource(R.string.edit_diary),
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                            }
+                                            IconButton(
+                                                onClick = viewModel::onOpenDeleteDiaryDialog,
+                                                colors = IconButtonColors(
+                                                    containerColor = Color.Transparent,
+                                                    contentColor = MaterialTheme.colorScheme.primary,
+                                                    disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                                    disabledContentColor = MaterialTheme.colorScheme.primary
+                                                ),
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Outlined.Delete,
+                                                    contentDescription = stringResource(R.string.delete),
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
-                        Row(
-                            Modifier
-                                .wrapContentHeight()
-                                .fillMaxWidth()
-                                .padding(8.dp),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            repeat(diaries.size) { iteration ->
-                                val color = if (currentPage == iteration) Color.Black else Color.Transparent
-                                Box(
-                                    modifier = Modifier
-                                        .padding(2.dp)
-                                        .clip(CircleShape)
-                                        .border(
-                                            BorderStroke(1.dp, Color.Black),
-                                            shape = CircleShape
-                                        )
-                                        .background(color)
-                                        .size(8.dp)
-                                )
+                            Row(
+                                Modifier
+                                    .wrapContentHeight()
+                                    .fillMaxWidth()
+                                    .padding(8.dp),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                repeat(diaries.size) { iteration ->
+                                    val color =
+                                        if (currentPage == iteration) Color.Black else Color.Transparent
+                                    Box(
+                                        modifier = Modifier
+                                            .padding(2.dp)
+                                            .clip(CircleShape)
+                                            .border(
+                                                BorderStroke(1.dp, Color.Black),
+                                                shape = CircleShape
+                                            )
+                                            .background(color)
+                                            .size(8.dp)
+                                    )
+                                }
                             }
                         }
                     }
-                }
-                item(
-                    span = StaggeredGridItemSpan.FullLine
-                ) {
-                    ButtonBar(buttonState, buttonElements, viewModel::onButtonStateUpdate) { item ->
-                        when(item) {
-                            ButtonState.INFO -> stringResource(R.string.info)
-                            else -> stringResource(R.string.images)
+                    item(
+                        span = StaggeredGridItemSpan.FullLine
+                    ) {
+                        ButtonBar(
+                            buttonState,
+                            buttonElements,
+                            viewModel::onButtonStateUpdate
+                        ) { item ->
+                            when (item) {
+                                ButtonState.INFO -> stringResource(R.string.info)
+                                else -> stringResource(R.string.images)
+                            }
                         }
                     }
-                }
-                when(buttonState) {
-                    ButtonState.IMAGES -> {
-                        val diaryImages = (uiState as AllDiariesUiState.Success).diaryPhotosMap[currentDiary.id]
+                    when (buttonState) {
+                        ButtonState.IMAGES -> {
+                            val diaryImages =
+                                (uiState as AllDiariesUiState.Success).diaryPhotosMap[currentDiary.id]
 
-                        if (diaryImages != null) {
-                            items(diaryImages) { image ->
-                                AsyncImage(
-                                    model = image.url,
-                                    contentScale = ContentScale.Crop,
-                                    contentDescription = stringResource(R.string.image),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .wrapContentHeight()
-                                )
+                            if (diaryImages != null) {
+                                items(diaryImages) { image ->
+                                    AsyncImage(
+                                        model = image.url,
+                                        contentScale = ContentScale.Crop,
+                                        contentDescription = stringResource(R.string.image),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .wrapContentHeight()
+                                    )
+                                }
                             }
                         }
-                    }
 //                    ButtonState.VIDEOS -> {
 //
 //                    }
-                    ButtonState.INFO -> {
-                        item(
-                            span = StaggeredGridItemSpan.FullLine
-                        ){
-                            Column(
-                                modifier = Modifier.padding(vertical = 10.dp, horizontal = 16.dp)
-                            ){
-                                Text(
-                                    text = stringResource(R.string.creation_date) + ":",
-                                    style = TextStyle(
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 18.sp
-                                    ),
-                                )
-                                Text(
-                                    text = formatDate(currentDiary.creationDate.toDate()),
-                                )
+                        ButtonState.INFO -> {
+                            item(
+                                span = StaggeredGridItemSpan.FullLine
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(
+                                        vertical = 10.dp,
+                                        horizontal = 16.dp
+                                    )
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.creation_date) + ":",
+                                        style = TextStyle(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 18.sp
+                                        ),
+                                    )
+                                    Text(
+                                        text = formatDate(currentDiary.creationDate.toDate()),
+                                    )
+                                }
                             }
-                        }
-                        item(
-                            span = StaggeredGridItemSpan.FullLine
-                        ){
-                            HorizontalDivider(thickness = 1.dp)
-                        }
-                        item(
-                            span = StaggeredGridItemSpan.FullLine
-                        ){
-                            Column(
-                                modifier = Modifier.padding(vertical = 10.dp, horizontal = 16.dp)
-                            ){
-                                Text(
-                                    text = stringResource(R.string.page_number) + ":",
-                                    style = TextStyle(
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 18.sp
-                                    ),
-                                )
-                                Text(
-                                    text = currentDiary.pageIds.size.toString(),
-                                )
+                            item(
+                                span = StaggeredGridItemSpan.FullLine
+                            ) {
+                                HorizontalDivider(thickness = 1.dp)
+                            }
+                            item(
+                                span = StaggeredGridItemSpan.FullLine
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(
+                                        vertical = 10.dp,
+                                        horizontal = 16.dp
+                                    )
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.page_number) + ":",
+                                        style = TextStyle(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 18.sp
+                                        ),
+                                    )
+                                    Text(
+                                        text = currentDiary.pageIds.size.toString(),
+                                    )
+                                }
                             }
                         }
                     }
+                }
+
+                if (deleteDialogState) {
+                    ConfirmDelete (
+                        stringResource(R.string.confirm_diary_deletion),
+                        stringResource(R.string.delete_diary),
+                        viewModel::onCloseDeleteDiaryDialog
+                    ) {
+                        viewModel.onDeleteDiary(
+                            currentDiary.id,
+                        )
+                    }
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.create_first_diary),
+                        textAlign = TextAlign.Center,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
 
@@ -298,18 +336,6 @@ fun AllDiariesScreen(
                     contentColor = MaterialTheme.colorScheme.primary
                 ) {
                     Icon(Icons.Filled.Add, stringResource(R.string.create_diary))
-                }
-            }
-
-            if (deleteDialogState) {
-                ConfirmDelete (
-                    stringResource(R.string.confirm_diary_deletion),
-                    stringResource(R.string.delete_diary),
-                    viewModel::onCloseDeleteDiaryDialog
-                ) {
-                    viewModel.onDeleteDiary(
-                        currentDiary.id,
-                    )
                 }
             }
         }
