@@ -33,7 +33,18 @@ fun ResetPasswordScreen(
 
     when (uiState) {
         is ResetPasswordUiState.Success -> {
-
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = stringResource(R.string.reset_password_email_sent), style = MaterialTheme.typography.titleLarge)
+                TextButton(onClick = onNavigateBack) {
+                    Text(stringResource(R.string.go_back_to_login))
+                }
+            }
         }
         is ResetPasswordUiState.Idle, is ResetPasswordUiState.Error -> {
             Column(

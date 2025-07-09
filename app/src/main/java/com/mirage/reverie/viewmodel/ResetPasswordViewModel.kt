@@ -12,6 +12,7 @@ import javax.inject.Inject
 
 data class ResetPasswordInputState(
     val email: String = "",
+    val emailError: String = "",
 )
 
 sealed class ResetPasswordUiState {
@@ -32,30 +33,48 @@ class ResetPasswordViewModel @Inject constructor(
     private val _inputState = MutableStateFlow(ResetPasswordInputState())
     val inputState = _inputState.asStateFlow()
 
+    private fun validateEmail(email: String): String {
+        return when {
+            email.isBlank() -> context.getString(R.string.email_mandatory)
+            !android.util.Patterns.EMAIL_ADDRESS.matcher(email)
+                .matches() -> context.getString(R.string.email_not_valid)
+            else -> ""
+        }
+    }
     fun onEmailChange(newEmail: String) {
+        val strippedEmail = newEmail.trim()
+        if (strippedEmail == inputState.value.email) return
+
+        val error = validateEmail(strippedEmail)
+
         _inputState.update { state ->
-            state.copy(email = newEmail)
+            state.copy(
+                email = strippedEmail,
+                emailError = error
+            )
         }
     }
 
     fun onResetPassword() {
         _uiState.update { ResetPasswordUiState.Idle }
 
-        val state = inputState.value
-        if (state.email.isBlank()) {
-            _uiState.update { ResetPasswordUiState.Error(context.getString(R.string.email_mandatory)) }
+        val inState = inputState.value
+
+        val updatedState = inState.copy(
+            emailError = validateEmail(inState.email)
+        )
+        _inputState.update { updatedState }
+
+        // if we detect an error, we return
+        if (updatedState.emailError.isNotBlank()) {
+            _uiState.update { ResetPasswordUiState.Error("") }
             return
         }
 
-        repository.sendPasswordResetEmail(state.email) { exception ->
-            if (exception == null) {
-                val infoMessage = context.getString(R.string.reset_password_email_sent)
-                _uiState.update { ResetPasswordUiState.Success(infoMessage) }
-            } else {
-                val errorMessage = exception.message ?: context.getString(R.string.reset_password_email_error)
-                _uiState.update { ResetPasswordUiState.Error(errorMessage) }
-            }
-        }
+        if (repository.sendPasswordResetEmail(updatedState.email))
+            _uiState.update { ResetPasswordUiState.Success(context.getString(R.string.reset_password_email_sent)) }
+        else
+            _uiState.update { ResetPasswordUiState.Error(context.getString(R.string.reset_password_email_error)) }
     }
 }
 

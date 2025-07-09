@@ -17,7 +17,7 @@ interface UserRepository {
 
     suspend fun authenticate(email: String, password: String): Boolean
     suspend fun createAccount(user: User, password: String): User?
-    fun sendPasswordResetEmail(email: String, onResult: (Throwable?) -> Unit)
+    fun sendPasswordResetEmail(email: String): Boolean
 
     suspend fun getUser(userId: String): User
     suspend fun updateUser(user: User)
@@ -75,9 +75,13 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun sendPasswordResetEmail(email: String, onResult: (Throwable?) -> Unit) {
-        auth.sendPasswordResetEmail(email)
-            .addOnCompleteListener { onResult(it.exception) }
+    override fun sendPasswordResetEmail(email: String): Boolean {
+        try {
+            auth.sendPasswordResetEmail(email)
+            return true
+        } catch (e: Exception) {
+            return false
+        }
     }
 
     override suspend fun getUser(userId: String): User {
