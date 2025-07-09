@@ -1,4 +1,4 @@
-package com.mirage.reverie.ui.components
+package com.mirage.reverie.navigation
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
@@ -13,24 +13,6 @@ import com.mirage.reverie.data.model.DiaryImage
 import com.mirage.reverie.data.model.DiaryPage
 import com.mirage.reverie.data.model.TimeCapsule
 import com.mirage.reverie.data.model.User
-import com.mirage.reverie.navigation.AllDiariesRoute
-import com.mirage.reverie.navigation.AllTimeCapsulesRoute
-import com.mirage.reverie.navigation.AuthenticationRoute
-import com.mirage.reverie.navigation.CreateDiaryRoute
-import com.mirage.reverie.navigation.CreateTimeCapsuleRoute
-import com.mirage.reverie.navigation.DiariesRoute
-import com.mirage.reverie.navigation.DiaryRoute
-import com.mirage.reverie.navigation.EditDiaryPageRoute
-import com.mirage.reverie.navigation.EditDiaryRoute
-import com.mirage.reverie.navigation.EditProfileRoute
-import com.mirage.reverie.navigation.LoginRoute
-import com.mirage.reverie.navigation.ProfileRoute
-import com.mirage.reverie.navigation.ResetPasswordRoute
-import com.mirage.reverie.navigation.SignupRoute
-import com.mirage.reverie.navigation.TimeCapsulesRoute
-import com.mirage.reverie.navigation.ViewDiaryRoute
-import com.mirage.reverie.navigation.ViewProfileRoute
-import com.mirage.reverie.navigation.ViewTimeCapsuleRoute
 import com.mirage.reverie.ui.screens.AllDiariesScreen
 import com.mirage.reverie.ui.screens.AllTimeCapsulesScreen
 import com.mirage.reverie.ui.screens.CreateTimeCapsuleScreen
