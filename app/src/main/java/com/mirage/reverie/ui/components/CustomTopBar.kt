@@ -1,4 +1,4 @@
-package com.mirage.reverie
+package com.mirage.reverie.ui.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Person
@@ -12,6 +12,7 @@ import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import com.mirage.reverie.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -1,7 +1,7 @@
 package com.mirage.reverie.data.repository
 
 import android.net.Uri
-import com.mirage.reverie.StorageService
+import com.mirage.reverie.data.StorageService
 import com.mirage.reverie.data.model.Diary
 import com.mirage.reverie.data.model.DiaryCover
 import com.mirage.reverie.data.model.DiaryImage

@@ -1,10 +1,11 @@
-package com.mirage.reverie
+package com.mirage.reverie.data
 
 import android.content.Context
 import android.net.Uri
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.toObject
+import com.mirage.reverie.R
 import com.mirage.reverie.data.model.Diary
 import com.mirage.reverie.data.model.DiaryCover
 import com.mirage.reverie.data.model.DiaryImage

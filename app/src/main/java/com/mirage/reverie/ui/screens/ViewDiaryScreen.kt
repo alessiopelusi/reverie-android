@@ -1,5 +1,9 @@
 package com.mirage.reverie.ui.screens
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import androidx.core.graphics.createBitmap
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -56,7 +60,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mirage.reverie.R
 import com.mirage.reverie.data.model.DiaryPage
-import com.mirage.reverie.drawableToBitmap
 import com.mirage.reverie.viewmodel.ViewDiaryUiState
 import com.mirage.reverie.viewmodel.ViewDiaryViewModel
 import dev.romainguy.graphics.path.toPath
@@ -80,6 +83,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.core.content.ContextCompat
 import com.mirage.reverie.data.model.DiaryImage
 import com.mirage.reverie.formatDate
 import com.mirage.reverie.ui.components.ConfirmDelete
@@ -647,3 +651,21 @@ fun DiaryPage(modifier: Modifier, subPageId: String, viewModel: ViewDiaryViewMod
         }
     }
 }
+
+fun drawableToBitmap(context: Context, drawableResId: Int): Bitmap {
+    val drawable = ContextCompat.getDrawable(context, drawableResId)
+        ?: throw IllegalArgumentException("Drawable not found for resource ID: $drawableResId")
+
+    val width = drawable.intrinsicWidth.takeIf { it > 0 } ?: 1
+    val height = drawable.intrinsicHeight.takeIf { it > 0 } ?: 1
+
+    val bitmap = createBitmap(width, height)
+    val canvas = Canvas(bitmap)
+
+    drawable.setBounds(0, 0, canvas.width, canvas.height)
+    drawable.draw(canvas)
+
+
+    return bitmap
+}
+

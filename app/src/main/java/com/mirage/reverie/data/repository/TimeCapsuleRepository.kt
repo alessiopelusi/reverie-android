@@ -1,6 +1,6 @@
 package com.mirage.reverie.data.repository
 
-import com.mirage.reverie.StorageService
+import com.mirage.reverie.data.StorageService
 import com.mirage.reverie.data.model.TimeCapsule
 import javax.inject.Inject
 import javax.inject.Provider

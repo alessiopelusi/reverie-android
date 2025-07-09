@@ -6,6 +6,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import com.mirage.reverie.data.StorageService
+import com.mirage.reverie.data.StorageServiceImpl
 import com.mirage.reverie.data.repository.DiaryRepository
 import com.mirage.reverie.data.repository.DiaryRepositoryImpl
 import com.mirage.reverie.data.repository.TimeCapsuleRepository

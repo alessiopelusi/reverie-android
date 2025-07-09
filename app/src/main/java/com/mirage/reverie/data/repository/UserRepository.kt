@@ -1,7 +1,7 @@
 package com.mirage.reverie.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
-import com.mirage.reverie.StorageService
+import com.mirage.reverie.data.StorageService
 import com.mirage.reverie.data.model.User
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow

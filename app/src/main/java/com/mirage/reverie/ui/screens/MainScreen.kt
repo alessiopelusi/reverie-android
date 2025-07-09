@@ -8,9 +8,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
-import com.mirage.reverie.CustomBottomBar
-import com.mirage.reverie.CustomNavHost
-import com.mirage.reverie.CustomTopBar
+import com.mirage.reverie.ui.components.CustomBottomBar
+import com.mirage.reverie.ui.components.CustomNavHost
+import com.mirage.reverie.ui.components.CustomTopBar
 import com.mirage.reverie.navigation.LoginRoute
 import com.mirage.reverie.navigation.ProfileRoute
 import com.mirage.reverie.ui.theme.ReverieTheme

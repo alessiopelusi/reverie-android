@@ -1,4 +1,4 @@
-package com.mirage.reverie
+package com.mirage.reverie.ui.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -24,6 +24,7 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.mirage.reverie.R
 import com.mirage.reverie.navigation.DiariesRoute
 import com.mirage.reverie.navigation.TimeCapsulesRoute
 

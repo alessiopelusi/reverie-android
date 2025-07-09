@@ -1,4 +1,4 @@
-package com.mirage.reverie
+package com.mirage.reverie.ui.components
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
