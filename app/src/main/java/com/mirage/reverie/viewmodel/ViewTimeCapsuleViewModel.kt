@@ -23,8 +23,10 @@ sealed class ViewTimeCapsuleState {
     data class Success(
         val timeCapsule: TimeCapsule,
         val timeCapsuleType: TimeCapsuleType,
-        val receiversUsername: List<Username>
-    ) : ViewTimeCapsuleState()
+        val receiversUsername: List<Username>,
+        val sender: Username
+    ) : ViewTimeCapsuleState() {
+    }
     data class Error(val exception: Throwable) : ViewTimeCapsuleState()
 }
 
@@ -50,7 +52,8 @@ class ViewTimeCapsuleViewModel @Inject constructor(
             val receiverUsers = timeCapsule.receiversIds.map { receiverId ->
                 Username(userRepository.getUser(receiverId).username, receiverId)
             }
-            _uiState.update { ViewTimeCapsuleState.Success(timeCapsule, timeCapsuleType, receiverUsers) }
+            val sender = Username(userRepository.getUser(timeCapsule.userId).username, timeCapsule.userId)
+            _uiState.update { ViewTimeCapsuleState.Success(timeCapsule, timeCapsuleType, receiverUsers, sender) }
         }
     }
 }

@@ -45,6 +45,7 @@ fun ViewTimeCapsuleScreen(
             val timeCapsuleType = (uiState as ViewTimeCapsuleState.Success).timeCapsuleType
             val scrollState = rememberScrollState()
             val receiversUsername = (uiState as ViewTimeCapsuleState.Success).receiversUsername
+            val sender = (uiState as ViewTimeCapsuleState.Success).sender
 
             Column (
                 modifier = Modifier
@@ -97,7 +98,8 @@ fun ViewTimeCapsuleScreen(
                     ),
                 )
                 Text(
-                    text = timeCapsule.userId
+                    text = sender.username,
+                    modifier = Modifier.clickable { onViewProfile(sender.uid) }
                 )
 
                 if (timeCapsuleType != TimeCapsuleType.RECEIVED) {
