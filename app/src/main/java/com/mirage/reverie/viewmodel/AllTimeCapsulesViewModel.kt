@@ -113,8 +113,7 @@ class AllTimeCapsulesViewModel @Inject constructor(
     }
 
     private fun onUpdateDeleteTimeCapsuleDialog(newTimeCapsuleId: String) {
-        val currState = uiState.value
-        if (currState !is AllTimeCapsulesUiState.Success) return
+        if (uiState.value !is AllTimeCapsulesUiState.Success) return
 
         _uiState.update { state ->
             state as AllTimeCapsulesUiState.Success
@@ -136,7 +135,7 @@ class AllTimeCapsulesViewModel @Inject constructor(
         val state = uiState.value
         if (state !is AllTimeCapsulesUiState.Success) return
 
-        val timeCapsule = state.timeCapsuleSentMap[state.deleteDialogCapsuleId] ?: return
+        val timeCapsule = state.sentTimeCapsule[state.deleteDialogCapsuleId] ?: return
 
         viewModelScope.launch {
             repository.deleteTimeCapsule(timeCapsule)
