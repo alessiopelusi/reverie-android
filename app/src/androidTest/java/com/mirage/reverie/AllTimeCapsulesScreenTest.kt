@@ -40,7 +40,7 @@ class AllTimeCapsulesScreenTest {
     }
 
     @Test
-    fun switchesToSentCapsules_onSentButtonClick() {
+    fun switchesToSentCapsulesOnSentButtonClick() {
         composeTestRule.activity.setContent {
             AllTimeCapsulesScreen(
                 onNavigateToViewTimeCapsule = {_, _ -> },
@@ -68,7 +68,7 @@ class AllTimeCapsulesScreenTest {
     }
 
     @Test
-    fun switchesToReceivedCapsules_onReceivedButtonClick() {
+    fun switchesToReceivedCapsulesOnReceivedButtonClick() {
         composeTestRule.activity.setContent {
             AllTimeCapsulesScreen(
                 onNavigateToViewTimeCapsule = {_, _ -> },
@@ -94,7 +94,7 @@ class AllTimeCapsulesScreenTest {
     }
 
     @Test
-    fun displaysCreateCapsuleFab_andRespondsToClick() {
+    fun displaysCreateCapsuleFabAndRespondsToClick() {
         composeTestRule.activity.setContent {
             AllTimeCapsulesScreen(
                 onNavigateToViewTimeCapsule = {_, _ -> },
@@ -111,7 +111,7 @@ class AllTimeCapsulesScreenTest {
     }
 
     @Test
-    fun deleteDialogAppears_whenDeleteOpened() {
+    fun deleteDialogAppearsWhenDeleteOpened() {
         composeTestRule.activity.setContent {
             AllTimeCapsulesScreen(
                 onNavigateToViewTimeCapsule = {_, _ -> },

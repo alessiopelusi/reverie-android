@@ -57,12 +57,8 @@ class FakeUserRepository : UserRepository {
         return newUser
     }
 
-    override fun sendPasswordResetEmail(email: String, onResult: (Throwable?) -> Unit) {
-        if (!emailIndex.containsKey(email)) {
-            onResult(IllegalArgumentException("Email not found"))
-        } else {
-            onResult(null)
-        }
+    override fun sendPasswordResetEmail(email: String): Boolean {
+        return emailIndex.containsKey(email)
     }
 
     override suspend fun getUser(userId: String): User {

@@ -24,7 +24,7 @@ class AllDiariesScreenTest {
     }
 
     @Test
-    fun displaysDiaryTitle_andRespondsToFabClick() {
+    fun displaysDiaryTitleAndRespondsToFabClick() {
         composeTestRule.activity.setContent {
             AllDiariesScreen(
                 onNavigateToDiary = {},
@@ -46,7 +46,7 @@ class AllDiariesScreenTest {
     }
 
     @Test
-    fun showsImageTab_onImageButtonClick() {
+    fun showsImageTabOnImageButtonClick() {
         composeTestRule.activity.setContent {
             AllDiariesScreen(
                 onNavigateToDiary = {},
@@ -87,7 +87,7 @@ class AllDiariesScreenTest {
     }
 
     @Test
-    fun displaysMultipleDiaries_andHandlesPagerSwipe() {
+    fun displaysMultipleDiariesAndHandlesPagerSwipe() {
         composeTestRule.activity.setContent {
             AllDiariesScreen(
                 onNavigateToDiary = {},
@@ -116,7 +116,7 @@ class AllDiariesScreenTest {
     }
 
     @Test
-    fun switchingToInfoTab_displaysCreationDateAndPageNumber() {
+    fun switchingToInfoTabDisplaysCreationDateAndPageNumber() {
         composeTestRule.activity.setContent {
             AllDiariesScreen(
                 onNavigateToDiary = {},
